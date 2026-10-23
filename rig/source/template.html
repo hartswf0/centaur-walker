@@ -1,0 +1,109 @@
+<meta charset="utf-8">
+<title>Centaur Rig Design Set</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<style>
+/* Drawing set. Top half: the sheet drawing. Bottom half: sheet list and the sheet's numbers. Wide screens put the list on the right. Single light look, same marks as the instrument. */
+:root{
+  --paper:#fff; --ink:#000; --teal:#19e6c8; --amber:#ffd23f; --red:#ff2e2e; --blue:#2563eb; --tan:#f6efe0; --rule:#000;
+  --mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box;border-radius:0}
+html,body{height:100%;background:var(--paper);color:var(--ink)}
+body{margin:0;font-family:var(--mono);font-size:12px;line-height:1.4;overflow:hidden;
+  padding-left:max(6px,env(safe-area-inset-left,0px));padding-right:max(6px,env(safe-area-inset-right,0px));padding-block:4px;
+  display:grid;grid-template-rows:auto minmax(0,55fr) minmax(0,45fr);gap:4px}
+@media (min-width:900px){ body{grid-template-rows:auto minmax(0,1fr);grid-template-columns:minmax(0,1fr) 440px} header{grid-column:1 / -1} }
+header{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;border:1px solid var(--rule);padding:4px 6px}
+header h1{font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:0 6px 0 0}
+.seg{display:flex;gap:3px;flex-wrap:wrap}
+button{font:inherit;font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--paper);color:var(--ink);border:1px solid var(--ink);padding:4px 8px;cursor:pointer;min-height:30px}
+button:hover{background:var(--ink);color:var(--paper)}
+button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.view{border:1px solid var(--rule);position:relative;min-height:0;display:grid;grid-template-rows:auto minmax(0,1fr)}
+.vbar{display:flex;gap:6px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--rule);padding:3px 6px;font-size:11px}
+.vbar b{letter-spacing:.06em;text-transform:uppercase}
+#sheet{overflow:auto;min-height:0;background:#e9e9e9;touch-action:pan-x pan-y pinch-zoom}
+#sheet svg{display:block;width:100%;height:100%;background:#fff}
+#sheet.z2 svg{width:200%;height:auto} #sheet.z4 svg{width:400%;height:auto}
+.panel{border:1px solid var(--rule);display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;min-width:0}
+.list{display:flex;flex-wrap:wrap;gap:3px;padding:5px;border-bottom:1px solid var(--rule)}
+@media (max-width:899px){.list{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}.list button{flex:0 0 auto}}
+.list button{text-transform:none;letter-spacing:0;min-height:26px;padding:2px 7px}
+.list button.part{border-style:dashed}
+#text{overflow-y:auto;min-height:0;padding:0 0 14px}
+h3{font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin:0;padding:9px 8px 4px;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+h3 span{font-weight:400;letter-spacing:0;text-transform:none;font-style:italic}
+.lead,.note{padding:6px 8px;margin:0}
+.note{font-size:11px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;margin-bottom:4px}
+td,th{padding:3px 6px;text-align:left;font-size:11px;border-top:1px solid #000;vertical-align:top}
+th{font-size:10px;font-weight:700}
+table.kv th{display:none} table.kv td:first-child{width:46%}
+table.kv td:last-child{font-weight:700}
+.led{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:6px;padding:4px 8px;align-items:center;border-top:1px solid #000}
+.led i{width:10px;height:10px;border:1px solid var(--ink)}
+.ok{background:var(--teal);padding:0 3px} .warn{background:var(--amber);padding:0 3px} .bad{background:var(--red);padding:0 3px}
+ol.steps{margin:0;padding:0 8px 0 30px} ol.steps li{margin:4px 0}
+.stack{display:grid;grid-template-columns:2em minmax(0,1fr) auto;gap:0 6px;padding:0 8px}
+.stack span{border-top:1px solid #000;padding:2px 0}
+.stack .t{text-align:right;font-variant-numeric:tabular-nums}
+.fast{padding:2px 8px 6px;margin:0;font-weight:700}
+.files{padding:6px 8px;column-width:220px;font-size:11px}
+.files div{break-inside:avoid}
+</style>
+
+<header>
+  <h1>Centaur Rig · design set</h1>
+  <div class="seg" role="group" aria-label="Build">
+    <button data-build="backpack" aria-pressed="true">Backpack</button>
+    <button data-build="bike" aria-pressed="false">Bike</button>
+  </div>
+  <div class="seg" role="group" aria-label="Zoom">
+    <button data-z="1" aria-pressed="true">Fit</button><button data-z="2" aria-pressed="false">×2</button><button data-z="4" aria-pressed="false">×4</button>
+  </div>
+</header>
+<section class="view" aria-label="Drawing">
+  <div class="vbar"><b id="vtitle"></b><span id="vsub"></span></div>
+  <div id="sheet"></div>
+</section>
+<section class="panel" aria-label="Sheets">
+  <div class="list" id="list"></div>
+  <div id="text"></div>
+</section>
+
+<script>
+const DATA = /*DATA*/null;
+const FILES = /*FILES*/null;
+const st = {build: 'backpack', sheet: 'plate', z: 1};
+try { const h = location.hash.slice(1); if (h) { const [b, s] = h.split('.'); if (DATA[b]) { st.build = b; if (s === 'files' || DATA[b].some(x => x.id === s)) st.sheet = s; } } } catch (e) {}
+const $ = id => document.getElementById(id);
+function render() {
+  const sheets = DATA[st.build]; let sh = sheets.find(s => s.id === st.sheet); if (!sh && st.sheet !== 'files') { sh = sheets[0]; st.sheet = sh.id; }
+  document.querySelectorAll('[data-build]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.build === st.build)));
+  const list = $('list'); list.innerHTML = '';
+  sheets.concat([{id: 'files', title: 'Files'}]).forEach((s, i) => {
+    const b = document.createElement('button'); b.textContent = s.title; if (s.part) b.className = 'part';
+    b.setAttribute('aria-pressed', String(s.id === st.sheet)); b.onclick = () => { st.sheet = s.id; render(); $('text').scrollTop = 0; };
+    list.appendChild(b);
+  });
+  if (st.sheet === 'files') {
+    $('vtitle').textContent = 'Files'; $('vsub').textContent = 'in centaur-rig-design-files.zip';
+    $('sheet').innerHTML = DATA[st.build].find(x => x.id === 'front').svg;
+    const groups = {}; FILES.forEach(f => { const k = f.split('/').slice(0, 2).join('/'); (groups[k] = groups[k] || []).push(f.split('/').pop()); });
+    $('text').innerHTML = '<p class="lead">The zip centaur-rig-design-files.zip sits next to this page, and the same files are unpacked in the files/ folder. It holds: a tiled PDF per build (Letter pages, 1:1, join on the crosses); every sheet as a 1:1 SVG; every cut part as a DXF in mm for a laser, CNC or print shop (layer CUT = outline and holes, CHEEK-OUTLINE = where cheek plates go); and design-data.json with every number.</p><div class="files">' + Object.entries(groups).map(([k, v]) => `<div><b>${k}</b><br>${v.join('<br>')}</div>`).join('<br>') + '</div>';
+  } else {
+    $('vtitle').textContent = sh.title; $('vsub').textContent = (st.build === 'backpack' ? 'BP' : 'BK') + (sh.part ? ' · 1:1 in the files' : '');
+    $('sheet').innerHTML = sh.svg; $('text').innerHTML = sh.panel;
+  }
+  $('sheet').className = st.z > 1 ? 'z' + st.z : '';
+  try { history.replaceState(null, '', '#' + st.build + '.' + st.sheet); } catch (e) {}
+}
+document.querySelectorAll('[data-build]').forEach(b => b.onclick = () => { st.build = b.dataset.build; render(); });
+document.querySelectorAll('[data-z]').forEach(b => b.onclick = () => { st.z = +b.dataset.z; document.querySelectorAll('[data-z]').forEach(q => q.setAttribute('aria-pressed', String(q === b))); render(); });
+render();
+</script>

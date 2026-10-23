@@ -1,0 +1,899 @@
+<title>Stride Plate</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<style>
+/* Layout: one bench. Stage, plate and footfall diagram on the left; numbers, bars and history on the right. One column on phones. */
+:root{
+  --paper:#fff; --ink:#000;
+  --teal:#19e6c8; --amber:#ffd23f; --red:#ff2e2e; --blue:#3b82f6;
+  --mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box;border-radius:0}
+html,body{background:var(--paper);color:var(--ink)}
+body{font-family:var(--mono);font-size:13px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px}
+header{display:flex;flex-wrap:wrap;gap:6px 24px;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--ink);padding-bottom:8px}
+h1{font-size:22px;font-weight:700;letter-spacing:.06em;margin:0;text-transform:uppercase}
+.sub{font-size:12px;max-width:68ch;margin:0}
+.bench{display:grid;gap:16px;margin-top:14px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:1020px){.bench{grid-template-columns:minmax(0,1fr) 370px}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.panel{border:1px solid var(--ink);min-width:0}
+.ph{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--ink);padding:6px 8px}
+.ph h2{font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin:0;font-weight:700}
+.ph .note{font-size:11px;font-style:italic}
+button{font:inherit;font-size:11px;letter-spacing:.08em;text-transform:uppercase;background:var(--paper);color:var(--ink);border:1px solid var(--ink);padding:4px 8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+button:hover{background:var(--ink);color:var(--paper)}
+button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+button:disabled{opacity:.35;cursor:default;background:var(--paper);color:var(--ink)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+canvas{display:block;width:100%;touch-action:none}
+#stage{aspect-ratio:16/10;min-height:300px;max-height:72vh;cursor:grab}
+#stage.on-bar{cursor:ew-resize}
+#stage.on-ring{cursor:crosshair}
+#plate{cursor:pointer}
+#foot{cursor:ew-resize}
+.status{border-top:1px solid var(--ink);padding:6px 8px;font-size:12px;min-height:2.2em;display:flex;flex-wrap:wrap;gap:4px 18px}
+.status .jam{color:var(--ink);background:var(--red);padding:0 4px}
+.status .air{background:var(--amber);padding:0 4px}
+.icon-play,.icon-pause{width:9px;height:10px;display:inline-block;position:relative}
+.icon-play{border-left:9px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent;width:0;height:0}
+.icon-pause::before,.icon-pause::after{content:"";position:absolute;top:0;width:3px;height:10px;background:currentColor}
+.icon-pause::before{left:0}.icon-pause::after{right:0}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.stat{padding:8px;border-right:1px solid var(--ink);border-bottom:1px solid var(--ink);min-width:0}
+.stat:nth-child(3n){border-right:0}
+.stat:nth-last-child(-n+3){border-bottom:0}
+.stat .k{font-size:10px;letter-spacing:.14em;text-transform:uppercase}
+.stat .v{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .d{font-size:11px;font-variant-numeric:tabular-nums}
+.stat .u{font-size:11px;font-weight:400}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{padding:3px 8px;text-align:left;font-size:12px}
+th{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;border-bottom:1px solid var(--ink)}
+tr.row td{border-bottom:1px solid #000}
+tr.row:last-child td{border-bottom:0}
+tr.row.hot{background:var(--ink);color:var(--paper)}
+tr.row.hot .val{background:var(--paper);color:var(--ink)}
+td.key{font-weight:700;width:2em}
+td.val{cursor:ew-resize;user-select:none;font-weight:700;width:5.5em}
+td.val:hover{outline:1px solid var(--blue)}
+td.dlt{width:5em}
+td.role{font-size:11px}
+.pos{color:var(--ink)} .chg{background:var(--amber);padding:0 3px}
+#hist{display:flex;flex-direction:column;max-height:320px;overflow-y:auto}
+.h{display:grid;grid-template-columns:76px minmax(0,1fr);gap:8px;align-items:center;border:0;border-bottom:1px solid var(--ink);padding:4px 8px;text-transform:none;letter-spacing:0;font-size:12px;text-align:left;justify-content:start}
+.h:last-child{border-bottom:0}
+.h canvas{width:76px;height:44px}
+.h.cur{background:var(--ink);color:var(--paper)}
+.h.cur canvas{background:var(--paper)}
+.h:hover canvas{background:var(--paper)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;padding:6px 8px;border-top:1px solid var(--ink)}
+.sw{display:inline-block;width:14px;height:8px;margin-right:5px;vertical-align:middle;border:1px solid var(--ink)}
+.dash{display:inline-block;width:16px;margin-right:5px;vertical-align:middle;border-top:2px dashed}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<header>
+  <h1>Stride Plate</h1>
+  <p class="sub">Theo Jansen's leg, set against Muybridge's diagram of foot movements. Every bar length is a control; every footfall is drawn.</p>
+</header>
+
+<div class="bench">
+  <div class="col">
+    <section class="panel" aria-label="Mechanism">
+      <div class="ph">
+        <div class="seg">
+          <button id="play" aria-label="Pause"><span class="icon-pause"></span><span id="playTxt">Pause</span></button>
+          <button id="slow" aria-pressed="false">Slow</button>
+        </div>
+        <div class="seg" role="group" aria-label="Zoom level">
+          <button data-z="0" aria-pressed="true">Beest</button>
+          <button data-z="0.62" aria-pressed="false">Leg</button>
+          <button data-z="1" aria-pressed="false">Joint</button>
+        </div>
+        <div class="seg" role="group" aria-label="Focused leg" id="legBtns"></div>
+        <div class="seg"><button id="ref" aria-pressed="true">Ref path</button></div>
+      </div>
+      <canvas id="stage" aria-label="Animated linkage. Drag bars to change their lengths, drag the ring around the crank to turn it, drag empty space to scrub time."></canvas>
+      <div class="status" id="status"></div>
+      <div class="legend">
+        <span><span class="sw" style="background:var(--teal)"></span>foot on ground</span>
+        <span><span class="sw" style="background:var(--red)"></span>linkage jams</span>
+        <span><span class="sw" style="background:var(--amber)"></span>no foot down</span>
+        <span><span class="dash" style="border-color:var(--red)"></span>Jansen's path</span>
+        <span><span class="dash" style="border-color:var(--blue)"></span>path before this drag</span>
+        <span><span class="sw" style="background:var(--blue)"></span>far-side legs</span>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Plate">
+      <div class="ph"><h2>Plate: one crank turn in 16 exposures</h2><span class="note">Tap an exposure to stop there.</span></div>
+      <canvas id="plate"></canvas>
+    </section>
+
+    <section class="panel" aria-label="Footfall diagram">
+      <div class="ph">
+        <h2>Footfall, two cycles</h2>
+        <div class="seg" role="group" aria-label="Gait presets" id="gaits"></div>
+      </div>
+      <canvas id="foot" aria-label="Footfall diagram. Drag a leg's row sideways to change when that leg strikes."></canvas>
+      <div class="legend"><span>Drag a row sideways to retime that leg. Bottom row counts feet on the ground.</span></div>
+    </section>
+  </div>
+
+  <div class="col">
+    <section class="panel" aria-label="Measures">
+      <div class="ph"><h2>Measures of the focused leg</h2><span class="note">change from Jansen</span></div>
+      <div class="stats" id="stats"></div>
+    </section>
+
+    <section class="panel" aria-label="Bars">
+      <div class="ph"><h2>Bars (units)</h2>
+        <div class="seg"><button id="undo">Undo</button><button id="reset">Holy numbers</button></div>
+      </div>
+      <table>
+        <thead><tr><th>Bar</th><th>Length</th><th>vs Jansen</th><th>Joins</th></tr></thead>
+        <tbody id="bars"></tbody>
+      </table>
+      <div class="legend"><span>Drag a length sideways, or focus it and use the arrow keys (Shift for 1.0).</span></div>
+    </section>
+
+    <section class="panel" aria-label="History">
+      <div class="ph"><h2>Edits</h2><span class="note">Tap one to return to it.</span></div>
+      <div id="hist"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const COL = {paper:'#fff', ink:'#000', teal:'#19e6c8', amber:'#ffd23f', red:'#ff2e2e', blue:'#3b82f6', tint:'rgba(59,130,246,.10)'};
+const FONT = "'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace";
+const HOLY = {a:38, b:41.5, c:39.3, d:40.1, e:55.8, f:39.4, g:36.7, h:65.7, i:49, j:50, k:61.9, l:7.8, m:15};
+const KEYS = ['a','b','c','d','e','f','g','h','i','j','k','l','m'];
+const BARS = {a:['B','A'], l:['A','O'], m:['O','M'], j:['M','J1'], b:['B','J1'], e:['J1','J3'], d:['B','J3'],
+              c:['B','J2'], k:['M','J2'], f:['J3','J4'], g:['J2','J4'], h:['J4','F'], i:['J2','F']};
+const ROLE = {a:'frame, across', l:'frame, drop', m:'crank', b:'pivot to top', j:'crank to top', c:'pivot to knee',
+              k:'crank to knee', d:'pivot to back', e:'top to back', f:'back to shin', g:'knee to shin', h:'shin to foot', i:'knee to foot'};
+const JOINT_OF = {a:'B', l:'B', m:'M', b:'J1', j:'J1', c:'J2', k:'J2', d:'J3', e:'J3', f:'J4', g:'J4', h:'F', i:'F'};
+const JOINT_DEF = {J1:['B','b','M','j',1], J2:['B','c','M','k',-1], J3:['B','d','J1','e',1], J4:['J3','f','J2','g',-1], F:['J4','h','J2','i',-1]};
+const JOINT_NAME = {J1:'top joint', J2:'knee', J3:'back joint', J4:'shin joint', F:'foot'};
+const ORDER = ['J1','J2','J3','J4','F'];
+const N = 360, TAU = Math.PI * 2;
+const GAITS = {
+  Walk:   {LF:.25, RF:.75, LH:0,   RH:.5},
+  Trot:   {LF:0,   RF:.5,  LH:.5,  RH:0},
+  Pace:   {LF:0,   RF:.5,  LH:0,   RH:.5},
+  Gallop: {LF:.5,  RF:.6,  LH:0,   RH:.1},
+  Bound:  {LF:0,   RF:0,   LH:.5,  RH:.5}
+};
+
+// ---------- linkage ----------
+function cc(P, r0, Q, r1, s) {
+  const dx = Q.x - P.x, dy = Q.y - P.y, d = Math.hypot(dx, dy);
+  if (d < 1e-9 || d > r0 + r1 || d < Math.abs(r0 - r1)) return null;
+  const a = (r0*r0 - r1*r1 + d*d) / (2*d), h = Math.sqrt(Math.max(0, r0*r0 - a*a));
+  const ux = dx/d, uy = dy/d, mx = P.x + a*ux, my = P.y + a*uy;
+  return {x: mx - s*h*uy, y: my + s*h*ux};
+}
+function gapOf(P, r0, Q, r1) {
+  const d = Math.hypot(Q.x - P.x, Q.y - P.y);
+  return d > r0 + r1 ? d - r0 - r1 : Math.abs(r0 - r1) - d;
+}
+function solve(G, th) {
+  const p = {O:{x:0,y:0}, B:{x:-G.a,y:-G.l}, A:{x:0,y:-G.l}, M:{x:G.m*Math.cos(th), y:G.m*Math.sin(th)}};
+  for (const J of ORDER) {
+    const [p0, r0, p1, r1, s] = JOINT_DEF[J];
+    const q = cc(p[p0], G[r0], p[p1], G[r1], s);
+    if (!q) { p.fail = J; p.gap = gapOf(p[p0], G[r0], p[p1], G[r1]); return p; }
+    p[J] = q;
+  }
+  return p;
+}
+function solveLeg(G, phi, mirror) {
+  const p = solve(G, mirror ? Math.PI - phi : phi);
+  if (mirror) for (const k in p) if (p[k] && typeof p[k] === 'object') p[k] = {x: -p[k].x, y: p[k].y};
+  return p;
+}
+const kIdx = ang => ((Math.round(ang / TAU * N) % N) + N) % N;
+
+function analyze(G) {
+  const fx = new Float64Array(N), fy = new Float64Array(N), ok = new Uint8Array(N), failJ = new Array(N).fill(null), gap = new Float64Array(N);
+  let minY = Infinity, maxY = -Infinity, valid = 0;
+  for (let k = 0; k < N; k++) {
+    const p = solve(G, TAU * k / N);
+    if (p.F) { ok[k] = 1; fx[k] = p.F.x; fy[k] = p.F.y; valid++; minY = Math.min(minY, p.F.y); maxY = Math.max(maxY, p.F.y); }
+    else { failJ[k] = p.fail; gap[k] = p.gap; }
+  }
+  if (!valid) { minY = -90; maxY = -70; }
+  const lift = maxY - minY, tol = Math.max(0.6, 0.05 * lift);
+  const contact = new Uint8Array(N);
+  for (let k = 0; k < N; k++) contact[k] = ok[k] && fy[k] < minY + tol ? 1 : 0;
+  let sv = 0, nv = 0, cxMin = Infinity, cxMax = -Infinity, sp = [];
+  for (let k = 0; k < N; k++) {
+    if (!contact[k]) continue;
+    cxMin = Math.min(cxMin, fx[k]); cxMax = Math.max(cxMax, fx[k]);
+    const n = (k + 1) % N;
+    if (contact[n]) { const v = fx[n] - fx[k]; sv += v; nv++; sp.push(Math.abs(v)); }
+  }
+  const mean = nv ? Math.abs(sv / nv) : 0;
+  const spin = sv <= 0 ? 1 : -1;
+  const speed = mean / (TAU / N);
+  sp.sort((x, y) => x - y);
+  const lo = sp.length ? sp[Math.floor(sp.length * .1)] : 0, hi = sp.length ? sp[Math.floor(sp.length * .9)] : 0;
+  const ripple = mean ? (hi - lo) / mean : 0;
+  const duty = contact.reduce((s, c) => s + c, 0) / N;
+  const runs = [];
+  for (let k = 0; k < N; k++) {
+    if (!failJ[k]) continue;
+    const last = runs[runs.length - 1];
+    if (last && last.end === k - 1 && last.j === failJ[k]) { last.end = k; last.gap = Math.max(last.gap, gap[k]); }
+    else runs.push({j: failJ[k], start: k, end: k, gap: gap[k]});
+  }
+  return {fx, fy, ok, contact, minY, maxY, lift, duty, speed, spin, ripple,
+          stride: isFinite(cxMax) ? cxMax - cxMin : 0, locked: (N - valid) / N, runs, valid};
+}
+
+function legTable(A, leg) {
+  const cT = new Uint8Array(N), lT = new Uint8Array(N), onsets = [];
+  const idxAt = k => { const phi = TAU * (A.spin * k / N + leg.phase); return leg.mirror ? kIdx(Math.PI - phi) : kIdx(phi); };
+  for (let k = 0; k < N; k++) { const i = idxAt(k); cT[k] = A.contact[i]; lT[k] = A.ok[i] ? 0 : 1; }
+  for (let k = 0; k < N; k++) if (cT[k] && !cT[(k - 1 + N) % N]) { const i = idxAt(k); onsets.push({k, fx: A.fx[i] * (leg.mirror ? -1 : 1)}); }
+  return {cT, lT, onsets};
+}
+
+// ---------- state ----------
+const S = {
+  G: {...HOLY}, live: null, A: null, Ac: null, AH: analyze(HOLY), LT: [],
+  T: 0.6, playing: true, slow: false, z: 0, zT: 0, focus: 1, ref: true,
+  hover: null, drag: null,
+  legs: [
+    {id:'LF', ox: 62, phase: .25, mirror:false, near:false},
+    {id:'RF', ox: 62, phase: .75, mirror:false, near:true},
+    {id:'LH', ox:-64, phase: 0,   mirror:false, near:false},
+    {id:'RH', ox:-64, phase: .5,  mirror:false, near:true}
+  ],
+  hist: [], hi: 0
+};
+const cur = () => S.live || S.G;
+function recompute() {
+  S.A = analyze(cur());
+  if (!S.live) S.Ac = S.A;
+  S.LT = S.legs.map(l => legTable(S.A, l));
+}
+function pushHist(G, label) {
+  S.hist = S.hist.slice(0, S.hi + 1);
+  S.hist.push({G: {...G}, label, A: analyze(G)});
+  S.hi = S.hist.length - 1;
+  if (S.hist.length > 60) { S.hist.shift(); S.hi--; }
+  renderHist();
+}
+function setG(G, label) {
+  S.G = {...G}; S.live = null; recompute();
+  if (label) pushHist(S.G, label);
+  renderBars(); renderStats();
+}
+
+// ---------- helpers ----------
+const lerp = (a, b, t) => a + (b - a) * t;
+const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const fmt = v => v.toFixed(1);
+const sgn = v => (v > 0 ? '+' : v < 0 ? '−' : '±') + Math.abs(v).toFixed(1);
+function sizeCanvas(c, h) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = c.clientWidth; const hh = h || c.clientHeight;
+  if (h) c.style.height = h + 'px';
+  if (c.width !== Math.round(w * dpr) || c.height !== Math.round(hh * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(hh * dpr); }
+  const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return {x, W: w, H: hh};
+}
+function distSeg(px, py, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y, L = dx*dx + dy*dy || 1;
+  const t = Math.max(0, Math.min(1, ((px - a.x)*dx + (py - a.y)*dy) / L));
+  return Math.hypot(px - a.x - t*dx, py - a.y - t*dy);
+}
+const uNow = () => (((S.T / TAU) % 1) + 1) % 1;
+
+// ---------- stage ----------
+const stage = document.getElementById('stage');
+function view(W, H) {
+  const A = S.A, fit = Math.min(W / 340, H / 178);
+  const e = ss(0.05, 0.6, S.z);
+  const s = fit * (1 + 0.65 * S.z);
+  const leg = S.legs[S.focus], bx = A.speed * S.T;
+  const cxB = bx - 12, cyB = (A.minY + 36) / 2 - 2;
+  const cxL = bx + leg.ox + (leg.mirror ? 30 : -30), cyL = (A.minY + 36) / 2;
+  const cx = lerp(cxB, cxL, e), cy = lerp(cyB, cyL, e);
+  return {s, cx, cy, W, H, bx, X: x => W/2 + (x - cx) * s, Y: y => H/2 - (y - cy) * s};
+}
+function legPose(i, T) {
+  const leg = S.legs[i];
+  return solveLeg(cur(), S.A.spin * T + TAU * leg.phase, leg.mirror);
+}
+function screenPts(v, p, ox, bx) {
+  const o = {};
+  for (const k in p) if (p[k] && typeof p[k] === 'object') o[k] = {x: v.X(bx + ox + p[k].x), y: v.Y(p[k].y)};
+  return o;
+}
+function drawLegShape(x, P, o) {
+  x.save();
+  x.lineCap = 'round'; x.lineJoin = 'round';
+  if (o.fill) {
+    x.fillStyle = COL.tint;
+    for (const tri of [['B','J1','J3'], ['J2','J4','F']]) {
+      if (tri.every(k => P[k])) { x.beginPath(); x.moveTo(P[tri[0]].x, P[tri[0]].y); x.lineTo(P[tri[1]].x, P[tri[1]].y); x.lineTo(P[tri[2]].x, P[tri[2]].y); x.closePath(); x.fill(); }
+    }
+  }
+  for (const k of KEYS) {
+    const [a, b] = BARS[k]; if (!P[a] || !P[b]) continue;
+    const frame = k === 'a' || k === 'l';
+    if (frame && !o.frame) continue;
+    x.strokeStyle = o.col; x.lineWidth = o.w;
+    if (o.hot === k) { x.strokeStyle = COL.blue; x.lineWidth = o.w + 3; }
+    x.setLineDash(frame ? [4, 4] : []);
+    x.beginPath(); x.moveTo(P[a].x, P[a].y); x.lineTo(P[b].x, P[b].y); x.stroke();
+  }
+  x.setLineDash([]);
+  if (o.joints) {
+    for (const k of ['M','J1','J2','J3','J4','F']) if (P[k]) {
+      x.beginPath(); x.arc(P[k].x, P[k].y, o.jr, 0, TAU); x.fillStyle = COL.paper; x.fill(); x.strokeStyle = o.col; x.lineWidth = 1.2; x.stroke();
+    }
+    for (const k of ['B','O']) { x.fillStyle = o.col; x.fillRect(P[k].x - o.jr, P[k].y - o.jr, o.jr*2, o.jr*2); }
+  }
+  x.restore();
+}
+function drawPath(x, v, A, ox, mirror, bx, style) {
+  const fl = mirror ? -1 : 1;
+  x.save(); x.lineJoin = 'round';
+  if (style.contact) {
+    x.strokeStyle = COL.teal; x.lineWidth = 6; x.beginPath(); let on = false;
+    for (let k = 0; k <= N; k++) {
+      const i = k % N;
+      if (A.contact[i]) { const X = v.X(bx + ox + fl * A.fx[i]), Y = v.Y(A.fy[i]); on ? x.lineTo(X, Y) : x.moveTo(X, Y); on = true; } else on = false;
+    }
+    x.stroke();
+  }
+  x.strokeStyle = style.col; x.lineWidth = style.w; x.setLineDash(style.dash || []);
+  x.beginPath(); let on = false;
+  for (let k = 0; k <= N; k++) {
+    const i = k % N;
+    if (A.ok[i]) { const X = v.X(bx + ox + fl * A.fx[i]), Y = v.Y(A.fy[i]); on ? x.lineTo(X, Y) : x.moveTo(X, Y); on = true; } else on = false;
+  }
+  x.stroke(); x.restore();
+}
+
+let lastV = null, lastPose = null;
+function drawStage() {
+  const {x, W, H} = sizeCanvas(stage);
+  const v = view(W, H); lastV = v;
+  const A = S.A, G = cur(), bx = v.bx, s = v.s;
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  x.font = `11px ${FONT}`; x.textBaseline = 'middle';
+  const gy = v.Y(A.minY);
+  const u = uNow(), kNow = Math.floor(u * N) % N;
+
+  // airborne wash
+  const sup = S.LT.reduce((n, t) => n + t.cT[kNow], 0);
+  if (sup === 0) { x.fillStyle = COL.amber; x.fillRect(0, gy, W, H - gy); }
+
+  // ground + ticks
+  x.strokeStyle = COL.ink; x.lineWidth = 1.5; x.beginPath(); x.moveTo(0, gy); x.lineTo(W, gy); x.stroke();
+  const wx0 = v.cx - W / 2 / s, wx1 = v.cx + W / 2 / s;
+  x.lineWidth = 1; x.fillStyle = COL.ink; x.textAlign = 'center';
+  for (let t = Math.floor(wx0 / 10) * 10; t <= wx1; t += 10) {
+    const X = v.X(t), big = Math.round(t) % 50 === 0;
+    x.beginPath(); x.moveTo(X, gy); x.lineTo(X, gy + (big ? 7 : 3)); x.stroke();
+    if (big && s * 50 > 34) x.fillText(String(Math.round(t)), X, H - 9);
+  }
+
+  // footfall plants, Muybridge style
+  const plants = [];
+  const n0 = Math.floor(S.T / TAU);
+  S.legs.forEach((leg, li) => {
+    for (let n = n0 - 6; n <= n0; n++) for (const on of S.LT[li].onsets) {
+      const Tn = TAU * (n + on.k / N);
+      if (Tn <= S.T + 1e-9) plants.push({x: A.speed * Tn + leg.ox + on.fx, id: leg.id, near: leg.near});
+    }
+  });
+  plants.sort((a, b) => a.x - b.x);
+  x.textAlign = 'center';
+  let prevX = null;
+  for (const p of plants) {
+    const X = v.X(p.x); if (X < -40 || X > W + 40) { prevX = p.x; continue; }
+    x.strokeStyle = p.near ? COL.ink : COL.blue; x.lineWidth = 1;
+    x.beginPath(); x.moveTo(X, gy); x.lineTo(X, gy + 18); x.stroke();
+    x.fillStyle = p.near ? COL.ink : COL.blue; x.fillText(p.id, X, gy + 26);
+    if (prevX !== null && (p.x - prevX) * s > 40 && S.z < 0.4) {
+      x.fillStyle = COL.ink; x.fillText(fmt(p.x - prevX), v.X((p.x + prevX) / 2), gy + 13);
+    }
+    prevX = p.x;
+  }
+
+  // poses
+  const poses = S.legs.map((_, i) => legPose(i, S.T));
+  lastPose = poses;
+  const focusA = ss(0.15, 0.5, S.z);
+  const fLeg = S.legs[S.focus];
+
+  // focused leg paths + crank ring
+  if (focusA > 0.01) {
+    x.globalAlpha = focusA;
+    if (S.ref && JSON.stringify(G) !== JSON.stringify(HOLY)) drawPath(x, v, S.AH, fLeg.ox, fLeg.mirror, bx, {col: COL.red, w: 1.2, dash: [5, 4]});
+    if (S.live && S.Ac) drawPath(x, v, S.Ac, fLeg.ox, fLeg.mirror, bx, {col: COL.blue, w: 1.5, dash: [3, 3]});
+    drawPath(x, v, A, fLeg.ox, fLeg.mirror, bx, {col: COL.ink, w: 1.4, contact: true});
+    // ring
+    const O = {x: v.X(bx + fLeg.ox), y: v.Y(0)}, R = G.m * s + 12;
+    for (let k = 0; k < N; k += 2) {
+      const phi = TAU * k / N, i = fLeg.mirror ? kIdx(Math.PI - phi) : k;
+      x.strokeStyle = !A.ok[i] ? COL.red : A.contact[i] ? COL.teal : COL.ink;
+      x.lineWidth = !A.ok[i] || A.contact[i] ? 6 : 1;
+      x.beginPath(); x.arc(O.x, O.y, R, -phi, -(phi + TAU * 2.4 / N), true); x.stroke();
+    }
+    const phiNow = A.spin * S.T + TAU * fLeg.phase;
+    x.fillStyle = COL.ink; x.beginPath(); x.arc(O.x + Math.cos(phiNow) * R, O.y - Math.sin(phiNow) * R, 4.5, 0, TAU); x.fill();
+    x.globalAlpha = 1;
+  }
+
+  // far legs
+  const jr = Math.max(2, Math.min(4.5, s * 1.1));
+  S.legs.forEach((leg, i) => { if (!leg.near) drawLegShape(x, screenPts(v, poses[i], leg.ox, bx), {col: COL.blue, w: Math.max(1, s * .35), fill: false, joints: false, frame: false}); });
+
+  // body
+  const hind = S.legs[2], front = S.legs[0];
+  const bL = v.X(bx + hind.ox - G.a - 6), bR = v.X(bx + front.ox + 8), bT = v.Y(6), bB = v.Y(-G.l - 4);
+  x.fillStyle = COL.paper; x.strokeStyle = COL.ink; x.lineWidth = 1.5;
+  x.fillRect(bL, bT, bR - bL, bB - bT); x.strokeRect(bL, bT, bR - bL, bB - bT);
+  // neck and head
+  const nx = bx + front.ox + 8;
+  x.beginPath(); x.moveTo(v.X(nx - 6), v.Y(6)); x.lineTo(v.X(nx + 22), v.Y(46)); x.lineTo(v.X(nx + 44), v.Y(40)); x.lineTo(v.X(nx + 42), v.Y(30)); x.lineTo(v.X(nx + 14), v.Y(6)); x.closePath();
+  x.fill(); x.stroke();
+  // tail
+  x.beginPath(); x.moveTo(v.X(bx + hind.ox - G.a - 6), v.Y(2)); x.lineTo(v.X(bx + hind.ox - G.a - 30), v.Y(-30)); x.stroke();
+
+  // near legs
+  S.legs.forEach((leg, i) => {
+    if (!leg.near) return;
+    const P = screenPts(v, poses[i], leg.ox, bx);
+    const isF = i === S.focus;
+    drawLegShape(x, P, {col: COL.ink, w: Math.max(1.4, s * (isF ? .55 : .45)), fill: true, joints: true, jr, frame: isF && S.z > .3, hot: isF ? S.hover : null});
+  });
+  if (!fLeg.near) {
+    const P = screenPts(v, poses[S.focus], fLeg.ox, bx);
+    x.globalAlpha = Math.max(.35, focusA);
+    drawLegShape(x, P, {col: COL.ink, w: Math.max(1.4, s * .55), fill: true, joints: true, jr, frame: S.z > .3, hot: S.hover});
+    x.globalAlpha = 1;
+  }
+
+  // contact marks under feet
+  S.legs.forEach((leg, i) => {
+    if (!S.LT[i].cT[kNow] || !poses[i].F) return;
+    const X = v.X(bx + leg.ox + poses[i].F.x);
+    x.fillStyle = COL.teal; x.fillRect(X - 9, gy - 2, 18, 5);
+  });
+
+  // focus overlays: labels, numbers, construction
+  const P = screenPts(v, poses[S.focus], fLeg.ox, bx);
+  const labA = ss(0.35, 0.6, S.z), numA = ss(0.75, 0.95, S.z);
+  if (labA > 0.01) {
+    x.globalAlpha = labA; x.textAlign = 'center';
+    for (const k of KEYS) {
+      const [a, b] = BARS[k]; if (!P[a] || !P[b]) continue;
+      const mx = (P[a].x + P[b].x) / 2, my = (P[a].y + P[b].y) / 2;
+      let nx2 = -(P[b].y - P[a].y), ny2 = P[b].x - P[a].x; const L = Math.hypot(nx2, ny2) || 1; nx2 /= L; ny2 /= L;
+      const txt = numA > .5 ? `${k} ${fmt(G[k])}` : k;
+      const off = numA > .5 ? 14 : 10;
+      const tx = mx + nx2 * off, ty = my + ny2 * off;
+      const tw = x.measureText(txt).width + 6;
+      x.fillStyle = S.hover === k ? COL.blue : COL.paper; x.fillRect(tx - tw / 2, ty - 7, tw, 14);
+      x.fillStyle = S.hover === k ? COL.paper : COL.ink; x.font = `${S.hover === k ? 700 : 500} 11px ${FONT}`;
+      x.fillText(txt, tx, ty);
+    }
+    x.globalAlpha = 1;
+  }
+  // construction circles for the joint the hovered bar decides, or the jammed joint
+  const cj = poses[S.focus].fail || (S.hover && JOINT_DEF[JOINT_OF[S.hover]] ? JOINT_OF[S.hover] : null);
+  const conA = poses[S.focus].fail ? Math.max(labA, .9) : numA;
+  if (cj && conA > 0.01) {
+    const [p0, r0, p1, r1, sd] = JOINT_DEF[cj];
+    const pz = poses[S.focus];
+    if (pz[p0] && pz[p1]) {
+      x.globalAlpha = conA;
+      const bad = pz.fail === cj;
+      x.strokeStyle = bad ? COL.red : COL.blue; x.lineWidth = 1;
+      for (const [c, r] of [[p0, r0], [p1, r1]]) { x.beginPath(); x.arc(P[c].x, P[c].y, G[r] * s, 0, TAU); x.stroke(); }
+      if (!bad) {
+        const fl = fLeg.mirror ? -1 : 1;
+        const loc = (q) => q && ({x: v.X(bx + fLeg.ox + q.x), y: v.Y(q.y)});
+        const un = q => fLeg.mirror ? {x: -q.x, y: q.y} : q;
+        const other = cc(un(pz[p0]), G[r0], un(pz[p1]), G[r1], -sd);
+        if (other) {
+          const o = loc(fLeg.mirror ? {x: -other.x, y: other.y} : other);
+          x.beginPath(); x.arc(o.x, o.y, 5, 0, TAU); x.stroke();
+          x.fillStyle = COL.blue; x.textAlign = 'left'; x.fillText('rejected', o.x + 8, o.y);
+        }
+        void fl;
+      } else {
+        x.fillStyle = COL.red; x.textAlign = 'left';
+        x.fillText(`${JOINT_NAME[cj]}: circles miss by ${fmt(pz.gap)}`, P[p0].x + 8, P[p0].y - 14);
+      }
+      x.globalAlpha = 1;
+    }
+  }
+  // focused leg label at overview
+  if (S.z < 0.3 && poses[S.focus].F) {
+    const X = v.X(bx + fLeg.ox + poses[S.focus].F.x);
+    x.fillStyle = COL.ink; x.textAlign = 'center'; x.font = `700 11px ${FONT}`;
+    x.fillText(fLeg.id + ' (focus)', X, gy - 14);
+  }
+  // corner readout
+  x.textAlign = 'left'; x.font = `11px ${FONT}`;
+  const phiDeg = ((((A.spin * S.T + TAU * fLeg.phase) % TAU) + TAU) % TAU) * 360 / TAU;
+  const rd = `crank ${phiDeg.toFixed(0).padStart(3, ' ')}°   cycle ${(S.T / TAU).toFixed(2)}   feet down ${sup}`;
+  x.fillStyle = COL.paper; x.fillRect(4, 4, x.measureText(rd).width + 12, 20); x.strokeStyle = COL.ink; x.lineWidth = 1; x.strokeRect(4.5, 4.5, x.measureText(rd).width + 11, 19);
+  x.fillStyle = COL.ink; x.fillText(rd, 10, 14);
+}
+
+// ---------- plate ----------
+const plate = document.getElementById('plate');
+let plateCells = null;
+function drawPlate() {
+  const W = plate.clientWidth, cols = W < 600 ? 4 : 8, rows = 16 / cols, cw = W / cols, ch = Math.round(cw * 0.74);
+  const {x} = sizeCanvas(plate, ch * rows);
+  x.fillStyle = COL.ink; x.fillRect(0, 0, W, ch * rows);
+  const A = S.A, base = Math.floor(S.T / TAU) * TAU, u = uNow(), kc = Math.floor(u * 16) % 16;
+  plateCells = {cw, ch, base, cols};
+  const G = cur();
+  for (let k = 0; k < 16; k++) {
+    const c = k % cols, r = Math.floor(k / cols), x0 = c * cw, y0 = r * ch, pad = 2;
+    x.fillStyle = COL.paper; x.fillRect(x0 + pad, y0 + pad, cw - pad * 2, ch - pad * 2);
+    const T = base + TAU * k / 16, s = Math.min((cw - 8) / 250, (ch - 14) / 150);
+    const cx = x0 + cw / 2 + 12 * s, gyW = A.minY, cyW = (A.minY + 36) / 2;
+    const X = wx => cx + wx * s, Y = wy => y0 + ch / 2 - 3 - (wy - cyW) * s;
+    x.strokeStyle = COL.ink; x.lineWidth = 1; x.beginPath(); x.moveTo(x0 + 4, Y(gyW)); x.lineTo(x0 + cw - 4, Y(gyW)); x.stroke();
+    const kk = Math.floor((k / 16) * N) % N;
+    const order = [0, 2, 1, 3];
+    for (const i of order) {
+      const leg = S.legs[i], p = solveLeg(G, A.spin * T + TAU * leg.phase, leg.mirror);
+      x.strokeStyle = leg.near ? COL.ink : COL.blue; x.lineWidth = leg.near ? 1.3 : .9;
+      for (const key of KEYS) { if (key === 'a' || key === 'l') continue; const [a, b] = BARS[key]; if (!p[a] || !p[b]) continue;
+        x.beginPath(); x.moveTo(X(leg.ox + p[a].x), Y(p[a].y)); x.lineTo(X(leg.ox + p[b].x), Y(p[b].y)); x.stroke(); }
+      if (p.F && S.LT[i].cT[kk]) { x.fillStyle = COL.teal; x.fillRect(X(leg.ox + p.F.x) - 4, Y(gyW) - 2, 8, 4); }
+      if (p.fail) { x.fillStyle = COL.red; x.fillRect(X(leg.ox) - 3, Y(0) - 3, 6, 6); }
+      if (i === 2) { // body after the far legs, before the near ones
+        x.fillStyle = COL.paper; x.strokeStyle = COL.ink; x.lineWidth = 1;
+        const L = X(S.legs[2].ox - G.a - 6), R = X(S.legs[0].ox + 8);
+        x.fillRect(L, Y(6), R - L, Y(-G.l - 4) - Y(6)); x.strokeRect(L, Y(6), R - L, Y(-G.l - 4) - Y(6));
+      }
+    }
+    const supK = S.LT.reduce((n, t) => n + t.cT[kk], 0);
+    if (supK === 0) { x.fillStyle = COL.amber; x.fillRect(x0 + pad, Y(gyW) + 2, cw - pad * 2, y0 + ch - pad - Y(gyW) - 2); }
+    x.fillStyle = COL.ink; x.font = `italic 11px ${FONT}`; x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+    x.fillText(String(k + 1), x0 + 6, y0 + ch - 6);
+    if (k === kc) { x.strokeStyle = COL.blue; x.lineWidth = 3; x.strokeRect(x0 + pad + 1.5, y0 + pad + 1.5, cw - pad * 2 - 3, ch - pad * 2 - 3); }
+  }
+}
+plate.addEventListener('click', e => {
+  if (!plateCells) return;
+  const r = plate.getBoundingClientRect(), c = Math.floor((e.clientX - r.left) / plateCells.cw), rr = Math.floor((e.clientY - r.top) / plateCells.ch);
+  const k = Math.max(0, Math.min(15, rr * plateCells.cols + c));
+  S.T = plateCells.base + TAU * k / 16 + 1e-6; setPlaying(false);
+});
+
+// ---------- footfall ----------
+const foot = document.getElementById('foot');
+const FL = {lab: 44, rh: 22, top: 6};
+let footGeom = null;
+function drawFoot() {
+  const rows = 5, H = FL.top + rows * FL.rh + 18;
+  const {x, W} = sizeCanvas(foot, H);
+  footGeom = {W, H};
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  const pw = W - FL.lab - 8, X = u => FL.lab + u / 2 * pw;
+  const sup = new Uint8Array(N);
+  for (let k = 0; k < N; k++) sup[k] = S.LT.reduce((n, t) => n + t.cT[k], 0);
+  // airborne bands
+  x.fillStyle = COL.amber;
+  for (let c = 0; c < 2; c++) for (let k = 0; k < N; k++) if (!sup[k]) x.fillRect(X(c + k / N), FL.top, pw / 2 / N + .6, rows * FL.rh);
+  x.font = `11px ${FONT}`; x.textBaseline = 'middle';
+  S.legs.forEach((leg, i) => {
+    const y = FL.top + i * FL.rh;
+    if (i === S.focus) { x.fillStyle = COL.ink; x.fillRect(0, y + 2, FL.lab - 6, FL.rh - 4); x.fillStyle = COL.paper; }
+    else x.fillStyle = leg.near ? COL.ink : COL.blue;
+    x.textAlign = 'left'; x.fillText(leg.id, 6, y + FL.rh / 2);
+    const t = S.LT[i];
+    for (let c = 0; c < 2; c++) {
+      let k = 0;
+      while (k < N) {
+        if (t.cT[k] || t.lT[k]) {
+          const lock = t.lT[k]; let e = k; while (e < N && (lock ? t.lT[e] : t.cT[e])) e++;
+          x.fillStyle = lock ? COL.red : (leg.near ? COL.ink : COL.blue);
+          x.fillRect(X(c + k / N), y + 5, X(c + e / N) - X(c + k / N), FL.rh - 10);
+          k = e;
+        } else k++;
+      }
+    }
+    x.strokeStyle = COL.ink; x.lineWidth = .5; x.beginPath(); x.moveTo(FL.lab, y + FL.rh); x.lineTo(W - 8, y + FL.rh); x.stroke();
+  });
+  // support row
+  const ys = FL.top + 4 * FL.rh;
+  x.fillStyle = COL.ink; x.textAlign = 'left'; x.fillText('DOWN', 6, ys + FL.rh / 2);
+  x.beginPath();
+  for (let c = 0; c < 2; c++) for (let k = 0; k <= N; k++) {
+    const kk = k % N, X0 = X(c + k / N), Y0 = ys + FL.rh - 3 - sup[kk] / 4 * (FL.rh - 6);
+    (c === 0 && k === 0) ? x.moveTo(X0, Y0) : x.lineTo(X0, Y0);
+  }
+  x.lineWidth = 1.5; x.stroke();
+  // axis
+  x.textAlign = 'center'; x.fillStyle = COL.ink;
+  for (let q = 0; q <= 8; q++) { const xx = X(q / 4); x.fillRect(xx, FL.top + rows * FL.rh, 1, 4); if (q % 2 === 0) x.fillText(String(q / 4), xx, H - 6); }
+  // playhead
+  const u = uNow();
+  x.fillStyle = COL.blue;
+  for (const c of [0, 1]) x.fillRect(X(c + u) - 1, FL.top, 2, rows * FL.rh);
+}
+foot.addEventListener('pointerdown', e => {
+  if (!footGeom) return;
+  const r = foot.getBoundingClientRect(), y = e.clientY - r.top, xx = e.clientX - r.left;
+  const row = Math.floor((y - FL.top) / FL.rh);
+  if (row < 0 || row > 3) return;
+  if (xx < FL.lab) { setFocus(row); return; }
+  foot.setPointerCapture(e.pointerId);
+  S.footDrag = {row, x0: xx, p0: S.legs[row].phase, pw: footGeom.W - FL.lab - 8};
+  setFocus(row);
+});
+foot.addEventListener('pointermove', e => {
+  const d = S.footDrag; if (!d) return;
+  const xx = e.clientX - foot.getBoundingClientRect().left;
+  const du = (xx - d.x0) / d.pw * 2;
+  let p = d.p0 - S.A.spin * du; p = ((p % 1) + 1) % 1;
+  S.legs[d.row].phase = Math.round(p * 100) / 100;
+  S.LT = S.legs.map(l => legTable(S.A, l)); renderStats(); markGait();
+});
+foot.addEventListener('pointerup', () => { S.footDrag = null; });
+
+const gaitBox = document.getElementById('gaits');
+for (const name of Object.keys(GAITS)) {
+  const b = document.createElement('button'); b.textContent = name; b.dataset.g = name; b.setAttribute('aria-pressed', 'false');
+  b.onclick = () => { for (const l of S.legs) l.phase = GAITS[name][l.id]; S.LT = S.legs.map(l => legTable(S.A, l)); renderStats(); markGait(); };
+  gaitBox.appendChild(b);
+}
+function markGait() {
+  for (const b of gaitBox.children) { const g = GAITS[b.dataset.g]; b.setAttribute('aria-pressed', String(S.legs.every(l => Math.abs(l.phase - g[l.id]) < 1e-6))); }
+}
+
+// ---------- stage interaction ----------
+function hitTest(px, py) {
+  if (!lastV || !lastPose || S.z < 0.25) return null;
+  const v = lastV, leg = S.legs[S.focus], p = lastPose[S.focus], G = cur();
+  const O = {x: v.X(v.bx + leg.ox), y: v.Y(0)}, R = G.m * v.s + 12;
+  if (Math.abs(Math.hypot(px - O.x, py - O.y) - R) < 10) return {type: 'ring', O};
+  const P = screenPts(v, p, leg.ox, v.bx);
+  let best = null;
+  for (const k of KEYS) {
+    const [a, b] = BARS[k]; if (!P[a] || !P[b]) continue;
+    const d = distSeg(px, py, P[a], P[b]);
+    if (d < 9 && (!best || d < best.d)) best = {type: 'bar', k, d, a: P[a], b: P[b]};
+  }
+  return best;
+}
+function legAt(px, py) {
+  if (!lastV || !lastPose) return -1;
+  let best = -1, bd = 26;
+  lastPose.forEach((p, i) => {
+    const P = screenPts(lastV, p, S.legs[i].ox, lastV.bx);
+    for (const k of KEYS) { const [a, b] = BARS[k]; if (!P[a] || !P[b]) continue; const d = distSeg(px, py, P[a], P[b]); if (d < bd) { bd = d; best = i; } }
+  });
+  return best;
+}
+const wrapPi = a => Math.atan2(Math.sin(a), Math.cos(a));
+stage.addEventListener('pointerdown', e => {
+  const r = stage.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+  stage.setPointerCapture(e.pointerId);
+  const h = hitTest(px, py);
+  if (h && h.type === 'ring') { S.drag = {mode: 'ring', O: h.O, wasPlaying: S.playing}; setPlaying(false); ringTo(px, py); return; }
+  if (h && h.type === 'bar') {
+    const dx = h.b.x - h.a.x, dy = h.b.y - h.a.y, L = Math.hypot(dx, dy) || 1;
+    const nearB = Math.hypot(px - h.b.x, py - h.b.y) < Math.hypot(px - h.a.x, py - h.a.y);
+    S.drag = {mode: 'bar', k: h.k, ux: dx / L, uy: dy / L, sign: nearB ? 1 : -1, L0: S.G[h.k], x0: px, y0: py, s: lastV.s};
+    S.hover = h.k; syncRows(); return;
+  }
+  S.drag = {mode: 'scrub', x0: px, y0: py, T0: S.T, wasPlaying: S.playing, moved: false};
+});
+function ringTo(px, py) {
+  const d = S.drag, leg = S.legs[S.focus];
+  const phi = Math.atan2(-(py - d.O.y), px - d.O.x);
+  const phiNow = S.A.spin * S.T + TAU * leg.phase;
+  S.T += S.A.spin * wrapPi(phi - phiNow);
+}
+stage.addEventListener('pointermove', e => {
+  const r = stage.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+  const d = S.drag;
+  if (!d) {
+    const h = hitTest(px, py);
+    stage.className = h ? (h.type === 'bar' ? 'on-bar' : 'on-ring') : '';
+    const k = h && h.type === 'bar' ? h.k : null;
+    if (k !== S.hover) { S.hover = k; syncRows(); }
+    return;
+  }
+  if (d.mode === 'ring') { ringTo(px, py); return; }
+  if (d.mode === 'bar') {
+    const dl = d.sign * ((px - d.x0) * d.ux + (py - d.y0) * d.uy) / d.s;
+    const val = Math.round(Math.max(1, Math.min(140, d.L0 + dl)) * 10) / 10;
+    S.live = {...S.G, [d.k]: val}; recompute(); renderBars(); renderStats(); return;
+  }
+  if (d.mode === 'scrub') {
+    const dx = px - d.x0;
+    if (Math.abs(dx) > 4 || Math.abs(py - d.y0) > 4) { d.moved = true; setPlaying(false); }
+    if (d.moved) { const sp = S.A.speed > .01 ? S.A.speed : 1; S.T = d.T0 - dx / (lastV.s * sp); }
+  }
+});
+stage.addEventListener('pointerup', e => {
+  const d = S.drag; S.drag = null;
+  if (!d) return;
+  if (d.mode === 'bar' && S.live) {
+    const nv = S.live[d.k];
+    if (nv !== d.L0) setG(S.live, `${d.k} ${fmt(d.L0)} → ${fmt(nv)}`); else { S.live = null; recompute(); renderBars(); renderStats(); }
+  }
+  if (d.mode === 'scrub' && !d.moved) {
+    const r = stage.getBoundingClientRect(), i = legAt(e.clientX - r.left, e.clientY - r.top);
+    if (i >= 0) setFocus(i);
+  }
+});
+stage.addEventListener('pointerleave', () => { if (!S.drag && S.hover) { S.hover = null; syncRows(); } });
+stage.addEventListener('wheel', e => {
+  e.preventDefault();
+  S.z = S.zT = Math.max(0, Math.min(1, S.z - e.deltaY * 0.0015)); markZoom();
+}, {passive: false});
+
+// ---------- controls ----------
+const playBtn = document.getElementById('play');
+function setPlaying(on) {
+  S.playing = on;
+  playBtn.innerHTML = on ? '<span class="icon-pause"></span><span>Pause</span>' : '<span class="icon-play"></span><span>Play</span>';
+  playBtn.setAttribute('aria-label', on ? 'Pause' : 'Play');
+}
+playBtn.onclick = () => setPlaying(!S.playing);
+const slowBtn = document.getElementById('slow');
+slowBtn.onclick = () => { S.slow = !S.slow; slowBtn.setAttribute('aria-pressed', String(S.slow)); };
+const refBtn = document.getElementById('ref');
+refBtn.onclick = () => { S.ref = !S.ref; refBtn.setAttribute('aria-pressed', String(S.ref)); };
+const zBtns = [...document.querySelectorAll('[data-z]')];
+zBtns.forEach(b => b.onclick = () => { S.zT = +b.dataset.z; markZoom(+b.dataset.z); });
+function markZoom(target) {
+  const z = target !== undefined ? target : S.z;
+  const lvl = z < 0.3 ? 0 : z < 0.8 ? 1 : 2;
+  zBtns.forEach((b, i) => b.setAttribute('aria-pressed', String(i === lvl)));
+  if (S.A) renderStats();
+}
+const legBox = document.getElementById('legBtns');
+S.legs.forEach((l, i) => { const b = document.createElement('button'); b.textContent = l.id; b.onclick = () => setFocus(i); legBox.appendChild(b); });
+function setFocus(i) { S.focus = i; [...legBox.children].forEach((b, j) => b.setAttribute('aria-pressed', String(j === i))); renderStats(); }
+document.getElementById('undo').onclick = () => { if (S.hi > 0) { S.hi--; setG(S.hist[S.hi].G); renderHist(); } };
+document.getElementById('reset').onclick = () => setG(HOLY, 'Holy numbers');
+window.addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('td.val')) return;
+  if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); setPlaying(!S.playing); }
+});
+
+// ---------- bars table ----------
+const barBody = document.getElementById('bars');
+const rowEls = {};
+for (const k of KEYS) {
+  const tr = document.createElement('tr'); tr.className = 'row'; tr.dataset.k = k;
+  tr.innerHTML = `<td class="key">${k}</td><td class="val" tabindex="0" role="slider" aria-label="Length of bar ${k}"></td><td class="dlt"></td><td class="role">${ROLE[k]}</td>`;
+  tr.onmouseenter = () => { S.hover = k; syncRows(); };
+  tr.onmouseleave = () => { if (!S.drag) { S.hover = null; syncRows(); } };
+  const val = tr.querySelector('.val');
+  val.addEventListener('pointerdown', e => {
+    val.setPointerCapture(e.pointerId);
+    S.drag = {mode: 'cell', k, x0: e.clientX, L0: S.G[k]}; S.hover = k; syncRows();
+    if (S.z < 0.3) { S.zT = 0.62; markZoom(0.62); }
+  });
+  val.addEventListener('pointermove', e => {
+    const d = S.drag; if (!d || d.mode !== 'cell') return;
+    const v = Math.round(Math.max(1, Math.min(140, d.L0 + (e.clientX - d.x0) * 0.1)) * 10) / 10;
+    S.live = {...S.G, [k]: v}; recompute(); renderBars(); renderStats();
+  });
+  val.addEventListener('pointerup', () => {
+    const d = S.drag; S.drag = null; if (!d || d.mode !== 'cell') return;
+    if (S.live && S.live[k] !== d.L0) setG(S.live, `${k} ${fmt(d.L0)} → ${fmt(S.live[k])}`); else { S.live = null; recompute(); renderBars(); }
+  });
+  val.addEventListener('focus', () => { S.hover = k; syncRows(); });
+  val.addEventListener('keydown', e => {
+    const st = e.shiftKey ? 1 : 0.1;
+    let dv = 0;
+    if (e.key === 'ArrowUp' || e.key === 'ArrowRight') dv = st;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') dv = -st;
+    if (!dv) return;
+    e.preventDefault();
+    const old = S.G[k], v = Math.round(Math.max(1, Math.min(140, old + dv)) * 10) / 10;
+    setG({...S.G, [k]: v}, `${k} ${fmt(old)} → ${fmt(v)}`);
+  });
+  barBody.appendChild(tr); rowEls[k] = tr;
+}
+function renderBars() {
+  const G = cur();
+  for (const k of KEYS) {
+    const tr = rowEls[k], dv = G[k] - HOLY[k];
+    tr.querySelector('.val').textContent = fmt(G[k]);
+    tr.querySelector('.val').setAttribute('aria-valuenow', G[k]);
+    tr.querySelector('.dlt').innerHTML = Math.abs(dv) < 0.05 ? '·' : `<span class="chg">${sgn(dv)}</span>`;
+  }
+}
+function syncRows() { for (const k of KEYS) rowEls[k].classList.toggle('hot', S.hover === k); }
+
+// ---------- stats ----------
+const statBox = document.getElementById('stats');
+function renderStats() {
+  const A = S.A, H = S.AH;
+  let minSup = 4, air = 0;
+  for (let k = 0; k < N; k++) { const n = S.LT.reduce((a, t) => a + t.cT[k], 0); minSup = Math.min(minSup, n); if (!n) air++; }
+  const cell = (k, v, unit, d) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}<span class="u"> ${unit}</span></div><div class="d">${d}</div></div>`;
+  const dd = (a, b, f = 1) => { const x = (a - b) * f; return Math.abs(x) < 0.05 ? 'same' : sgn(x); };
+  statBox.innerHTML =
+    cell('Stride', fmt(A.stride), 'u', dd(A.stride, H.stride)) +
+    cell('Lift', fmt(A.lift), 'u', dd(A.lift, H.lift)) +
+    cell('Ground time', (A.duty * 100).toFixed(0), '%', dd(A.duty, H.duty, 100)) +
+    cell('Speed ripple', (A.ripple * 100).toFixed(0), '%', dd(A.ripple, H.ripple, 100)) +
+    cell('Jammed', (A.locked * 100).toFixed(0), '% of turn', dd(A.locked, H.locked, 100)) +
+    cell('Fewest feet down', String(minSup), 'of 4', air ? `airborne ${(air / N * 100).toFixed(0)}% of cycle` : 'never airborne');
+  const st = document.getElementById('status');
+  const parts = [];
+  for (const r of A.runs.slice(0, 3)) parts.push(`<span class="jam">${JOINT_NAME[r.j]} cannot close from ${r.start}° to ${r.end}° (circles miss by up to ${fmt(r.gap)} u)</span>`);
+  if (air) parts.push(`<span class="air">All four feet off the ground for ${(air / N * 100).toFixed(0)}% of the cycle</span>`);
+  if (!parts.length) parts.push(S.z < 0.3 ? 'Tap a leg to focus it. Press Leg to see and drag its bars.' : 'Drag any bar to change its length. Drag the ring to turn the crank by hand. Drag empty space to scrub time.');
+  st.innerHTML = parts.join('');
+}
+
+// ---------- history ----------
+const histBox = document.getElementById('hist');
+function thumb(c, A) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1); c.width = 76 * dpr; c.height = 44 * dpr;
+  const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const s = 0.9, cx = 38, cy = 22;
+  const draw = (B, col, dash) => {
+    x.strokeStyle = col; x.lineWidth = 1; x.setLineDash(dash); x.beginPath(); let on = false;
+    for (let k = 0; k <= N; k++) { const i = k % N; if (B.ok[i]) { const X = cx + (B.fx[i] + 37) * s, Y = cy - (B.fy[i] + 80) * s; on ? x.lineTo(X, Y) : x.moveTo(X, Y); on = true; } else on = false; }
+    x.stroke();
+  };
+  draw(S.AH, COL.red, [3, 2]); draw(A, COL.ink, []);
+  if (A.locked > 0) { x.fillStyle = COL.red; x.fillRect(2, 2, 8, 8); }
+}
+function renderHist() {
+  histBox.innerHTML = '';
+  S.hist.slice().reverse().forEach((h, ri) => {
+    const i = S.hist.length - 1 - ri;
+    const b = document.createElement('button'); b.className = 'h' + (i === S.hi ? ' cur' : '');
+    const c = document.createElement('canvas'); thumb(c, h.A);
+    const t = document.createElement('span');
+    t.textContent = `${i + 1}. ${h.label} · stride ${fmt(h.A.stride)}${h.A.locked ? ' · jams' : ''}`;
+    b.append(c, t);
+    b.onclick = () => { S.hi = i; setG(h.G); renderHist(); };
+    histBox.appendChild(b);
+  });
+  document.getElementById('undo').disabled = S.hi <= 0;
+}
+
+// ---------- loop ----------
+let last = performance.now();
+const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (S.playing && !(S.drag && S.drag.mode !== 'bar' && S.drag.mode !== 'cell')) S.T += dt * (S.slow ? 0.35 : 1.5);
+  if (Math.abs(S.zT - S.z) > 0.001) S.z += (S.zT - S.z) * (reduce ? 1 : Math.min(1, dt * 6)); else S.z = S.zT;
+  drawStage(); drawPlate(); drawFoot();
+  requestAnimationFrame(frame);
+}
+recompute();
+pushHist(HOLY, 'Holy numbers');
+setFocus(1); renderBars(); renderStats(); markGait(); setPlaying(!reduce);
+requestAnimationFrame(frame);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => {});
+})();
+</script>

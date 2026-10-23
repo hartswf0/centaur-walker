@@ -1,0 +1,1985 @@
+{
+ "backpack": {
+  "sigma": 9.79,
+  "axle": 899.0534646175444,
+  "rpm": 54,
+  "worst": 0.6257233586241894,
+  "legKg": 0.5673727556533352,
+  "totalKg": 3.9347455113066703,
+  "spread": 2.2177913767908763,
+  "wobble": 16.750220468242887,
+  "ledger": [
+   [
+    "Feet carry the rump",
+    "89%",
+    "warn"
+   ],
+   [
+    "Feet stay planted",
+    "35 mm slide",
+    "warn"
+   ],
+   [
+    "Axle level with your hip",
+    "0.4\u00b0",
+    "ok"
+   ],
+   [
+    "In line with your feet",
+    "-3 mm",
+    "ok"
+   ],
+   [
+    "Same stride as yours",
+    "100%",
+    "ok"
+   ],
+   [
+    "Horse walk timing",
+    "+1%",
+    "ok"
+   ],
+   [
+    "Ground time like a walk",
+    "44%",
+    "bad"
+   ]
+  ],
+  "links": {
+   "j": {
+    "L": 489.49999999999994,
+    "squeeze": 21.413554269809506,
+    "Pcr": 48.62419984666406,
+    "buck": 0.44038882567398413
+   },
+   "k": {
+    "L": 606.001,
+    "squeeze": 19.851509964785315,
+    "Pcr": 31.725697452679192,
+    "buck": 0.6257233586241894
+   },
+   "c": {
+    "L": 384.74699999999996,
+    "squeeze": 29.183068792262922,
+    "Pcr": 78.70591562047028,
+    "buck": 0.37078621806507295
+   },
+   "f": {
+    "L": 385.72599999999994,
+    "squeeze": 26.469199131668613,
+    "Pcr": 78.30690021429317,
+    "buck": 0.338018732183671
+   }
+  },
+  "pins": {
+   "O": {
+    "use": 0.019214500675256846,
+    "peak": 24.9788508778339,
+    "swing": 359.00000000000006,
+    "knocks": 2
+   },
+   "B": {
+    "use": 0.14916241274810607,
+    "peak": 59.66496509924243,
+    "swing": 56.5031791625484,
+    "knocks": 3
+   },
+   "M": {
+    "use": 0.06244712719458475,
+    "peak": 24.9788508778339,
+    "swing": 359.29951571839365,
+    "knocks": 2
+   },
+   "J1": {
+    "use": 0.053533885674523767,
+    "peak": 21.413554269809506,
+    "swing": 43.0905228826557,
+    "knocks": 3
+   },
+   "J2": {
+    "use": 0.11209886679536547,
+    "peak": 44.83954671814619,
+    "swing": 50.669809387767486,
+    "knocks": 2
+   },
+   "J3": {
+    "use": 0.06617299782917153,
+    "peak": 26.469199131668613,
+    "swing": 102.46627856962282,
+    "knocks": 3
+   },
+   "J4": {
+    "use": 0.06617299782917153,
+    "peak": 26.469199131668613,
+    "swing": 121.20411734109379,
+    "knocks": 3
+   }
+  },
+  "stacks": {
+   "O": {
+    "items": [
+     [
+      "shaft collar (left leg) / 60T spur hub (right leg), against the bearing",
+      7.0
+     ],
+     [
+      "Frame: 608 bearing, press fit, flush with inner face",
+      11.0
+     ],
+     [
+      "spacer tube 27.4 long, 12 OD \u00d7 8.5 ID",
+      27.4
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Crank: M8 thin nut (DIN 439, 5 mm) epoxied in a 13 AF hex cut through the OUTER ply layer, flush; 3 mm roll pin across the crank through the rod in the INNER layer, 2.75 from the glue line",
+      11.0
+     ]
+    ],
+    "grip": 50.4,
+    "fastener": "M8 threaded rod, cut to 141, shared by both legs, ends flush with the crank outer faces, cranks 180\u00b0 apart, thread locker"
+   },
+   "B": {
+    "items": [
+     [
+      "M8 bolt head",
+      5.3
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "Frame: flanged bush 8\u00d710\u00d75, flange outward",
+      13.0
+     ],
+     [
+      "spacer tube 25.4 long, 12 OD \u00d7 8.5 ID",
+      25.4
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Top triangle: cheek plates: flanged bush 8\u00d710\u00d75 pressed into each face; foam core \u00d814",
+      38.4
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Link c: cheek plates: flanged bush 8\u00d710\u00d75 pressed into each face; foam core \u00d814",
+      38.4
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "M8 nylock nut",
+      8.0
+     ]
+    ],
+    "grip": 120.4,
+    "fastener": "M8 \u00d7 140 bolt (partly threaded), nylock"
+   },
+   "M": {
+    "items": [
+     [
+      "Crank: M8 thin nut (DIN 439, 5 mm) epoxied in a 13 AF hex cut through the INNER ply layer before gluing",
+      11.0
+     ],
+     [
+      "spacer tube 27.4 long, 12 OD \u00d7 8.5 ID",
+      27.4
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Link j: cheek plates: flanged bush 8\u00d710\u00d75 pressed into each face; foam core \u00d814",
+      38.4
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Link k: cheek plates: flanged bush 8\u00d710\u00d75 pressed into each face; foam core \u00d814",
+      38.4
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "M8 bolt head (outer side)",
+      5.3
+     ]
+    ],
+    "grip": 118.8,
+    "fastener": "M8 \u00d7 120 bolt, cut to 118 so the tip stops 1 mm inside the crank, thread locker"
+   },
+   "J1": {
+    "items": [
+     [
+      "M8 bolt head",
+      5.3
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "Top triangle: cheek plates: flanged bush 8\u00d710\u00d75 pressed into each face; foam core \u00d814",
+      38.4
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Link j: cheek plates: flanged bush 8\u00d710\u00d75 pressed into each face; foam core \u00d814",
+      38.4
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "M8 nylock nut",
+      8.0
+     ]
+    ],
+    "grip": 81.0,
+    "fastener": "M8 \u00d7 100 bolt (partly threaded), nylock"
+   },
+   "J2": {
+    "items": [
+     [
+      "M8 bolt head",
+      5.3
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "Foot triangle: cheek plates: flanged bush 8\u00d710\u00d75 pressed into each face; foam core \u00d814",
+      38.4
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Link c: cheek plates: flanged bush 8\u00d710\u00d75 pressed into each face; foam core \u00d814",
+      38.4
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Link k: cheek plates: flanged bush 8\u00d710\u00d75 pressed into each face; foam core \u00d814",
+      38.4
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "M8 nylock nut",
+      8.0
+     ]
+    ],
+    "grip": 120.4,
+    "fastener": "M8 \u00d7 140 bolt (partly threaded), nylock"
+   },
+   "J3": {
+    "items": [
+     [
+      "M8 bolt head",
+      5.3
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "Link f: cheek plates: flanged bush 8\u00d710\u00d75 pressed into each face; foam core \u00d814",
+      38.4
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Top triangle: cheek plates: flanged bush 8\u00d710\u00d75 pressed into each face; foam core \u00d814",
+      38.4
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "M8 nylock nut",
+      8.0
+     ]
+    ],
+    "grip": 81.0,
+    "fastener": "M8 \u00d7 100 bolt (partly threaded), nylock"
+   },
+   "J4": {
+    "items": [
+     [
+      "M8 bolt head",
+      5.3
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "Link f: cheek plates: flanged bush 8\u00d710\u00d75 pressed into each face; foam core \u00d814",
+      38.4
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Foot triangle: cheek plates: flanged bush 8\u00d710\u00d75 pressed into each face; foam core \u00d814",
+      38.4
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "M8 nylock nut",
+      8.0
+     ]
+    ],
+    "grip": 81.0,
+    "fastener": "M8 \u00d7 100 bolt (partly threaded), nylock"
+   }
+  },
+  "layers": {
+   "order": {
+    "frame": 0,
+    "crank": 1,
+    "j": 2,
+    "k": 3,
+    "c": 2,
+    "f": 0,
+    "up": 1,
+    "lo": 1
+   },
+   "thick": [
+    38.4,
+    38.4,
+    38.4,
+    38.4
+   ],
+   "zInner": [
+    20.0,
+    59.4,
+    98.8,
+    138.2
+   ]
+  },
+  "footZ": 78.6,
+  "humanZ": 61.25000000000001,
+  "drive": {
+   "O": [
+    0.0,
+    899.0534646175444
+   ],
+   "S1": [
+    0.0,
+    859.0534646175444
+   ],
+   "W": [
+    330.0,
+    55.0
+   ],
+   "R": [
+    330.0,
+    137.5
+   ],
+   "Wr": 55.0,
+   "rollR": 27.5,
+   "belt": [
+    [
+     "R",
+     "S1",
+     16,
+     40,
+     793.4351909901538,
+     1642.9439368244093,
+     "GT2 6 mm: closed loop 1650\u20131660 mm or a spliced open belt; sprung toothed idler takes up slack"
+    ]
+   ],
+   "spur": [
+    [
+     "S1",
+     "O",
+     20,
+     60,
+     40.0
+    ]
+   ],
+   "ratio": 7.5,
+   "perTurn": 1295.9069696057898,
+   "shafts": [
+    [
+     "O crank rod",
+     "141",
+     [
+      [
+       "crank (captive nut + roll pin)",
+       "-70 \u2026 -59"
+      ],
+      [
+       "washer",
+       "-59 \u2026 -58"
+      ],
+      [
+       "spacer tube",
+       "-58 \u2026 -31"
+      ],
+      [
+       "frame bearing 608",
+       "-31 \u2026 -20"
+      ],
+      [
+       "shaft collar",
+       "-19 \u2026 -12"
+      ],
+      [
+       "60T spur, hub to the right",
+       "8 \u2026 19"
+      ],
+      [
+       "frame bearing 608",
+       "20 \u2026 31"
+      ],
+      [
+       "spacer tube",
+       "31 \u2026 58"
+      ],
+      [
+       "washer",
+       "58 \u2026 59"
+      ],
+      [
+       "crank (captive nut + roll pin)",
+       "59 \u2026 70"
+      ]
+     ]
+    ],
+    [
+     "S1 shaft, 8 mm steel",
+     "62",
+     [
+      [
+       "frame bearing, left",
+       "-31 \u2026 -20"
+      ],
+      [
+       "nylon washer",
+       "-20 \u2026 -19"
+      ],
+      [
+       "wheel arm (608 in arm)",
+       "-19 \u2026 -8"
+      ],
+      [
+       "40T GT2 pulley",
+       "-6 \u2026 7"
+      ],
+      [
+       "20T spur, hub to the right",
+       "8 \u2026 19"
+      ],
+      [
+       "frame bearing, right",
+       "20 \u2026 31"
+      ]
+     ]
+    ],
+    [
+     "R roller shaft, 8 mm steel",
+     "66",
+     [
+      [
+       "shaft collar",
+       "-26 \u2026 -19"
+      ],
+      [
+       "wheel arm (608 in arm)",
+       "-19 \u2026 -8"
+      ],
+      [
+       "16T GT2 pulley",
+       "-6 \u2026 7"
+      ],
+      [
+       "55 mm roller, locked to shaft with epoxy putty",
+       "8 \u2026 32"
+      ],
+      [
+       "shaft collar",
+       "33 \u2026 40"
+      ]
+     ]
+    ],
+    [
+     "W wheel axle",
+     "M8 \u00d7 70 bolt",
+     [
+      [
+       "wheel arm",
+       "-19 \u2026 -8"
+      ],
+      [
+       "spacer tube 14",
+       "-7 \u2026 7"
+      ],
+      [
+       "110 mm wheel on its own bearings",
+       "8 \u2026 32"
+      ],
+      [
+       "washer + nylock",
+       "33 \u2026 43"
+      ]
+     ]
+    ],
+    [
+     "Tensioner",
+     "M6 \u00d7 30 pivot, M5 \u00d7 30 idler",
+     [
+      [
+       "wheel arm",
+       "-19 \u2026 -8"
+      ],
+      [
+       "tensioner lever (one ply)",
+       "-7 \u2026 -2"
+      ],
+      [
+       "GT2 20T toothed idler, shim to line up with the belt",
+       "-1 \u2026 9"
+      ]
+     ]
+    ]
+   ]
+  },
+  "cut": [
+   [
+    "BP-FRAME",
+    "Frame",
+    "1/4 in ply",
+    4,
+    "436 \u00d7 225",
+    5
+   ],
+   [
+    "BP-CRANK",
+    "Crank",
+    "1/4 in ply",
+    4,
+    "197 \u00d7 50",
+    2
+   ],
+   [
+    "BP-J",
+    "Link j",
+    "1 in EPS",
+    2,
+    "560 \u00d7 70",
+    2
+   ],
+   [
+    "BP-K",
+    "Link k",
+    "1 in EPS",
+    2,
+    "676 \u00d7 70",
+    2
+   ],
+   [
+    "BP-C",
+    "Link c",
+    "1 in EPS",
+    2,
+    "455 \u00d7 70",
+    2
+   ],
+   [
+    "BP-F",
+    "Link f",
+    "1 in EPS",
+    2,
+    "456 \u00d7 70",
+    2
+   ],
+   [
+    "BP-UP",
+    "Top triangle",
+    "1 in EPS",
+    2,
+    "476 \u00d7 462",
+    3
+   ],
+   [
+    "BP-LO",
+    "Foot triangle",
+    "1 in EPS",
+    2,
+    "505 \u00d7 544",
+    2
+   ],
+   [
+    "BP-CHEEK",
+    "Cheek plate \u00d860",
+    "1/4 in ply",
+    52,
+    "\u00d860",
+    1
+   ],
+   [
+    "BP-SPINE-J",
+    "Dowel spine, link j",
+    "1/4 in dowel",
+    2,
+    "413 long",
+    0
+   ],
+   [
+    "BP-SPINE-K",
+    "Dowel spine, link k",
+    "1/4 in dowel",
+    2,
+    "530 long",
+    0
+   ],
+   [
+    "BP-SPINE-C",
+    "Dowel spine, link c",
+    "1/4 in dowel",
+    2,
+    "309 long",
+    0
+   ],
+   [
+    "BP-SPINE-F",
+    "Dowel spine, link f",
+    "1/4 in dowel",
+    2,
+    "310 long",
+    0
+   ],
+   [
+    "BP-ARM",
+    "Wheel arm",
+    "1/4 in ply",
+    2,
+    "390 \u00d7 864",
+    7
+   ],
+   [
+    "BP-TENSION",
+    "Tensioner lever",
+    "1/4 in ply",
+    1,
+    "126 \u00d7 26",
+    3
+   ],
+   [
+    "BP-BLOCK",
+    "Saddle block (holes on the Mounts sheet)",
+    "2\u00d74 lumber (38 \u00d7 89)",
+    1,
+    "140 long",
+    4
+   ],
+   [
+    "BP-DRAWBAR",
+    "Drawbar, rear end flattened 150, front 60 (Mounts sheet)",
+    "3/4 in EMT",
+    1,
+    "840 long",
+    4
+   ],
+   [
+    "BP-LUMBAR",
+    "Lumbar plate (Mounts sheet)",
+    "1/2 in ply",
+    1,
+    "250 \u00d7 150",
+    4
+   ],
+   [
+    "BP-SHAFT-S1",
+    "S1 shaft",
+    "8 mm steel rod",
+    1,
+    "62 long",
+    0
+   ],
+   [
+    "BP-SHAFT-R",
+    "R roller shaft",
+    "8 mm steel rod",
+    1,
+    "66 long",
+    0
+   ],
+   [
+    "BP-ROD-O",
+    "Crank rod",
+    "M8 threaded rod",
+    1,
+    "141 long",
+    0
+   ],
+   [
+    "BP-SPACERS",
+    "Spacer tubes (cut list per pin on the Pin stacks sheet)",
+    "12 OD \u00d7 8.5 ID tube",
+    1,
+    "194 total",
+    0
+   ]
+  ],
+  "buy": [
+   [
+    "EPS foam board 1 in, 2 \u00d7 4 ft",
+    2,
+    8.0
+   ],
+   [
+    "1/4 in birch ply, 2 \u00d7 4 ft",
+    2,
+    15.0
+   ],
+   [
+    "1/2 in ply offcut 250 \u00d7 150",
+    1,
+    3.0
+   ],
+   [
+    "1/4 in hardwood dowel, 36 in",
+    4,
+    1.0
+   ],
+   [
+    "2\u00d74 offcut, 140 mm",
+    1,
+    1.0
+   ],
+   [
+    "3/4 in EMT conduit, 10 ft",
+    1,
+    9.0
+   ],
+   [
+    "wood glue (PVA, foam-safe)",
+    1,
+    5.0
+   ],
+   [
+    "spray adhesive (to stick the printed sheets to stock, foam-safe)",
+    1,
+    8.0
+   ],
+   [
+    "5-minute epoxy (captive nuts)",
+    1,
+    6.0
+   ],
+   [
+    "epoxy putty stick (locks the roller to its shaft)",
+    1,
+    6.0
+   ],
+   [
+    "thread locker, medium",
+    1,
+    6.0
+   ],
+   [
+    "M8 \u00d7 100 bolt",
+    6,
+    0.6
+   ],
+   [
+    "M8 \u00d7 120 bolt",
+    2,
+    0.6
+   ],
+   [
+    "M8 \u00d7 140 bolt",
+    4,
+    0.6
+   ],
+   [
+    "M8 nylock nut",
+    12,
+    0.12
+   ],
+   [
+    "M8 thin nut DIN 439 (captive in the cranks)",
+    4,
+    0.15
+   ],
+   [
+    "roll pin 3 \u00d7 40 (crank to rod)",
+    2,
+    0.3
+   ],
+   [
+    "M8 fender washer 32 mm",
+    24,
+    0.15
+   ],
+   [
+    "nylon washer 8 \u00d7 16 \u00d7 1",
+    24,
+    0.08
+   ],
+   [
+    "flanged nylon bush 8 ID \u00d7 10 OD \u00d7 5, 1 mm flange",
+    56,
+    0.35
+   ],
+   [
+    "tube 12 OD \u00d7 8.5 ID (aluminium or nylon), 194 mm total",
+    1,
+    6.0
+   ],
+   [
+    "M8 threaded rod, 1 m",
+    1,
+    4.0
+   ],
+   [
+    "8 mm steel rod, 300 mm (S1 + R shafts)",
+    1,
+    6.0
+   ],
+   [
+    "8 mm shaft collar with set screw",
+    4,
+    0.8
+   ],
+   [
+    "608-2RS bearing (frame O \u00d72, frame S1 \u00d72, arm S1, arm R)",
+    6,
+    0.9
+   ],
+   [
+    "GT2 20T toothed idler, 5 mm bore, 6 mm belt",
+    1,
+    3.0
+   ],
+   [
+    "110 mm inline skate wheel with bearings (ground wheel)",
+    1,
+    8.0
+   ],
+   [
+    "55 mm aggressive inline wheel (roller, bearings removed)",
+    1,
+    5.0
+   ],
+   [
+    "GT2 pulley 16T, 8 mm bore, 6 mm belt",
+    1,
+    4.0
+   ],
+   [
+    "GT2 pulley 40T, 8 mm bore, 6 mm belt",
+    1,
+    6.0
+   ],
+   [
+    "GT2 6 mm belt: closed loop 1650\u20131700 mm, or 2 m open belt spliced (see Steps)",
+    1,
+    8.0
+   ],
+   [
+    "spur gear module 1, 20T, 8 mm bore, steel",
+    1,
+    6.0
+   ],
+   [
+    "spur gear module 1, 60T, 8 mm bore, steel",
+    1,
+    9.0
+   ],
+   [
+    "M6 \u00d7 80 bolt + nylock (frame\u2013block\u2013frame)",
+    2,
+    0.5
+   ],
+   [
+    "M6 \u00d7 110 bolt + nylock (drawbar to block)",
+    2,
+    0.6
+   ],
+   [
+    "M6 \u00d7 40 bolt + nylock (drawbar to hinge)",
+    2,
+    0.4
+   ],
+   [
+    "M8 \u00d7 70 bolt + nylock (wheel axle)",
+    1,
+    0.6
+   ],
+   [
+    "M6 \u00d7 30 bolt + nylock (lever pivot \u00d71, weight bar \u00d72)",
+    3,
+    0.4
+   ],
+   [
+    "M5 \u00d7 30 bolt + nylock (idler)",
+    1,
+    0.3
+   ],
+   [
+    "3 in steel butt hinge (drawbar pitch pivot)",
+    1,
+    4.0
+   ],
+   [
+    "2 in ratchet straps (lumbar plate to backpack hip belt)",
+    2,
+    6.0
+   ],
+   [
+    "extension spring ~20 N (tensioner) + screw eye",
+    1,
+    2.5
+   ],
+   [
+    "steel flat bar 50 \u00d7 6 mm, 420 long, ~1 kg (wheel down-force)",
+    1,
+    6.0
+   ],
+   [
+    "rubber pad 10 mm, 50 \u00d7 50 (feet)",
+    2,
+    1.0
+   ]
+  ],
+  "steps": [
+   "Print every part sheet at 100% (tiled PDF in the files). Measure the 100 mm bar. Reprint if it is off by more than 1 mm. Join tiles on the crosses.",
+   "Before gluing the crank pairs: cut a 13 mm across-flats hex right through one layer (red hex on the sheet): at M in the inner layer (faces the frame), at O in the outer layer. Epoxy an M8 thin nut (5 mm) in each, flush.",
+   "Glue pairs of 1/4 in ply for frames (\u00d72), cranks (\u00d72) and the wheel arm (\u00d71). Clamp flat overnight.",
+   "Stick the printed sheets to the stock with spray adhesive. Cut foam with a snap blade in two passes or a hot wire. Cut ply with a jigsaw.",
+   "Drill ply on a drill press: \u00d810 for bushes, \u00d822 for 608s (Forstner, flush with the inner face), \u00d88.2 at the crank centres, \u00d86.5 for M6, \u00d85 for the screw eye.",
+   "Cut 6.5 \u00d7 7 mm slots along links j, k, c, f (table saw or router, two passes). Glue the 1/4 in dowel in with PVA. Let dry.",
+   "Cut 52 cheek discs \u00d860 with \u00d810 holes. Drill the foam \u00d814 at each hole. Glue a cheek to each face, lined up on an M8 bolt.",
+   "Press a flanged bush into every \u00d810 hole from the outside face, flange out. Press 608s into the frames (O, S1) and the arm (S1, R).",
+   "Pin B (frame pivot): M8 \u00d7 140 bolt (partly threaded), nylock. Head on the centre side. Inner to outer: Frame / spacer tube 25.4 long, 12 OD \u00d7 8.5 ID / Top triangle / Link c. Tighten until it stops rattling, then back off 1/8 turn.",
+   "Pin J1 (top): M8 \u00d7 100 bolt (partly threaded), nylock. Head on the centre side. Inner to outer: Top triangle / Link j. Tighten until it stops rattling, then back off 1/8 turn.",
+   "Pin J2 (knee): M8 \u00d7 140 bolt (partly threaded), nylock. Head on the centre side. Inner to outer: Foot triangle / Link c / Link k. Tighten until it stops rattling, then back off 1/8 turn.",
+   "Pin J3 (back): M8 \u00d7 100 bolt (partly threaded), nylock. Head on the centre side. Inner to outer: Link f / Top triangle. Tighten until it stops rattling, then back off 1/8 turn.",
+   "Pin J4 (hock): M8 \u00d7 100 bolt (partly threaded), nylock. Head on the centre side. Inner to outer: Link f / Foot triangle. Tighten until it stops rattling, then back off 1/8 turn.",
+   "Pin M (crank pin): M8 \u00d7 120 bolt, cut to 118 so the tip stops 1 mm inside the crank, thread locker. Bolt goes in from the outside, through Crank / spacer tube 27.4 long, 12 OD \u00d7 8.5 ID / Link j / Link k, into the captive nut. Check j and k swing freely.",
+   "Crank rod O: M8 threaded rod, cut to 141, shared by both legs, ends flush with the crank outer faces, cranks 180\u00b0 apart, thread locker. Order is on the Z map. Set the cranks 180\u00b0 apart, then drill 3 mm across each crank through the rod, in the inner ply layer 2.75 from the glue line, and tap in a 3 \u00d7 40 roll pin.",
+   "File a small flat on every shaft where a pulley, spur or collar sits. Tighten each set screw onto its flat with thread locker.",
+   "Fit the 60T spur on the crank rod and the 20T spur + 40T pulley on S1 (positions on the Z map). The gears should mesh with a paper-thin gap.",
+   "Remove the bearings from the 55 mm roller. Slide it on the R shaft and pack the core with epoxy putty, centred. Let it cure.",
+   "Hang the arm on S1. Fit the 110 mm wheel on its M8 \u00d7 70 axle and the R shaft with roller and 16T pulley. The roller sits on top of the wheel. The belt path is 1643 mm: use a 1650\u20131700 mm closed loop, or splice a 2 m open belt (overlap 40 mm teeth-in-teeth, glue with flexible CA, wrap with tape); a clamp joint will not pass the 16T pulley.",
+   "Bolt the tensioner lever to the arm at tp (loose, nylock), pointing up the arm toward S1, the toothed idler at its end inside the belt loop. Hook the spring from the lever to the screw eye at sa so the idler pushes one belt span outward. Shim with washers so the idler lines up with the belt.",
+   "Bolt the saddle block between the frames (2 \u00d7 M6 \u00d7 80 at m1, m2). Flatten both ends of the drawbar (840 mm). Bolt one end on top of the block (2 \u00d7 M6 \u00d7 110), the other to the butt hinge on the lumbar plate.",
+   "Strap the lumbar plate to the backpack hip belt with two ratchet straps. The hinge pin runs side to side so the rig can pitch.",
+   "Drill the steel bar \u00d86.5 at 20 and 390 from one end and bolt it along the arm at w1, w2 (left face). Its weight presses the wheel down about 1 kg.",
+   "Glue a rubber pad under each foot point F.",
+   "Turn the crank one full turn by hand. Nothing catches. Mark any pin that knocks.",
+   "Stand on the rig's right side and push it forward (to your right). The crank turns clockwise and each foot moves backward while it is down. If not, the gear stage is missing or doubled.",
+   "Hang the rump (2 kg) and walk 100 strides. Measure foot slop, sideways push at the foot (10 N), and link k bow. Compare with the Checks sheet."
+  ]
+ },
+ "bike": {
+  "sigma": 6,
+  "axle": 700,
+  "rpm": 60.457718173559485,
+  "worst": 0.6090621710639043,
+  "legKg": 0.9819549995541028,
+  "totalKg": 3.1639099991082054,
+  "spread": 2.0344547048781143,
+  "wobble": 19.193724863756685,
+  "ledger": [
+   [
+    "Feet touch the ground",
+    "no, in the air",
+    "bad"
+   ],
+   [
+    "Foot above the road",
+    "149 mm",
+    "ok"
+   ],
+   [
+    "Shaft clears the tire",
+    "42 mm",
+    "ok"
+   ],
+   [
+    "Roller fits under rack",
+    "39 mm spare",
+    "ok"
+   ],
+   [
+    "Heel clears the leg",
+    "260 mm",
+    "ok"
+   ],
+   [
+    "Legs read as",
+    "walk, 60 rpm",
+    "ok"
+   ]
+  ],
+  "links": {
+   "j": {
+    "L": 300,
+    "squeeze": 42.05121227093823,
+    "Pcr": 364.90120716249817,
+    "buck": 0.11523999221030788
+   },
+   "k": {
+    "L": 371.4,
+    "squeeze": 145.00922683821597,
+    "Pcr": 238.08608337128402,
+    "buck": 0.6090621710639043
+   },
+   "c": {
+    "L": 235.79999999999998,
+    "squeeze": 0,
+    "Pcr": 590.6499996155659,
+    "buck": 0
+   },
+   "f": {
+    "L": 236.39999999999998,
+    "squeeze": 36.02142026095683,
+    "Pcr": 587.6555811192285,
+    "buck": 0.061296823204421334
+   }
+  },
+  "pins": {
+   "O": {
+    "use": 0.1261042754121626,
+    "peak": 163.93555803581137,
+    "swing": 359.00000000000006,
+    "knocks": 1
+   },
+   "B": {
+    "use": 0.46766411522656637,
+    "peak": 187.06564609062656,
+    "swing": 56.5031791625484,
+    "knocks": 3
+   },
+   "M": {
+    "use": 0.1261042754121626,
+    "peak": 163.93555803581137,
+    "swing": 359.29951571839365,
+    "knocks": 1
+   },
+   "J1": {
+    "use": 0.10512803067734558,
+    "peak": 42.05121227093823,
+    "swing": 43.0905228826557,
+    "knocks": 3
+   },
+   "J2": {
+    "use": 0.46766411522656637,
+    "peak": 187.06564609062656,
+    "swing": 50.669809387767486,
+    "knocks": 1
+   },
+   "J3": {
+    "use": 0.09005355065239208,
+    "peak": 36.02142026095683,
+    "swing": 102.46627856962282,
+    "knocks": 3
+   },
+   "J4": {
+    "use": 0.09005355065239208,
+    "peak": 36.02142026095683,
+    "swing": 121.20411734109379,
+    "knocks": 3
+   }
+  },
+  "stacks": {
+   "O": {
+    "items": [
+     [
+      "shaft collar against the bearing (each leg)",
+      7.0
+     ],
+     [
+      "Frame: 608 bearing, press fit, flush with inner face",
+      11.0
+     ],
+     [
+      "spacer tube 2.0 long, 12 OD \u00d7 8.5 ID",
+      2.0
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Crank: M8 thin nut (DIN 439, 5 mm) epoxied in a 13 AF hex cut through the OUTER ply layer, flush; 3 mm roll pin across the crank through the rod in the INNER layer, 2.75 from the glue line",
+      11.0
+     ]
+    ],
+    "grip": 25.0,
+    "fastener": "M8 threaded rod, cut to 370, shared by both legs, ends flush with the crank outer faces, cranks 180\u00b0 apart, thread locker"
+   },
+   "B": {
+    "items": [
+     [
+      "M8 bolt head",
+      5.3
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "Frame: flanged bush 8\u00d710\u00d75, flange outward",
+      13.0
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Top triangle: flanged bush 8\u00d710\u00d75, flange outward",
+      6.5
+     ],
+     [
+      "spacer tube 4.5 long, 12 OD \u00d7 8.5 ID",
+      4.5
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Link c: flanged bush 8\u00d710\u00d75, flange outward",
+      6.5
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "M8 nylock nut",
+      8.0
+     ]
+    ],
+    "grip": 35.7,
+    "fastener": "M8 \u00d7 50 bolt (partly threaded), nylock"
+   },
+   "M": {
+    "items": [
+     [
+      "Crank: M8 thin nut (DIN 439, 5 mm) epoxied in a 13 AF hex cut through the INNER ply layer before gluing",
+      11.0
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Link j: flanged bush 8\u00d710\u00d75, flange outward",
+      6.5
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "spacer tube 10.0 long, 12 OD \u00d7 8.5 ID",
+      10.0
+     ],
+     [
+      "Link k: flanged bush 8\u00d710\u00d75, flange outward",
+      6.5
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "M8 bolt head (outer side)",
+      5.3
+     ]
+    ],
+    "grip": 37.6,
+    "fastener": "M8 \u00d7 40 bolt, cut to 37 so the tip stops 1 mm inside the crank, thread locker"
+   },
+   "J1": {
+    "items": [
+     [
+      "M8 bolt head",
+      5.3
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "Top triangle: flanged bush 8\u00d710\u00d75, flange outward",
+      6.5
+     ],
+     [
+      "spacer tube 4.5 long, 12 OD \u00d7 8.5 ID",
+      4.5
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Link j: flanged bush 8\u00d710\u00d75, flange outward",
+      6.5
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "M8 nylock nut",
+      8.0
+     ]
+    ],
+    "grip": 21.7,
+    "fastener": "M8 \u00d7 35 bolt (partly threaded), nylock"
+   },
+   "J2": {
+    "items": [
+     [
+      "M8 bolt head",
+      5.3
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "Foot triangle: flanged bush 8\u00d710\u00d75, flange outward",
+      6.5
+     ],
+     [
+      "spacer tube 4.5 long, 12 OD \u00d7 8.5 ID",
+      4.5
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Link c: flanged bush 8\u00d710\u00d75, flange outward",
+      6.5
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "spacer tube 10.0 long, 12 OD \u00d7 8.5 ID",
+      10.0
+     ],
+     [
+      "Link k: flanged bush 8\u00d710\u00d75, flange outward",
+      6.5
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "M8 nylock nut",
+      8.0
+     ]
+    ],
+    "grip": 39.2,
+    "fastener": "M8 \u00d7 50 bolt (partly threaded), nylock"
+   },
+   "J3": {
+    "items": [
+     [
+      "M8 bolt head",
+      5.3
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "Link f: flanged bush 8\u00d710\u00d75, flange outward",
+      6.5
+     ],
+     [
+      "spacer tube 6.5 long, 12 OD \u00d7 8.5 ID",
+      6.5
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Top triangle: flanged bush 8\u00d710\u00d75, flange outward",
+      6.5
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "M8 nylock nut",
+      8.0
+     ]
+    ],
+    "grip": 23.7,
+    "fastener": "M8 \u00d7 35 bolt (partly threaded), nylock"
+   },
+   "J4": {
+    "items": [
+     [
+      "M8 bolt head",
+      5.3
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "Link f: flanged bush 8\u00d710\u00d75, flange outward",
+      6.5
+     ],
+     [
+      "spacer tube 6.5 long, 12 OD \u00d7 8.5 ID",
+      6.5
+     ],
+     [
+      "nylon washer 8 \u00d7 16 \u00d7 1",
+      1.0
+     ],
+     [
+      "Foot triangle: flanged bush 8\u00d710\u00d75, flange outward",
+      6.5
+     ],
+     [
+      "M8 fender washer 32 mm",
+      1.6
+     ],
+     [
+      "M8 nylock nut",
+      8.0
+     ]
+    ],
+    "grip": 23.7,
+    "fastener": "M8 \u00d7 35 bolt (partly threaded), nylock"
+   }
+  },
+  "layers": {
+   "order": {
+    "frame": 0,
+    "crank": 1,
+    "j": 2,
+    "k": 3,
+    "c": 2,
+    "f": 0,
+    "up": 1,
+    "lo": 1
+   },
+   "thick": [
+    13.0,
+    11.0,
+    6.5,
+    6.5
+   ],
+   "zInner": [
+    160.0,
+    174.0,
+    186.0,
+    203.5
+   ]
+  },
+  "footZ": 177.25,
+  "humanZ": 61.25000000000001,
+  "drive": {
+   "C": [
+    -190,
+    700
+   ],
+   "R": [
+    -50.00000000000001,
+    724.6696401903691
+   ],
+   "S1": [
+    -87.34321705988808,
+    739.0043581721811
+   ],
+   "S2": [
+    -145.95951975701598,
+    738.6834592297523
+   ],
+   "clear": 15.713740681632657,
+   "hub": [
+    0.0,
+    351
+   ],
+   "r": 351,
+   "rack": 790,
+   "rollR": 26.0,
+   "spur": [
+    [
+     "R",
+     "S1",
+     20,
+     60,
+     40.0
+    ]
+   ],
+   "belt": [
+    [
+     "S1",
+     "S2",
+     20,
+     60,
+     58.61718108210746,
+     200,
+     "GT2 6 mm closed loop 200 mm"
+    ],
+    [
+     "S2",
+     "C",
+     20,
+     60,
+     58.61718108210745,
+     200,
+     "GT2 10 mm closed loop 200 mm (last stage carries the most)"
+    ]
+   ],
+   "ratio": 27,
+   "perTurn": 4410.79608564007,
+   "shafts": [
+    [
+     "C crank rod",
+     "370",
+     [
+      [
+       "crank (captive nut + roll pin)",
+       "-185 \u2026 -174"
+      ],
+      [
+       "washer",
+       "-174 \u2026 -173"
+      ],
+      [
+       "spacer tube",
+       "-173 \u2026 -171"
+      ],
+      [
+       "frame bearing 608",
+       "-171 \u2026 -160"
+      ],
+      [
+       "shaft collar",
+       "-159 \u2026 -152"
+      ],
+      [
+       "drive box outer plate (608)",
+       "-143 \u2026 -132"
+      ],
+      [
+       "60T GT2 pulley, 10 mm belt",
+       "-101 \u2026 -87"
+      ],
+      [
+       "drive box inner plate (608)",
+       "-85 \u2026 -74"
+      ],
+      [
+       "shaft collar",
+       "152 \u2026 159"
+      ],
+      [
+       "frame bearing 608",
+       "160 \u2026 171"
+      ],
+      [
+       "spacer tube",
+       "171 \u2026 173"
+      ],
+      [
+       "washer",
+       "173 \u2026 174"
+      ],
+      [
+       "crank (captive nut + roll pin)",
+       "174 \u2026 185"
+      ]
+     ]
+    ],
+    [
+     "R roller shaft, 8 mm steel",
+     "174",
+     [
+      [
+       "shaft collar",
+       "-150 \u2026 -143"
+      ],
+      [
+       "box outer plate (608)",
+       "-143 \u2026 -132"
+      ],
+      [
+       "20T spur",
+       "-130 \u2026 -120"
+      ],
+      [
+       "box inner plate (608)",
+       "-85 \u2026 -74"
+      ],
+      [
+       "52 mm roller, locked with epoxy putty",
+       "-16 \u2026 16"
+      ],
+      [
+       "shaft collar",
+       "17 \u2026 24"
+      ]
+     ]
+    ],
+    [
+     "S1 shaft, 8 mm steel",
+     "83",
+     [
+      [
+       "shaft collar",
+       "-150 \u2026 -143"
+      ],
+      [
+       "box outer plate (608)",
+       "-143 \u2026 -132"
+      ],
+      [
+       "60T spur",
+       "-130 \u2026 -120"
+      ],
+      [
+       "20T GT2 pulley, 6 mm belt",
+       "-117 \u2026 -103"
+      ],
+      [
+       "box inner plate (608)",
+       "-85 \u2026 -74"
+      ],
+      [
+       "shaft collar",
+       "-74 \u2026 -67"
+      ]
+     ]
+    ],
+    [
+     "S2 shaft, 8 mm steel",
+     "83",
+     [
+      [
+       "shaft collar",
+       "-150 \u2026 -143"
+      ],
+      [
+       "box outer plate (608)",
+       "-143 \u2026 -132"
+      ],
+      [
+       "60T GT2 pulley, 6 mm belt",
+       "-117 \u2026 -103"
+      ],
+      [
+       "20T GT2 pulley, 10 mm belt",
+       "-101 \u2026 -87"
+      ],
+      [
+       "box inner plate (608)",
+       "-85 \u2026 -74"
+      ],
+      [
+       "shaft collar",
+       "-74 \u2026 -67"
+      ]
+     ]
+    ],
+    [
+     "Box standoffs \u00d73",
+     "M6 \u00d7 80 + nylock",
+     [
+      [
+       "outer plate",
+       "-143 \u2026 -132"
+      ],
+      [
+       "spacer tube 47",
+       "-132 \u2026 -85"
+      ],
+      [
+       "inner plate",
+       "-85 \u2026 -74"
+      ]
+     ]
+    ]
+   ]
+  },
+  "cut": [
+   [
+    "BK-FRAME",
+    "Frame",
+    "1/4 in ply",
+    4,
+    "338 \u00d7 174",
+    4
+   ],
+   [
+    "BK-CRANK",
+    "Crank",
+    "1/4 in ply",
+    4,
+    "130 \u00d7 40",
+    2
+   ],
+   [
+    "BK-J",
+    "Link j",
+    "1/4 in ply",
+    2,
+    "340 \u00d7 40",
+    2
+   ],
+   [
+    "BK-K",
+    "Link k",
+    "1/4 in ply",
+    2,
+    "411 \u00d7 40",
+    2
+   ],
+   [
+    "BK-C",
+    "Link c",
+    "1/4 in ply",
+    2,
+    "276 \u00d7 40",
+    2
+   ],
+   [
+    "BK-F",
+    "Link f",
+    "1/4 in ply",
+    2,
+    "276 \u00d7 40",
+    2
+   ],
+   [
+    "BK-UP",
+    "Top triangle",
+    "1/4 in ply",
+    2,
+    "289 \u00d7 280",
+    3
+   ],
+   [
+    "BK-LO",
+    "Foot triangle",
+    "1/4 in ply",
+    2,
+    "307 \u00d7 330",
+    2
+   ],
+   [
+    "BK-BOX",
+    "Drive box plate",
+    "1/4 in ply",
+    4,
+    "268 \u00d7 109",
+    8
+   ],
+   [
+    "BK-BOARD",
+    "Rack board (Mounts sheet)",
+    "1/2 in ply",
+    1,
+    "420 \u00d7 320",
+    12
+   ],
+   [
+    "BK-ANGLE",
+    "Rack angle (Mounts sheet)",
+    "alu angle 1 \u00d7 1 \u00d7 1/8 in",
+    2,
+    "300 long",
+    4
+   ],
+   [
+    "BK-SHAFT-R",
+    "R roller shaft",
+    "8 mm steel rod",
+    1,
+    "174 long",
+    0
+   ],
+   [
+    "BK-SHAFT-S",
+    "S1 and S2 shafts",
+    "8 mm steel rod",
+    2,
+    "83 long",
+    0
+   ],
+   [
+    "BK-STANDOFF",
+    "Box standoffs",
+    "tube 12 OD \u00d7 8.5 ID",
+    3,
+    "47 long",
+    0
+   ],
+   [
+    "BK-ROD-C",
+    "Crank rod",
+    "M8 threaded rod",
+    1,
+    "370 long",
+    0
+   ],
+   [
+    "BK-SPACERS",
+    "Spacer tubes (per pin on the Pin stacks sheet)",
+    "12 OD \u00d7 8.5 ID tube",
+    1,
+    "258 total",
+    0
+   ]
+  ],
+  "buy": [
+   [
+    "1/4 in birch ply, 2 \u00d7 4 ft",
+    1,
+    15.0
+   ],
+   [
+    "1/2 in ply 420 \u00d7 320",
+    1,
+    6.0
+   ],
+   [
+    "aluminium angle 1 \u00d7 1 \u00d7 1/8 in, 3 ft",
+    1,
+    12.0
+   ],
+   [
+    "U-bolts to clamp the board to the rack (measure rack tubes)",
+    4,
+    1.5
+   ],
+   [
+    "wood glue (PVA, foam-safe)",
+    1,
+    5.0
+   ],
+   [
+    "spray adhesive (to stick the printed sheets to stock, foam-safe)",
+    1,
+    8.0
+   ],
+   [
+    "5-minute epoxy (captive nuts)",
+    1,
+    6.0
+   ],
+   [
+    "epoxy putty stick (locks the roller to its shaft)",
+    1,
+    6.0
+   ],
+   [
+    "thread locker, medium",
+    1,
+    6.0
+   ],
+   [
+    "M8 \u00d7 35 bolt",
+    6,
+    0.6
+   ],
+   [
+    "M8 \u00d7 40 bolt",
+    2,
+    0.6
+   ],
+   [
+    "M8 \u00d7 50 bolt",
+    4,
+    0.6
+   ],
+   [
+    "M8 nylock nut",
+    12,
+    0.12
+   ],
+   [
+    "M8 thin nut DIN 439 (captive in the cranks)",
+    4,
+    0.15
+   ],
+   [
+    "roll pin 3 \u00d7 40 (crank to rod)",
+    2,
+    0.3
+   ],
+   [
+    "M8 fender washer 32 mm",
+    24,
+    0.15
+   ],
+   [
+    "nylon washer 8 \u00d7 16 \u00d7 1",
+    24,
+    0.08
+   ],
+   [
+    "flanged nylon bush 8 ID \u00d7 10 OD \u00d7 5, 1 mm flange",
+    30,
+    0.35
+   ],
+   [
+    "tube 12 OD \u00d7 8.5 ID (aluminium or nylon), 258 mm total",
+    1,
+    6.0
+   ],
+   [
+    "M8 threaded rod, 1 m",
+    1,
+    4.0
+   ],
+   [
+    "8 mm steel rod, 500 mm (R, S1, S2 shafts)",
+    1,
+    9.0
+   ],
+   [
+    "8 mm shaft collar with set screw",
+    8,
+    0.8
+   ],
+   [
+    "608-2RS bearing (frame O \u00d72, box plates C R S1 S2 \u00d72)",
+    10,
+    0.9
+   ],
+   [
+    "52 mm skateboard wheel (roller, bearings removed)",
+    1,
+    5.0
+   ],
+   [
+    "spur gear module 1, 20T + 60T, 8 mm bore, steel",
+    1,
+    15.0
+   ],
+   [
+    "GT2 pulley 20T 8 mm bore, 6 mm belt",
+    1,
+    3.0
+   ],
+   [
+    "GT2 pulley 60T 8 mm bore, 6 mm belt",
+    1,
+    8.0
+   ],
+   [
+    "GT2 pulley 20T 8 mm bore, 10 mm belt",
+    1,
+    4.0
+   ],
+   [
+    "GT2 pulley 60T 8 mm bore, 10 mm belt",
+    1,
+    10.0
+   ],
+   [
+    "GT2 6 mm closed belt, 200 mm loop",
+    1,
+    3.0
+   ],
+   [
+    "GT2 10 mm closed belt, 200 mm loop",
+    1,
+    4.0
+   ],
+   [
+    "M6 \u00d7 30 bolt + nylock (frames to angles)",
+    4,
+    0.4
+   ],
+   [
+    "M6 \u00d7 40 bolt + nylock (angles to board)",
+    4,
+    0.4
+   ],
+   [
+    "M6 \u00d7 80 bolt + nylock (box standoffs)",
+    3,
+    0.5
+   ],
+   [
+    "extension spring ~20 N (roller down-force) + screw eye",
+    1,
+    3.5
+   ]
+  ],
+  "steps": [
+   "Print every part sheet at 100% (tiled PDF in the files). Measure the 100 mm bar. Reprint if it is off by more than 1 mm. Join tiles on the crosses.",
+   "Before gluing the crank pairs: cut a 13 mm across-flats hex right through one layer (red hex on the sheet): at M in the inner layer (faces the frame), at O in the outer layer. Epoxy an M8 thin nut (5 mm) in each, flush.",
+   "Glue pairs of 1/4 in ply for frames (\u00d72), cranks (\u00d72) and drive-box plates (\u00d72 pairs). Clamp flat overnight.",
+   "Stick the printed sheets to the ply with spray adhesive. Cut with a jigsaw or bandsaw. Drill on a drill press: \u00d810 bushes, \u00d822 608s (Forstner), \u00d88.2 crank centres, \u00d86.5 for M6.",
+   "Press flanged bushes into every \u00d810 hole, flange out. Press 608s into the frames (O) and both box plates (C, R, S1, S2).",
+   "Pin B (frame pivot): M8 \u00d7 50 bolt (partly threaded), nylock. Head on the centre side. Inner to outer: Frame / Top triangle / spacer tube 4.5 long, 12 OD \u00d7 8.5 ID / Link c. Tighten until it stops rattling, then back off 1/8 turn.",
+   "Pin J1 (top): M8 \u00d7 35 bolt (partly threaded), nylock. Head on the centre side. Inner to outer: Top triangle / spacer tube 4.5 long, 12 OD \u00d7 8.5 ID / Link j. Tighten until it stops rattling, then back off 1/8 turn.",
+   "Pin J2 (knee): M8 \u00d7 50 bolt (partly threaded), nylock. Head on the centre side. Inner to outer: Foot triangle / spacer tube 4.5 long, 12 OD \u00d7 8.5 ID / Link c / spacer tube 10.0 long, 12 OD \u00d7 8.5 ID / Link k. Tighten until it stops rattling, then back off 1/8 turn.",
+   "Pin J3 (back): M8 \u00d7 35 bolt (partly threaded), nylock. Head on the centre side. Inner to outer: Link f / spacer tube 6.5 long, 12 OD \u00d7 8.5 ID / Top triangle. Tighten until it stops rattling, then back off 1/8 turn.",
+   "Pin J4 (hock): M8 \u00d7 35 bolt (partly threaded), nylock. Head on the centre side. Inner to outer: Link f / spacer tube 6.5 long, 12 OD \u00d7 8.5 ID / Foot triangle. Tighten until it stops rattling, then back off 1/8 turn.",
+   "Pin M (crank pin): M8 \u00d7 40 bolt, cut to 37 so the tip stops 1 mm inside the crank, thread locker. Bolt goes in from the outside, through Crank / Link j / spacer tube 10.0 long, 12 OD \u00d7 8.5 ID / Link k, into the captive nut. Check j and k swing freely.",
+   "Crank rod O: M8 threaded rod, cut to 370, shared by both legs, ends flush with the crank outer faces, cranks 180\u00b0 apart, thread locker. Order is on the Z map. Set the cranks 180\u00b0 apart, then drill 3 mm across each crank through the rod, in the inner ply layer 2.75 from the glue line, and tap in a 3 \u00d7 40 roll pin.",
+   "File a small flat on every shaft where a pulley, spur or collar sits. Tighten each set screw onto its flat with thread locker.",
+   "Bolt the two angles under the board long edges, flush with the rear end and the edges (Mounts sheet). Bolt the board to the rack with 4 U-bolts so the board overhangs the rack by 170 at the back and the crank rod will sit 190 behind the rear axle.",
+   "Bolt each leg frame to its angle with 2 \u00d7 M6 \u00d7 30 at m1, m2: head on the inside (box side), nylock outside.",
+   "Remove the bearings from the 52 mm roller. Slide it on the R shaft and pack the core with epoxy putty, centred. Let it cure.",
+   "Assemble the drive box with the shaft order on the Z map: three M6 \u00d7 80 standoffs with 47 mm tubes hold the plates apart. Fit both 200 mm belts. If a belt is slack, the centres are off: re-drill S2. Hang the box on the crank rod.",
+   "Hook the spring from the screw eye at hole sa (on the tail behind the hinge) straight up to the rack board. The tail lifts, the roller presses the tire with about 1 kg.",
+   "Turn the crank one full turn by hand. Nothing catches. Mark any pin that knocks.",
+   "Bike on a stand, roller down. Stand on the right side and turn the rear wheel forward. The crank turns clockwise. Count 27 roller turns per crank turn.",
+   "Ride 1 km at walking pace, then 16 km/h. Check bolts, belt tension and roller grip."
+  ]
+ }
+}
