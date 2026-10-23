@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en"><head><link rel="icon" href="favicon.svg" type="image/svg+xml"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Centaur Walker Templates</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#e9e7e2;--panel:#f7f6f2;--view:#dcd8cf;--ink:#17150f;--ink-2:#5a554b;--ink-3:#8d877b;--rule:#d0cabe;--accent:#2f55c9;--accent-ink:#fff;--hot:#e2591b;
+  --f-body:'IBM Plex Sans',system-ui,sans-serif;--f-mono:'IBM Plex Mono',ui-monospace,monospace;--f-disp:'Bodoni Moda',Georgia,serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f0e0c;--panel:#171512;--view:#1d1a16;--ink:#ece7dd;--ink-2:#a9a293;--ink-3:#736c60;--rule:#2d2924;--accent:#8fa8ff;--accent-ink:#0d1014;--hot:#ff8a4c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f0e0c;--panel:#171512;--view:#1d1a16;--ink:#ece7dd;--ink-2:#a9a293;--ink-3:#736c60;--rule:#2d2924;--accent:#8fa8ff;--accent-ink:#0d1014;--hot:#ff8a4c;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-body);display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+header{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--rule);background:var(--panel)}
+h1{font:500 17px var(--f-disp);letter-spacing:.14em;text-transform:uppercase;margin:0;white-space:nowrap}
+.meta{font:12px var(--f-mono);color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.btn{border:0;border-radius:7px;background:var(--accent);color:var(--accent-ink);font:600 13px var(--f-body);padding:8px 14px;cursor:pointer;white-space:nowrap}
+main{display:grid;grid-template-columns:1fr 360px;min-height:0}
+.stage{position:relative;background:var(--view);display:grid;place-items:center;padding:18px;min-height:0;overflow:hidden}
+.stage .sheet{width:100%;height:100%;display:grid;place-items:center}
+.stage svg{max-width:100%;max-height:100%;width:auto;height:auto;box-shadow:0 1px 2px rgba(0,0,0,.18),0 6px 24px rgba(0,0,0,.12);background:#fff}
+.pager{position:absolute;left:12px;right:12px;bottom:10px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+.pager button{pointer-events:auto;width:40px;height:36px;border-radius:7px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer;display:grid;place-items:center}
+.pager span{font:12px var(--f-mono);color:var(--ink-2);background:var(--panel);padding:3px 8px;border-radius:5px;border:1px solid var(--rule)}
+aside{background:var(--panel);border-left:1px solid var(--rule);overflow:auto;min-height:0}
+.how{padding:14px 16px;border-bottom:1px solid var(--rule);font-size:13px;color:var(--ink-2)}
+.how b{color:var(--ink)}
+.list{list-style:none;margin:0;padding:6px 0}
+.list li{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:9px 16px;cursor:pointer;border-left:3px solid transparent}
+.list li:hover{background:var(--bg)}
+.list li[aria-current="true"]{background:var(--bg);border-left-color:var(--accent)}
+.list .k{font:600 12px var(--f-mono);color:var(--accent);padding-top:2px}
+.list .t{font-weight:600}.list .s{font-size:12px;color:var(--ink-2)}
+#print{display:none}
+@media (max-width:760px){
+  header{padding:8px 12px;gap:10px}h1{font-size:14px;letter-spacing:.1em}.meta{display:none}
+  main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+  aside{border-left:0;border-top:1px solid var(--rule)}
+  .stage{padding:10px 10px 52px}
+}
+@page{size:letter landscape;margin:.5in}
+@media print{
+  html,body{height:auto;overflow:visible;background:#fff;display:block}
+  header,main{display:none!important}
+  #print{display:block}
+  #print svg{display:block;width:10in;height:7.5in;page-break-after:always;break-after:page}
+  #print svg:last-child{page-break-after:auto;break-after:auto}
+}
+</style></head>
+<body>
+<header><h1>Centaur Walker</h1><div class="meta" id="meta"></div><button class="btn" id="pr">Print all sheets</button></header>
+<main>
+  <section class="stage"><div class="sheet" id="view"></div>
+    <div class="pager"><button id="prev" aria-label="Previous sheet"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M8 1 3 6l5 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button><span id="pg"></span><button id="next" aria-label="Next sheet"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M4 1l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button></div>
+  </section>
+  <aside>
+    <div class="how"><a href="build-book.html" target="_blank" rel="noopener">Open the build book</a> for the steps. <b>Print on letter paper, landscape, at 100% (Actual size).</b> Measure the 1 in. square on any sheet before cutting. Tape a strip to the bar with its edges on the bar’s edges, punch through each cross, then drill 3/8 in. One template marks both legs.</div>
+    <ul class="list" id="list"></ul>
+  </aside>
+</main>
+<div id="print"></div>
+<script>
+/* All numbers come from the walker design (Walker 2). Units: inches. */
+const PITCH_IN=.75;
+const N={a:16,b:13,c:18,d:13,e:13,f:28,g:11,h:22,i:23,j:18,k:28,l:5,m:5};
+const BARS=[
+  {id:'m',name:'Crank',j:['O','C']},{id:'j',name:'Upper rod',j:['C','D']},{id:'k',name:'Lower rod',j:['C','E']},
+  {id:'b',name:'Hip bar, front',j:['B','D']},{id:'d',name:'Hip bar, rear',j:['B','F']},{id:'e',name:'Hip bar, top',j:['D','F']},
+  {id:'c',name:'Thigh rod',j:['B','E']},{id:'f',name:'Gaskin rod',j:['F','G']},{id:'g',name:'Hock bar',j:['G','E']},
+  {id:'h',name:'Cannon bar, rear',j:['G','H']},{id:'i',name:'Cannon bar, front',j:['E','H']}];
+const HUB_HALF=1.3125; // hub bolts 2-5/8 in. apart, centred on O
+const frac=(x)=>{let w=Math.floor(x+1e-9),r=Math.round((x-w)*16);if(r===16){w++;r=0;}if(!r)return `${w}`;let n=r,d=16;while(n%2===0){n/=2;d/=2;}return (w?w+'-':'')+n+'/'+d;};
+const IN=x=>frac(x)+' in.';const MM=x=>Math.round(x*25.4)+' mm';
+for(const b of BARS){b.span=N[b.id]*PITCH_IN;
+  if(b.id==='m'){b.cut=b.span+1.5+HUB_HALF;b.holes=[{x:.75,t:'hub'},{x:.75+2*HUB_HALF,t:'hub'},{x:.75+HUB_HALF+b.span,t:'C'}];}
+  else{b.cut=b.span+1.5;b.holes=[{x:.75,t:b.j[0]},{x:.75+b.span,t:b.j[1]}];}}
+
+/* sheet = 10 × 7.5 in. drawing area (letter landscape, 1/2 in. margins) */
+const W=10,H=7.5,SEG=9.5;
+const NS='http://www.w3.org/2000/svg';
+function svg(){const s=document.createElementNS(NS,'svg');s.setAttribute('viewBox',`0 0 ${W} ${H}`);s.setAttribute('width',W+'in');s.setAttribute('height',H+'in');s.setAttribute('font-family',"'IBM Plex Sans',sans-serif");return s;}
+function el(p,tag,a,txt){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;p.appendChild(e);return e;}
+const INK='#17150f',GREY='#8d877b',LIGHT='#d8d3c8',WOOD='#f3e6c8',HOT='#e2591b',BLUE='#2f55c9';
+function txt(p,x,y,s,o={}){return el(p,'text',{x,y,'font-size':o.size||.13,'font-weight':o.w||400,fill:o.fill||INK,'text-anchor':o.a||'start','font-family':o.mono?"'IBM Plex Mono',monospace":"'IBM Plex Sans',sans-serif",...(o.ls?{'letter-spacing':o.ls}:{})},s);}
+function txtw(p,x,y,s,maxw,o={}){const cw=(o.size||.13)*.5,words=s.split(' ');let ln='',yy=y;for(const w of words){if((ln+' '+w).length*cw>maxw&&ln){txt(p,x,yy,ln,o);yy+=(o.size||.13)*1.45;ln=w;}else ln=ln?ln+' '+w:w;}if(ln)txt(p,x,yy,ln,o);return yy;}
+function line(p,x1,y1,x2,y2,o={}){return el(p,'line',{x1,y1,x2,y2,stroke:o.c||INK,'stroke-width':o.w||.012,...(o.dash?{'stroke-dasharray':o.dash}:{})});}
+function frame(s,code,title,sub){
+  el(s,'rect',{x:0,y:0,width:W,height:H,fill:'#fff'});
+  txt(s,0,.24,'CENTAUR WALKER',{size:.13,ls:.03,fill:GREY});
+  txt(s,0,.5,`${code}  ${title}`,{size:.24,w:600});
+  if(sub)txt(s,0,.7,sub,{size:.12,fill:'#5a554b'});
+  // scale check
+  el(s,'rect',{x:W-1.02,y:.02,width:1,height:1,fill:'none',stroke:INK,'stroke-width':.012});
+  txt(s,W-.52,.48,'1 in.',{size:.13,w:600,a:'middle'});txt(s,W-.52,.66,'check',{size:.1,a:'middle',fill:GREY});
+  txt(s,W-1.12,.4,'Print at 100%',{size:.11,a:'end',fill:'#5a554b'});txt(s,W-1.12,.56,'letter, landscape',{size:.11,a:'end',fill:'#5a554b'});
+}
+function cross(s,x,y,r=.3){line(s,x-r,y,x+r,y,{w:.01});line(s,x,y-r,x,y+r,{w:.01});}
+function hole(s,x,y,d=.375,label){el(s,'circle',{cx:x,cy:y,r:d/2,fill:'#fff',stroke:INK,'stroke-width':.014});cross(s,x,y,d/2+.14);el(s,'circle',{cx:x,cy:y,r:.025,fill:INK});if(label)txt(s,x,y-d/2-.2,label,{size:.13,w:600,a:'middle'});}
+
+/* ---------- sheets ---------- */
+const SHEETS=[];
+// 0: check and index
+SHEETS.push({code:'0',title:'Check and index',sub:'Print first. Both squares must measure true before you print the rest.',draw(s){
+  frame(s,'0','Check and index','Print this sheet first. Measure both squares; if either is off, set the printer to Actual size and print again.');
+  el(s,'rect',{x:0,y:1.1,width:1,height:1,fill:'none',stroke:INK,'stroke-width':.014});txt(s,.5,1.65,'1 in.',{a:'middle',w:600,size:.15});
+  const mm50=50/25.4;el(s,'rect',{x:1.4,y:1.1,width:mm50,height:mm50,fill:'none',stroke:INK,'stroke-width':.014});txt(s,1.4+mm50/2,1.1+mm50/2+.05,'50 mm',{a:'middle',w:600,size:.15});
+  // 9 in ruler in 3/4 in. steps
+  const ry=3.55;line(s,0,ry,9,ry,{w:.014});for(let i=0;i<=36;i++){const x=i*.25,big=i%3===0;line(s,x,ry,x,ry-(big?.22:.1),{w:.01});if(big)txt(s,x,ry+.2,i%4===0?String(i/4):'',{size:.11,a:'middle',mono:1});}
+  for(let i=0;i<=12;i++)el(s,'circle',{cx:i*.75,cy:ry-.3,r:.03,fill:BLUE});
+  txt(s,0,ry+.42,'Blue dots: 3/4 in. pitch. Every hole spacing on the legs is a whole number of these.',{size:.11,fill:'#5a554b'});
+  // index
+  let y=4.45;txt(s,0,y,'SHEETS',{size:.11,w:600,fill:GREY,ls:.02});y+=.25;
+  const rows=SHEETS.slice(1).map(q=>[q.code,q.title,q.idx||'']);
+  const col=Math.ceil(rows.length/2);rows.forEach((r,i)=>{const x=i<col?0:5,yy=y+(i%col)*.26;txt(s,x,yy,r[0],{size:.13,w:600,mono:1,fill:BLUE});txt(s,x+.55,yy,r[1],{size:.13});txt(s,x+4.6,yy,r[2],{size:.11,a:'end',fill:GREY});});
+}});
+// bar sheets
+{const rows=[];for(const b of BARS){const n=Math.ceil(b.cut/SEG),L=b.cut/n;for(let k=0;k<n;k++)rows.push({b,k,n,x0:k*L,x1:(k+1)*L});}
+ const per=3,count=Math.ceil(rows.length/per);
+ for(let si=0;si<count;si++){const rr=rows.slice(si*per,si*per+per),code='B'+(si+1);
+   const names=[...new Set(rr.map(r=>r.b.id))];
+   SHEETS.push({code,title:'Leg bars',idx:names.map(id=>id).join(' '),sub:rr.map(r=>r.b.name).filter((v,i,a)=>a.indexOf(v)===i).join(' · '),rows:rr,draw(s){
+     frame(s,code,'Leg bars','Tape each strip to a 1×2 so its long edges sit on the bar’s edges. Punch through each cross. Cut on the solid end lines.');
+     rr.forEach((r,i)=>{const y0=1.05+i*2.15,yS=y0+.32,b=r.b,len=r.x1-r.x0,ox=(W-len)/2;
+       txt(s,ox,y0+.08,`${b.id}`,{size:.2,w:700,fill:BLUE,mono:1});
+       txt(s,ox+.3,y0+.08,`${b.name}  ·  cut ${IN(b.cut)}  ·  holes ${IN(b.span)} apart (${MM(b.span)})${b.id==='m'?' to C; hub holes 2-5/8 in. apart':''}  ·  make 2`,{size:.125,w:500});
+       if(b.id==='m'&&r.k===0)txt(s,ox+.3,y0+.25,'At C: 7/8 in. counterbore 5/16 in. deep on the inner face; glue a 1-1/2 in. square of offcut over C on the outer face (build book step 3).',{size:.095,fill:HOT,w:600});
+       if(r.n>1)txt(s,ox+len,y0+.08,`part ${r.k+1} of ${r.n}`,{size:.12,a:'end',fill:HOT,w:600});
+       el(s,'rect',{x:ox,y:yS,width:len,height:1.5,fill:WOOD,stroke:'none'});
+       line(s,ox,yS,ox+len,yS,{w:.014});line(s,ox,yS+1.5,ox+len,yS+1.5,{w:.014});
+       line(s,ox,yS+.75,ox+len,yS+.75,{c:GREY,w:.008,dash:'.08 .06'});
+       // 3/4 in. pitch ticks from the first hole
+       const h0=b.holes[0].x;for(let t=Math.ceil((r.x0-h0)/PITCH_IN-1e-9);h0+t*PITCH_IN<=r.x1+1e-9;t++){const x=ox+h0+t*PITCH_IN-r.x0;if(x<ox-1e-6||x>ox+len+1e-6)continue;line(s,x,yS,x,yS+.12,{c:GREY,w:.008});line(s,x,yS+1.38,x,yS+1.5,{c:GREY,w:.008});}
+       // ends
+       const endL=r.k===0,endR=r.k===r.n-1;
+       const endMark=(x,real,side)=>{if(real){line(s,x,yS-.18,x,yS+1.68,{w:.03});txt(s,x+(side<0?.06:-.06),yS+1.66,'CUT',{size:.09,w:700,a:side<0?'start':'end'});}
+         else{line(s,x,yS-.18,x,yS+1.68,{c:HOT,w:.014,dash:'.06 .05'});const tag=String.fromCharCode(65+(side<0?r.k-1:r.k));
+           el(s,'path',{d:`M${x} ${yS+.75-.16} l${side*-.16} .16 l${side*.16} .16 z`,fill:HOT});txt(s,x+(side<0?.08:-.08),yS-.05,`butt to ${tag}`,{size:.1,fill:HOT,a:side<0?'start':'end',w:600});txt(s,x+(side<0?.22:-.22),yS+.8,tag,{size:.14,fill:HOT,w:700,a:'middle'});}};
+       endMark(ox,endL,-1);endMark(ox+len,endR,1);
+       for(const h of b.holes)if(h.x>=r.x0-1e-6&&h.x<=r.x1+1e-6)hole(s,ox+h.x-r.x0,yS+.75,.375,h.t);
+       // dimension from first hole
+     });
+   }});}}
+// plate corners
+const PL={w:15.25,h:13,hubFront:2.5,hubUp:5,hubD:3.625,bBack:12,bDown:3.75};
+SHEETS.push({code:'P1',title:'Centre plate, front corner',idx:'hub hole',draw(s){
+  frame(s,'P1','Centre plate, front corner','Lay the plate on its side. Butt its front edge and bottom edge into the corner lines. Punch the centre, bore with the 3-5/8 in. hole saw.');
+  const cx=9.2,cy=7.2; // corner: front edge runs along the bottom of the sheet, the plate's bottom edge up the right side
+  el(s,'rect',{x:cx-8.4,y:cy-6.1,width:8.4,height:6.1,fill:'#f2ead8'});
+  line(s,cx-8.4,cy,cx,cy,{w:.035});line(s,cx,cy-6.1,cx,cy,{w:.035});
+  txt(s,cx-4.2,cy+.22,'FRONT EDGE',{size:.12,w:700,ls:.04,a:'middle'});
+  txt(s,cx+.12,cy-3,'BOTTOM EDGE',{size:.12,w:700,ls:.04,a:'middle'}).setAttribute('transform',`rotate(90 ${cx+.12} ${cy-3})`);
+  const hx=cx-PL.hubUp,hy=cy-PL.hubFront;
+  el(s,'circle',{cx:hx,cy:hy,r:PL.hubD/2,fill:'#fff',stroke:INK,'stroke-width':.02});
+  el(s,'circle',{cx:hx,cy:hy,r:3.5/2,fill:'none',stroke:GREY,'stroke-width':.01,'stroke-dasharray':'.06 .05'});
+  cross(s,hx,hy,PL.hubD/2+.3);el(s,'circle',{cx:hx,cy:hy,r:.03,fill:INK});
+  txt(s,hx+.12,hy-.25,'HUB',{size:.16,w:700});txt(s,hx+.12,hy+.3,'3-5/8 in. hole saw',{size:.1,fill:'#5a554b'});
+  txtw(s,hx+PL.hubD/2+.15,hy+.5,'dashed: the PVC ring, 3-1/2 in. outside',1.4,{size:.1,fill:GREY});
+  line(s,hx,cy-.3,cx,cy-.3,{c:BLUE,w:.01});txt(s,(hx+cx)/2,cy-.37,'5',{size:.12,a:'middle',fill:BLUE,mono:1});
+  line(s,cx-.3,hy,cx-.3,cy,{c:BLUE,w:.01});txt(s,cx-.37,(hy+cy)/2+.04,'2-1/2',{size:.12,a:'end',fill:BLUE,mono:1});
+  el(s,'path',{d:`M${hx-.4} ${hy-PL.hubD/2-.15} v-1.6`,stroke:BLUE,'stroke-width':.014,fill:'none'});el(s,'path',{d:`M${hx-.4} ${hy-PL.hubD/2-1.85} l-.08 .16 h.16 z`,fill:BLUE});
+  txtw(s,hx-.25,hy-PL.hubD/2-1.6,'to the rear edge: B is 12 in. this way and 3-3/4 in. toward the bottom edge (sheet P2)',3.2,{size:.11,fill:BLUE});
+  txtw(s,cx-8.25,cy-5.85,'Plate: 1/2 in. plywood, 15-1/4 × 13 in. The hub centre is 2-1/2 in. from the front edge and 5 in. from the bottom edge.',2.6,{size:.11,fill:'#5a554b'});
+}});
+SHEETS.push({code:'P2',title:'Centre plate, rear corner',idx:'pivot B',draw(s){
+  frame(s,'P2','Centre plate, rear corner','Butt the plate’s rear and bottom edges into the corner lines. Punch B and drill 3/8 in. Check: B to hub centre measures 12-9/16 in.');
+  const cx=1.2,cy=7.2;
+  el(s,'rect',{x:cx,y:cy-5.2,width:8,height:5.2,fill:'#f2ead8'});
+  line(s,cx,cy-5.2,cx,cy,{w:.035});line(s,cx,cy,cx+8,cy,{w:.035});
+  txt(s,cx-.12,cy-2.6,'REAR EDGE',{size:.12,w:700,ls:.04,a:'middle'}).setAttribute('transform',`rotate(-90 ${cx-.12} ${cy-2.6})`);
+  txt(s,cx+4,cy+.22,'BOTTOM EDGE',{size:.12,w:700,ls:.04,a:'middle'});
+  const bx=cx+(PL.w-PL.hubFront-PL.bBack),by=cy-(PL.hubUp-PL.bDown);
+  hole(s,bx,by,.375,'B');
+  line(s,cx,by+.45,bx,by+.45,{c:BLUE,w:.01});txt(s,(cx+bx)/2,by+.62,'3/4',{size:.12,a:'middle',fill:BLUE,mono:1});
+  line(s,bx+.45,by,bx+.45,cy,{c:BLUE,w:.01});txt(s,bx+.52,(by+cy)/2+.04,'1-1/4',{size:.12,fill:BLUE,mono:1});
+  const ang=Math.atan2(PL.bDown,PL.bBack);el(s,'path',{d:`M${bx} ${by} L${bx+5.5*Math.cos(ang)} ${by-5.5*Math.sin(ang)}`,stroke:BLUE,'stroke-width':.012,'stroke-dasharray':'.08 .06',fill:'none'});
+  txt(s,bx+5.6*Math.cos(ang),by-5.6*Math.sin(ang)-.05,'to hub centre: 12-9/16 in.',{size:.11,fill:BLUE});
+  txt(s,cx+.15,cy-4.95,'Spine straps go on the top edge, off this sheet: four one-hole straps, 1, 5, 10 and 14 in. from the front edge.',{size:.11,fill:'#5a554b'});
+}});
+// PVC ring wrap
+SHEETS.push({code:'R',title:'Hub ring wrap',idx:'3 in. PVC',draw(s){
+  frame(s,'R','Hub ring wrap','Cut out both bands, tape them end to end at A, and wrap the 3 in. PVC pipe so the end meets the start. Saw on the outside of each line, keeping the cut square.');
+  const C=3.5*Math.PI,half=C/2,bh=1.3,y1=1.5,y2=3.6,x0=(W-half)/2;
+  [[y1,0],[y2,1]].forEach(([y,k])=>{el(s,'rect',{x:x0,y,width:half,height:bh,fill:'#fff',stroke:INK,'stroke-width':.014});
+    const la=y+.3,lb=la+.625;line(s,x0,la,x0+half,la,{w:.02});line(s,x0,lb,x0+half,lb,{w:.02});
+    txt(s,x0+.15,la-.07,'saw outside this line',{size:.1,fill:'#5a554b'});txt(s,x0+.15,lb+.17,'saw outside this line',{size:.1,fill:'#5a554b'});
+    el(s,'rect',{x:x0,y:la,width:half,height:.625,fill:'#eef2fb'});txt(s,x0+half/2,la+.36,k?'ring: cut 5/8 in. — part 2':'ring: cut 5/8 in. — part 1',{size:.12,w:600,a:'middle',fill:BLUE});
+    if(k===0){line(s,x0+half,y-.15,x0+half,y+bh+.15,{c:HOT,dash:'.06 .05'});txt(s,x0+half+.08,y+bh/2,'A',{size:.16,w:700,fill:HOT});txt(s,x0,y+bh+.2,'START',{size:.1,w:700});}
+    else{line(s,x0,y-.15,x0,y+bh+.15,{c:HOT,dash:'.06 .05'});txt(s,x0-.08,y+bh/2,'A',{size:.16,w:700,fill:HOT,a:'end'});txt(s,x0+half,y+bh+.2,'END meets START',{size:.1,w:700,a:'end'});}});
+  txtw(s,x0,y2+bh+.75,`Band length ${IN(C)} = the outside of 3 in. PVC (3-1/2 in. across). Cut the ring 5/8 in., then sand it to 19/32 in.: the plywood (actual 15/32 in.) plus two nylon washers. The cranks clamp the ring, never the plate.`,half,{size:.11,fill:'#5a554b'});
+}});
+// hoof
+SHEETS.push({code:'H',title:'Hoof pad',idx:'1×4, make 2',draw(s){
+  frame(s,'H','Hoof pad, full size from above','Cut 4 in. of 1×4. Lay this on top. The inner edge goes toward the centre plate. Brace feet point outward.');
+  const ox=3,oy=1.6,pl=4,pw=3.5,stack=(2*19.05+1.6)/25.4,inch=1/25.4;
+  // pad (x along the stride, y across: inner edge at top)
+  el(s,'rect',{x:ox,y:oy,width:pl,height:pw,fill:WOOD,stroke:INK,'stroke-width':.02});
+  txt(s,ox+pl/2,oy-.12,'INNER EDGE — line up with the inner face of the front cannon bar',{size:.12,w:700,a:'middle'});
+  txt(s,ox+.1,oy+pw+.25,'OUTER EDGE',{size:.12,w:700});
+  txt(s,ox+.1,oy+.35,'FRONT',{size:.1,w:700,fill:GREY});txt(s,ox+pl-.1,oy+.35,'REAR',{size:.1,w:700,fill:GREY,a:'end'});
+  // cannon stack footprint
+  const hx=ox+pl/2;el(s,'rect',{x:hx-.75,y:oy,width:1.5,height:stack,fill:'none',stroke:GREY,'stroke-width':.012,'stroke-dasharray':'.07 .05'});
+  txtw(s,ox+pl+.15,oy+.12,`Dashed box: the two cannon bars and their washer above, ${IN(stack)} thick.`,2.4,{size:.1,fill:GREY});
+  line(s,hx,oy-.05,hx,oy+pw+.05,{c:BLUE,w:.01,dash:'.06 .05'});txt(s,hx,oy+pw+.25,'H',{size:.14,w:700,a:'middle',fill:BLUE});
+  // braces: inner one 5/8 in. behind H at the inner edge; outer one 5/8 in. ahead at the stack's outer face
+  const bw=.5,foot=2,off=.625;
+  const brace=(x,y,lab)=>{el(s,'rect',{x:x-bw/2,y,width:bw,height:foot,fill:'#e4e6ea',stroke:INK,'stroke-width':.014});el(s,'rect',{x:x-bw/2,y:y-.06,width:bw,height:.06,fill:INK});txt(s,x,y+foot+.18,lab,{size:.1,a:'middle',w:600});};
+  brace(hx-off,oy,'inner brace');txt(s,hx+off+.32,oy+stack+.25,'outer brace',{size:.1,w:600});brace(hx+off,oy+stack+inch,'');
+  txt(s,hx+off+.32,oy+pw+.25,'brace overhangs 1/8 in.',{size:.09,fill:GREY});
+  // dims
+  line(s,ox,oy+pw+.55,ox+pl,oy+pw+.55,{c:BLUE,w:.01});txt(s,ox+pl/2,oy+pw+.72,'4 in.',{size:.12,a:'middle',fill:BLUE,mono:1});
+  line(s,ox-.3,oy,ox-.3,oy+pw,{c:BLUE,w:.01});txt(s,ox-.38,oy+pw/2,'3-1/2 in.',{size:.12,fill:BLUE,mono:1,a:'middle'}).setAttribute('transform',`rotate(-90 ${ox-.38} ${oy+pw/2})`);
+  txtw(s,ox,oy+pw+1.2,'Each brace screws to the outside face of one cannon bar, 5/8 in. off H so it clears the nut. Mark the pad through the foot holes; drive #8 × 5/8 in. screws so none come through the rubber. Glue rubber from a floor protector pad to the underside. Hoof weight with braces and rubber: about 90 g.',6.5,{size:.11,fill:'#5a554b'});
+}});
+
+/* ---------- UI ---------- */
+let cur=0;const view=document.getElementById('view'),list=document.getElementById('list');
+SHEETS.forEach((q,i)=>{const li=document.createElement('li');li.innerHTML=`<span class="k">${q.code}</span><span><div class="t">${q.title}</div><div class="s">${q.sub||q.idx||''}</div></span>`;li.onclick=()=>show(i);list.appendChild(li);});
+function render(q){const s=svg();q.draw(s);return s;}
+function show(i){cur=(i+SHEETS.length)%SHEETS.length;view.replaceChildren(render(SHEETS[cur]));[...list.children].forEach((li,k)=>li.setAttribute('aria-current',k===cur));document.getElementById('pg').textContent=`${SHEETS[cur].code} · ${cur+1} of ${SHEETS.length}`;list.children[cur].scrollIntoView({block:'nearest'});}
+document.getElementById('prev').onclick=()=>show(cur-1);document.getElementById('next').onclick=()=>show(cur+1);
+addEventListener('keydown',e=>{if(e.key==='ArrowRight')show(cur+1);if(e.key==='ArrowLeft')show(cur-1);});
+const pr=document.getElementById('print');function buildPrint(){pr.replaceChildren(...SHEETS.map(render));}
+addEventListener('beforeprint',buildPrint);document.getElementById('pr').onclick=()=>{buildPrint();print();};
+const tot=BARS.reduce((a,b)=>a+2*b.cut,0);
+document.getElementById('meta').textContent=`${SHEETS.length} sheets · 11 bar templates, each used twice · ${Math.round(tot)} in. of 1×2 cut · plate, hub ring, hoof`;
+show(0);
+</script>
+</body></html>

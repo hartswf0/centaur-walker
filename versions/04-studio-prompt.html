@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<title>Centaur Studio Prompt</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#f4f5f4;--panel:#fff;--ink:#15181b;--ink-2:#555c62;--rule:#d6dadb;--accent:#2f55c9;--accent-ink:#fff;
+  --f-display:"Bodoni Moda",Georgia,serif;--f-body:"IBM Plex Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0e1113;--panel:#151a1d;--ink:#e7eaeb;--ink-2:#a3abb1;--rule:#2a3136;--accent:#7f9dff;--accent-ink:#0d1014;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1113;--panel:#151a1d;--ink:#e7eaeb;--ink-2:#a3abb1;--rule:#2a3136;--accent:#7f9dff;--accent-ink:#0d1014;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--f-body)}
+.bar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--rule)}
+.bar h1{margin:0;font:500 15px var(--f-display);letter-spacing:.16em;text-transform:uppercase;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button{font:600 13px var(--f-body);background:var(--accent);color:var(--accent-ink);border:0;border-radius:6px;padding:8px 14px;min-height:36px;cursor:pointer}
+button.ghost{background:transparent;color:var(--accent);border:1px solid var(--rule)}
+main{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+#prompt{white-space:pre-wrap;font:14px/1.6 var(--f-body);margin:0}
+#prompt .h{display:block;font:600 13px var(--f-body);letter-spacing:.08em;text-transform:uppercase;margin-top:22px}
+#prompt .t{display:block;font:500 22px/1.25 var(--f-display);letter-spacing:.04em;margin-bottom:2px}
+#prompt .g{font:12.5px/1.6 var(--f-mono);color:var(--ink-2)}
+.note{font-size:13px;color:var(--ink-2);margin:0 0 16px}
+.ok{font:500 12px var(--f-mono);color:var(--ink-2)}
+</style>
+<div class="bar"><h1>Centaur Studio Prompt</h1><span class="ok" id="ok" aria-live="polite"></span><button class="ghost" id="raw" type="button">Plain text</button><button id="copy" type="button">Copy</button></div>
+<main>
+<p class="note">A run prompt for this project, modeled on SCION. Copy it into a new session with the two current files attached.</p>
+<div id="prompt"></div>
+</main>
+<script id="src" type="text/plain">CENTAUR STUDIO — MECHANISM, INSTRUMENT, AND BUILD
+BUILD, INDEPENDENT CRITIQUE, AND RECURSIVE INQUIRY
+
+You lead a build swarm responsible for two linked results: a pair of foam centaur hind legs that a person can actually build and wear or ride, and the single-file instrument used to design, simulate, and build them.
+
+Create the hind-leg system — hung from a backpack boom behind a walking wearer whose own legs serve as the forelegs, or driven from a bicycle crank or rear wheel — from the horse-limb references, the Muybridge walking and galloping plates, the Jansen linkage, the hand-drawn lap joint with cheek plates, and the salvage stock on hand (giant plastic novelty scissors, expandable plastic trellis with rivet pivots, PVC pipe and fittings, steel flat bar, bicycle cranks, gears and pedals). Deliver it as one HTML file that runs on a phone and on a desktop, built with the tools available in this session and buildable from hardware-store and salvaged materials at about 100 US dollars per leg.
+
+Infer missing implementation details and proceed. Ask only when an unresolved choice would materially change what gets built or would exceed authorization.
+
+Choose the architecture, tools, representations, and agent organization. Your decisions must serve the leg that gets built and the person who builds and uses it.
+
+The standard is sustained excellence in actual use: a leg that reads as a horse's hind leg in motion; joints that survive their load; a build order a person can follow at a bench; drive options whose numbers can be checked; an interface in which the simulation and the part being studied are always visible; and sound and touch that report real events. Line count, number of views, agent count, render effects, and volume of text are not evidence of quality.
+
+◻ CENTAUR STUDIO
+→ [Owns] → ◻ COMPLETE BUILD AND USE EXPERIENCE
+→ [Coordinates] → ◻ BUILD SWARM
+→ [Maintains] → ◻ ONE CANONICAL LEG MODEL AND PROJECT STATE
+→ [Tests Against] → ◻ INSPECTABLE REFERENCES AND PHYSICAL LIMITS
+→ [Improves Through] → ◻ INDEPENDENT CRITIQUE
+→ [Reconsiders Through] → ◻ TARGETED INQUIRY
+→ [Delivers] → ◻ WORKING INSTRUMENT AND BUILDABLE LEG
+
+1. DEFINE WHAT WOULD MAKE THIS WORK EXCEPTIONAL
+
+◻ DESIGN THESIS
+→ [Identifies] → ◻ CENTRAL EXPERIENCE
+→ [Requires] → ◻ DISTINCTIVE MECHANICAL CHOICE
+→ [Is Demonstrated By] → ◻ SPECIFIC MOMENT
+→ [Is Tested Across] → ◻ WHOLE SYSTEM
+
+Establish a concise design thesis before large-scale building.
+
+Determine:
+
+- What the wearer, the rider, and an onlooker should see and feel when the leg moves.
+- What makes this leg particular: the stifle and hock folding together through a coupling, the lap-joint stack at each pivot, the drive that powers it.
+- Which formal choices give the instrument its identity: one leg model shared by every view; time shown as cycle, dial, strip, trace, and build sequence.
+- Which moments must carry the most force.
+- What would make the result competent but forgettable: a correct parts list attached to a leg that swings like a pendulum.
+
+Identify at least one defining moment whose execution would justify the whole project. Candidate: behind a walking person, the hoof leaves the ground, the hock folds with the stifle, and the leg reaches forward and plants with visible weight. Design the surrounding work so that moment can earn its effect.
+
+Do not distribute effort evenly. A correct joint section can demand as much precision as the full animated stride.
+
+2. ESTABLISH A BAR THAT SURVIVES INSPECTION
+
+◻ QUALITY REFERENCE
+→ [Demonstrates] → ◻ SPECIFIC ACHIEVEMENT
+→ [Provides] → ◻ INSPECTABLE PASSAGE
+→ [Defines] → ◻ COMPARISON CONDITION
+→ [Does Not Dictate] → ◻ IMITATION
+
+Select concrete references for the dimensions that matter here, and explain each one's relevance in one sentence:
+
+- Limb motion: Muybridge's walking-horse plates, for hoof path, hock timing, and stance duration.
+- Anatomy: the equine reciprocal apparatus, for the rule that stifle and hock flex together.
+- Mechanism: Jansen's Strandbeest leg and the hand-pushed PVC walkers, for a flat stance stroke from one crank built from cheap stock.
+- Joint: the user's lap-joint sketch with cheek plates, and hardware-store shoulder-bolt stacks, for how a pin carries load into foam.
+- Puppetry: large-scale horse puppets driven by people inside them, for how weight reads through hoof contact and hesitation.
+- Interface: CAD and electronics design workstations, for a model that stays visible while inspectors dock beside it and numbers sit next to what they measure.
+- Sound: physical bench sounds — ratchet, washer ring, bolt seating, hot-wire cut — for feedback that names the material.
+
+Use material agents can actually inspect. If no suitable material is available, define observable tests and record the limitation.
+
+Compare like with like:
+
+- Hoof path against Muybridge hoof path.
+- Joint-angle curves against equine joint-angle curves.
+- Pin load against foam bearing and glue shear limits.
+- Drive force against what a walker or cyclist can supply.
+- The phone layout against a workstation layout at phone size.
+
+Physical limits that do not move without stated evidence: bead EPS bearing about 70 kPa; glue shear into EPS about 50 kPa; human walking cadence about 0.8 to 1 Hz; cycling cadence 60 to 90 rpm; hip pivot 93 cm above the floor for an adult wearer.
+
+Do not equate more realism, smoother motion, more views, or more detail with higher quality. Keep the bar stable. Benchmark changes require an explicit reason and renewed review of affected work.
+
+3. PROVE THE METHOD EARLY
+
+◻ REPRESENTATIVE PASSAGE
+→ [Combines] → ◻ HARDEST DESIGN DEMAND
+→ [Combines] → ◻ HARDEST BUILD DEMAND
+→ [Tests] → ◻ END-TO-END CAPABILITY
+→ [Determines] → ◻ WHETHER TO SCALE THE METHOD
+
+Build a short representative passage: one hind leg on the walking wearer, through one full stride, with the cable drive, the hock coupling, ground contact, the section through the hock joint, and the build step that makes that joint, all readable on one phone screen.
+
+Do not choose an easy demonstration because it will look successful.
+
+Put this passage through independent review before multiplying modes, panels, or parts. If one leg model cannot feed the 2D view, the section, the 3D view, the physics, and the build order, change the representation while the cost is low.
+
+Keep a rough whole-instrument assembly alongside the test. Proving one view does not prove the instrument.
+
+4. MAKE THE SWARM ACCOUNTABLE TO ARTIFACTS
+
+◻ BUILD SWARM
+→ [Forms Around] → ◻ BOUNDED DESIGN PROBLEM
+→ [Shares] → ◻ VERSIONED FILES AND CONTRACTS
+→ [Produces] → ◻ INSPECTABLE DELIVERABLE
+→ [Is Reorganized By] → ◻ EVIDENCE
+
+Collectively cover: anatomy and proportion, kinematics, dynamics and drive, joint engineering, sourcing and salvage, fabrication sequence, finish and aesthetics, interface and layout, sound and haptics, mechanism evolution, integration, and verification.
+
+Choose staffing and boundaries yourself. Do not instantiate ceremonial roles.
+
+Every active task must have:
+
+- A concrete perceptual or technical objective.
+- An owner.
+- Input revisions and dependencies.
+- Allowed changes and protected relationships.
+- A deliverable that can be opened, played, or tested.
+- An acceptance condition.
+- A budget and a stopping condition.
+
+A report about intended work is not a deliverable.
+
+5. BUILD MOTION WITH SPECIFICITY
+
+◻ LEG MOTION
+→ [Begins With] → ◻ DRIVE AND LOAD
+→ [Develops Through] → ◻ LINKAGE AND COUPLING
+→ [Becomes Visible Through] → ◻ HOOF PATH AND TIMING
+→ [Changes Through] → ◻ CONTACT, FRICTION, AND SLACK
+
+Every important motion must come from something in the mechanism.
+
+Determine:
+
+- What drives each joint: cable, crank, coupling, gravity, or the wearer's hip.
+- What holds the leg in stance.
+- What lifts the hoof clear in swing.
+- What resists: pivot friction, cable slack, inertia, ground friction.
+- What changes after contact, slip, or lock-up.
+- What the motion shows before a label explains it.
+
+Test key poses alone — contact, passing, lift, reach — and check that they read. Then check the in-betweens for path, rotation, and overlap.
+
+Avoid generic motion: every joint on one sine wave, symmetric swing, constant speed, and a swing with no stance must earn their place.
+
+The motion must read without captions.
+
+6. MAKE THE WORLD CONSEQUENT
+
+◻ WORLD
+→ [Constrains] → ◻ MOTION
+→ [Responds To] → ◻ CONTACT
+→ [Retains] → ◻ CONSEQUENCE
+→ [Provides] → ◻ OPPORTUNITY AND RESISTANCE
+
+Hold scale, mass, and forces consistent: mass from the actual foam volume and density; gravity; pivot friction from clamp force and washer material; cable losses over pulleys; ground contact with friction; the wearer's hip bob; crank and wheel geometry.
+
+Keep separate:
+
+- Geometry and profiles.
+- Joint state.
+- Drive state.
+- Camera and projection.
+- Layer order (near and far legs, lap layers).
+- Materials and finish.
+- Sound and haptic events.
+
+Stylization is allowed when declared and applied consistently.
+
+7. COMPOSE ATTENTION THROUGH INTERFACE AND SOUND
+
+◻ LAYOUT
+→ [Keeps Visible] → ◻ SIMULATION AND PART UNDER STUDY
+→ [Docks] → ◻ CONTROLS AND INSPECTORS
+→ [Never Covers] → ◻ THE VIEWPORT
+→ [Places] → ◻ NUMBERS BESIDE WHAT THEY MEASURE
+
+◻ SOUND AND HAPTICS
+→ [Report] → ◻ CONTACT AND STATE CHANGE
+→ [Distinguish] → ◻ MATERIAL
+→ [Stay] → ◻ SPARSE
+
+On a phone the simulation holds the top half and controls the bottom half; on a wide screen they sit side by side. Nothing overlays the viewport except small transient labels. Every view — side, section, planes, 3D, linkage, dial, strip, footfall diagram, build — reads the same model at the same moment in time. Switching modes keeps context.
+
+No emoji glyphs; icons are drawn marks. Copy is plain and literal, with no metaphor where a literal phrase exists.
+
+Evaluate at phone size and normal speed, not only in enlarged diagnostic views.
+
+8. KEEP ONE SHARED, RECOVERABLE MODEL
+
+◻ CANONICAL STATE
+→ [Identifies] → ◻ PART, JOINT, AND DRIVE
+→ [Records] → ◻ ACCEPTED REVISION
+→ [Connects] → ◻ DEPENDENCY
+→ [Preserves] → ◻ CONTINUITY CONTRACT
+→ [Supports] → ◻ REPRODUCTION AND RESTORE
+
+Segment lengths, profiles, joint stacks, materials, drive parameters, costs, and build steps live in one model. Every view and every build step derives from it. Changing the joint type must rebuild the parts, the section, the parts list, and the build order together.
+
+Before integrating a change:
+
+- Check conflicting writes.
+- Check whether read dependencies changed.
+- Rebuild affected derived views.
+- Inspect the result in the whole instrument.
+
+Keep every accepted version of the file. Recovery restores the actual file, not a description of it.
+
+9. NEVER LET THE BUILDER AWARD THE PASS
+
+◻ BUILDER
+→ [Produces] → ◻ CANDIDATE
+→ [Supplies] → ◻ FILE, SCREENSHOTS, AND REPRODUCTION STEPS
+
+◻ INDEPENDENT CRITIC
+→ [Receives] → ◻ ASSIGNMENT AND QUALITY BAR
+→ [Inspects] → ◻ ACTUAL OUTPUT
+→ [Returns] → ◻ EVIDENCED VERDICT
+
+Use separate critics with fresh context for important work. Withhold the builder's justification, effort history, and earlier praise.
+
+Critics open the file at phone size and at normal speed first, then use diagnostic views. They return:
+
+- Verdict: bar met, reference stronger, or inconclusive.
+- Evidence: screenshot, mode, step number, cycle phase, or a reproducible failure.
+- Primary gap: the most consequential remaining weakness.
+- Acceptance condition: what observable change would close it.
+- Protected strengths: what the repair must keep.
+
+Builders may check their work. They cannot be the only authority accepting it.
+
+10. REPAIR THE CAUSE, THEN RECHECK THE WHOLE
+
+Reproduce the failure, find its likely cause, and choose a bounded intervention.
+
+A leg that floats may need stance friction or hip bob, not more frames.
+A crowded screen may need a docked inspector, not smaller text.
+A crushed joint needs more bearing area, not stronger glue.
+A gait that looks wrong may need a different coupling ratio, not smoothing.
+
+Do not hide structural problems with texture, shadows, camera motion, or sound. Check for regressions after every accepted repair across all modes.
+
+11. INVESTIGATE WHEN REPAIR STOPS WORKING
+
+Trigger inquiry when several repairs fail the same way, critics disagree about the cause, the representation cannot express the intended motion, local success keeps damaging the whole, or the target is being chased through a misleading proxy.
+
+Record:
+
+1. What is observed?
+2. What explanation currently guides the work?
+3. What assumption does that explanation depend on?
+4. What alternative would imply a different repair?
+5. What experiment distinguishes them?
+
+Use at least two perspectives: anatomical, mechanical, perceptual, fabrication, or computational. Build the experiment, inspect it, and keep uncertainty explicit. Inquiry earns its cost only when it changes what gets built, tested, kept, or dropped.
+
+12. PRESERVE DISCOVERY AND DISTINCTIVENESS
+
+Keep promising accidents: an evolved linkage that walks oddly well, a salvage part that suggests a different joint, a stepping stone in the novelty archive. Give them bounded experiments. Ask whether each one makes the leg read better, build easier, or carry load better. Do not discard an unusual result for being unusual, and do not keep it for being novel.
+
+Integration must keep deliberate roughness and restraint. Uniform polish can erase what the work is.
+
+13. KEEP THE WHOLE SYSTEM UNDER REVIEW
+
+Keep the full instrument working from the earliest version. After each major wave, give the whole file to a fresh critic. Review:
+
+- Whether the leg reads as a horse's hind leg in every drive mode.
+- Whether the numbers agree across views.
+- Whether a person could finish the build order at a bench.
+- Whether the simulation stays visible in every mode and panel.
+- Whether switching modes keeps context.
+- Redundant views and dead controls.
+- Whether the defining moment earns its effect.
+
+Whole-system review can reopen any local approval. Do not declare success by adding up component scores.
+
+14. VERIFY CLAIMS AND PROTECT RESOURCES
+
+◻ FINDING
+→ [Is Classified As] → ◻ MEASURED | ◻ STRUCTURAL | ◻ JUDGED | ◻ UNKNOWN
+→ [References] → ◻ EXACT FILE VERSION
+→ [Includes] → ◻ METHOD AND EVIDENCE
+
+Measure what the model supports: joint angles, forces, bearing stress, mass, cost totals, cycle timing, script errors. Judge what requires perception: whether the motion reads, whether the layout is clear, whether the finish looks right. Mark as unknown what only a physical build can settle, such as how a given foam actually wears at a pivot.
+
+Never manufacture numerical certainty for a judgment. Never claim to have watched motion when only stills were checked. Prices are estimates unless looked up.
+
+Repeated equivalent attempts are not persistence. Change the hypothesis or method when the evidence calls for it.
+
+15. MAKE PROGRESS AND STOPPING HONEST
+
+Keep a short progress record in the instrument or beside it: current version, verdicts, open repairs, accepted checkpoints.
+
+Continue until independent review finds the bar met, the human stops the run, the budget is spent, or further attempts show no progress and a method change is not justified.
+
+Do not lower the bar silently or call unfinished work complete.
+
+Deliver:
+
+- The instrument file, or a clearly identified milestone.
+- The previous accepted versions.
+- A concise validation record.
+- Remaining limitations.
+- The strongest recoverable checkpoint.
+
+START NOW
+
+Open the current files. State the design thesis and references. Identify the moment that most severely tests the ambition. Build it, submit it to independent review, and use the evidence to organize the rest of the work.
+
+Make every important claim about quality answerable by opening the file and using it.</script>
+<script>
+(()=>{const src=document.getElementById('src').textContent.trim();const out=document.getElementById('prompt');
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const lines=src.split('\n');let html='';lines.forEach((l,i)=>{const e=esc(l);
+  if(i<2)html+=`<span class="${i?'h':'t'}" style="${i?'margin-top:0':''}">${e}</span>`;
+  else if(/^(\d+\.\s+[A-Z][A-Z ,'—-]+|START NOW)$/.test(l))html+=`<span class="h">${e}</span>`;
+  else if(/^(◻|→)/.test(l))html+=`<span class="g">${e}</span>\n`;
+  else html+=e+'\n';});
+out.innerHTML=html;
+let plain=false;document.getElementById('raw').addEventListener('click',e=>{plain=!plain;out.textContent=plain?src:'';if(!plain)out.innerHTML=html;e.currentTarget.textContent=plain?'Formatted':'Plain text';});
+document.getElementById('copy').addEventListener('click',async()=>{const ok=document.getElementById('ok');try{await navigator.clipboard.writeText(src);ok.textContent='Copied';}catch(e){const r=document.createRange();r.selectNodeContents(out);const s=getSelection();s.removeAllRanges();s.addRange(r);ok.textContent='Selected — copy now';}setTimeout(()=>ok.textContent='',2500);});
+})();
+</script>
+
+</html>

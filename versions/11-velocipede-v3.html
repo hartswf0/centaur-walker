@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<title>Centaur Velocipede</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#e8e5df;--panel:#f6f4f0;--view:#d9d4cb;--ink:#17150f;--ink-2:#5a554b;--ink-3:#8d877b;--rule:#d0cabe;--rule-2:#e4e0d8;--accent:#2f55c9;--accent-ink:#fff;--ok:#15803d;--warn:#c2410c;
+  --f-display:"Bodoni Moda",Didot,Georgia,serif;--f-body:"IBM Plex Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f0e0c;--panel:#171512;--view:#1d1a16;--ink:#ece7dd;--ink-2:#a9a293;--ink-3:#736c60;--rule:#2d2924;--rule-2:#221f1b;--accent:#8fa8ff;--accent-ink:#0d1014;--ok:#4ade80;--warn:#fb923c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f0e0c;--panel:#171512;--view:#1d1a16;--ink:#ece7dd;--ink-2:#a9a293;--ink-3:#736c60;--rule:#2d2924;--rule-2:#221f1b;--accent:#8fa8ff;--accent-ink:#0d1014;--ok:#4ade80;--warn:#fb923c;color-scheme:dark}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.4 var(--f-body);overflow:hidden}
+.ws{height:100%;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(250px,50%) auto auto minmax(0,1fr);grid-template-areas:"head" "view" "trans" "tabs" "insp";padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+@media (min-width:900px){.ws{grid-template-columns:minmax(0,1fr) 410px;grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"head head" "view side" "trans side"}.side{grid-area:side;display:grid;grid-template-rows:auto minmax(0,1fr);border-left:1px solid var(--rule);min-height:0}.tabs,.insp{grid-area:auto!important}}
+@media (max-width:899px){.side{display:contents}}
+header{grid-area:head;display:flex;align-items:center;gap:10px;padding:6px 12px;background:var(--panel);border-bottom:1px solid var(--rule);min-width:0}
+h1{margin:0;font:500 15px var(--f-display);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}
+@media (max-width:560px){h1{display:none}}
+.hstat{flex:1;min-width:0;font:500 11px var(--f-mono);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini{font:600 11px var(--f-body);border:1px solid var(--rule);background:var(--panel);color:var(--ink);border-radius:5px;min-height:30px;min-width:32px;padding:4px 8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.mini[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.mode{display:inline-flex;border:1px solid var(--ink);border-radius:7px;overflow:hidden;flex-shrink:0}
+.mode button{font:600 12.5px var(--f-body);border:0;background:transparent;color:var(--ink);padding:6px 12px;min-height:34px;cursor:pointer;display:inline-flex;gap:7px;align-items:center}
+.mode button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.mode i{display:inline-block;width:14px;height:10px;border:1.6px solid currentColor;border-radius:50%}
+.mode i.pack{border-radius:3px;width:10px;height:13px}
+.view{grid-area:view;position:relative;background:var(--view);overflow:hidden;min-height:0}
+.view canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.view canvas[hidden]{display:none}
+.vbar{position:absolute;top:8px;left:8px;right:8px;display:flex;flex-wrap:wrap;gap:6px;justify-content:space-between;pointer-events:none}.vbar>*{pointer-events:auto}
+.vseg{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--panel)}
+.vseg button{font:600 11px var(--f-body);border:0;background:transparent;color:var(--ink);padding:5px 10px;min-height:30px;cursor:pointer}
+.vseg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.vstat{position:absolute;left:8px;right:8px;bottom:6px;font:500 10.5px var(--f-mono);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.warn{position:absolute;left:8px;bottom:22px;font:600 11px var(--f-body);color:#fff;background:var(--warn);border-radius:4px;padding:3px 8px;pointer-events:none}
+.warn[hidden]{display:none}
+.trans{grid-area:trans;display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--panel);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.scrub{flex:1;height:28px;touch-action:none;cursor:pointer;min-width:0}
+.play{width:40px;height:36px;border-radius:7px;border:0;background:var(--accent);color:var(--accent-ink);cursor:pointer;display:grid;place-items:center}
+.ic{display:inline-block;position:relative;width:12px;height:12px}
+.ic.play-i{width:0;height:0;border-left:11px solid currentColor;border-top:6px solid transparent;border-bottom:6px solid transparent}
+.ic.pause-i::before,.ic.pause-i::after{content:"";position:absolute;top:0;width:4px;height:12px;background:currentColor}.ic.pause-i::before{left:1px}.ic.pause-i::after{right:1px}
+.cad{display:flex;align-items:center;gap:6px;font:500 11px var(--f-mono);color:var(--ink-2)}.cad input{width:96px;accent-color:var(--accent)}
+.tabs{grid-area:tabs;display:flex;background:var(--panel);border-bottom:1px solid var(--rule)}
+.tabs button{flex:1;font:600 12.5px var(--f-body);border:0;border-bottom:2px solid transparent;background:transparent;color:var(--ink-2);padding:9px 6px;min-height:40px;cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.insp{grid-area:insp;overflow:auto;background:var(--panel);padding:12px 14px calc(18px + env(safe-area-inset-bottom,0px));min-height:0}
+.insp section{display:flex;flex-direction:column;gap:10px}
+h2{margin:0;font:600 16px var(--f-body)}
+p{margin:0;max-width:66ch}.muted{color:var(--ink-2);font-size:12.5px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}.tw{overflow-x:auto}
+th,td{text-align:left;padding:4px 6px;border-bottom:1px solid var(--rule-2);vertical-align:top}
+th{font-weight:600;color:var(--ink-2);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+td.n{font-family:var(--f-mono);text-align:right;white-space:nowrap}td.m{font-family:var(--f-mono);white-space:nowrap}
+.tag{display:inline-block;font:600 9.5px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;padding:1px 4px;border-radius:3px;border:1px solid currentColor}
+.tag.buy{color:var(--accent)}.tag.salvage{color:var(--ok)}.tag.have{color:#8a6d3b}
+ol.steps{list-style:none;margin:0;padding:0}
+ol.steps li{display:grid;grid-template-columns:26px 1fr;gap:8px;padding:8px 4px;border-bottom:1px solid var(--rule-2);cursor:pointer}
+ol.steps li.ph{display:block;cursor:default;border:0;font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding:12px 4px 2px}
+ol.steps li .no{font:500 11px var(--f-mono);color:var(--ink-3);text-align:right;padding-top:2px}
+ol.steps li b{font-weight:600;display:block}
+ol.steps li span.d{font-size:12.5px;color:var(--ink-2)}
+ol.steps li.cur{background:var(--rule-2)}
+ol.steps li.off{opacity:.45}
+ol.steps li .num{font-family:var(--f-mono);color:var(--ink)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13px;margin:0}.kv dt{color:var(--ink-2)}.kv dd{margin:0;font:500 12.5px var(--f-mono)}
+.sl{display:grid;grid-template-columns:minmax(8.5em,auto) 1fr auto;gap:8px;align-items:center;font-size:13px;color:var(--ink-2)}
+.val{font:500 12px var(--f-mono);color:var(--ink);min-width:7ch;text-align:right}
+.big{font:500 22px var(--f-mono);letter-spacing:-.01em}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cell{border:1px solid var(--rule);border-radius:6px;padding:8px 10px;background:var(--bg)}.cell small{display:block;color:var(--ink-2);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.spk{position:relative;width:16px;height:12px;display:inline-block}.spk::before{content:"";position:absolute;left:0;top:3px;width:4px;height:6px;background:currentColor}.spk::after{content:"";position:absolute;left:3px;top:0;border-right:6px solid currentColor;border-top:6px solid transparent;border-bottom:6px solid transparent}.spk i{position:absolute;left:10px;top:2px;width:6px;height:8px;border:2px solid currentColor;border-left:0;border-radius:0 8px 8px 0;opacity:.25}[aria-pressed="true"] .spk i{opacity:1}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+select{font:500 12.5px var(--f-body);padding:4px;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);min-height:30px}
+.loading{position:absolute;inset:0;display:grid;place-items:center;font:500 12px var(--f-mono);color:var(--ink-2)}
+</style>
+<div class="ws">
+<header><h1>Centaur Velocipede</h1><div class="mode" role="group" aria-label="Mode"><button data-m="bike" aria-pressed="true"><i></i>Bicycle</button><button data-m="pack" aria-pressed="false"><i class="pack"></i>Backpack</button></div><div class="hstat" id="hstat"></div><button class="mini" id="snd" type="button" aria-pressed="false" aria-label="Sound"><span class="spk"><i></i></span></button></header>
+<div class="view" id="view">
+  <canvas id="c3" aria-label="3D model. Drag to orbit, pinch to zoom, tap a part to name it."></canvas>
+  <canvas id="c2" hidden aria-label="Drawing"></canvas>
+  <div class="loading" id="loading">Loading 3D…</div>
+  <div class="vbar"><div class="vseg" role="group" aria-label="View"><button data-v="3d" aria-pressed="true">3D</button><button data-v="elev" aria-pressed="false">Elevation</button><button data-v="plate" aria-pressed="false">Plate</button><button data-v="leg" aria-pressed="false">Leg</button></div><div class="vseg" role="group" aria-label="3D options" id="v3opts"><button id="xray" aria-pressed="false">Bare</button><button id="fit">Fit</button></div></div>
+  <div class="warn" id="warn" hidden></div>
+  <div class="vstat" id="vstat"></div>
+</div>
+<div class="trans"><button class="play" id="play" type="button" aria-label="Pause"><span class="ic pause-i" id="pi"></span></button><canvas class="scrub" id="scrub" aria-label="Phase of one leg cycle. Drag to scrub."></canvas><label class="cad"><input id="spd" type="range" min="0.5" max="7" step="0.05" value="2.5" aria-label="Ground speed"><span id="spdv"></span></label></div>
+<div class="side">
+  <div class="tabs" role="tablist"><button role="tab" data-t="build" aria-selected="true">Build</button><button role="tab" data-t="parts" aria-selected="false">Parts</button><button role="tab" data-t="drive" aria-selected="false">Drive</button><button role="tab" data-t="joints" aria-selected="false">Joints</button></div>
+  <div class="insp" id="insp"></div>
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(()=>{
+const T=window.THREE,TAU=Math.PI*2,D=Math.PI/180,$=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const V=(x,y)=>({x,y}),sub=(a,b)=>V(a.x-b.x,a.y-b.y),add=(a,b)=>V(a.x+b.x,a.y+b.y),len=v=>Math.hypot(v.x,v.y);
+const mm=m=>(m*1000).toFixed(0)+' mm';
+
+/* ===== Jansen linkage (Jansen's units) ===== */
+const JU={a:38,b:41.5,c:39.3,d:40.1,e:55.8,f:39.4,g:36.7,h:65.7,i:49,j:50,k:61.9,l:7.8,m:15};
+function circ(p,r1,q,r2,side){const dx=q.x-p.x,dy=q.y-p.y,d=Math.hypot(dx,dy);if(d<1e-9)return null;const a=(r1*r1-r2*r2+d*d)/(2*d),hh=r1*r1-a*a;if(hh<0)return null;const h=Math.sqrt(hh),mx=p.x+a*dx/d,my=p.y+a*dy/d;return V(mx-side*h*dy/d,my+side*h*dx/d);}
+function jan(th){const O=V(0,0),B=V(-JU.a,-JU.l),C=V(JU.m*Math.cos(th),JU.m*Math.sin(th));const Dd=circ(B,JU.b,C,JU.j,1),E=circ(B,JU.c,C,JU.k,-1),F=circ(B,JU.d,Dd,JU.e,1),G=circ(F,JU.f,E,JU.g,-1),H=circ(G,JU.h,E,JU.i,-1);return {O,B,C,D:Dd,E,F,G,H};}
+const NS=360,PU=[];for(let k=0;k<NS;k++)PU.push(jan(k/NS*TAU));
+const YMIN=Math.min(...PU.map(p=>p.H.y)),YMAXH=Math.max(...PU.map(p=>p.H.y));
+const CONTACT=PU.map(p=>p.H.y<YMIN+1.0);
+let TD=0,LO=0;for(let k=0;k<NS;k++){if(CONTACT[k]&&!CONTACT[(k+1)%NS])TD=k;if(CONTACT[k]&&!CONTACT[(k-1+NS)%NS])LO=k;}
+const DUTY=CONTACT.filter(Boolean).length/NS;
+const thetaAt=ph=>TD/NS*TAU-TAU*ph; // phase 0 = left hind touchdown; the crank turns clockwise seen from the right
+const onGround=ph=>CONTACT[((Math.round(TD-NS*ph)%NS)+NS)%NS];
+const SC=.170/JU.m;                  // metres per Jansen unit: the crank is a 170 mm bicycle crank arm
+const DROP=-YMIN*SC;                 // pivot O to hoof bottom
+const BODIES=[{id:'crank',name:'Crank arm',j:['O','C']},{id:'j',name:'Upper rod',j:['C','D']},{id:'k',name:'Lower rod',j:['C','E']},{id:'t1',name:'Hip plate',j:['B','D','F']},{id:'c',name:'Thigh rocker',j:['B','E']},{id:'f',name:'Gaskin rod',j:['F','G']},{id:'t2',name:'Shank plate',j:['G','E','H']}];
+const LINKS=[['O','C','m'],['C','D','j'],['C','E','k'],['B','D','b'],['B','F','d'],['D','F','e'],['B','E','c'],['F','G','f'],['G','E','g'],['G','H','h'],['E','H','i']];
+const JOINTS=['B','C','D','E','F','G'];
+const legL=ph=>{const u=jan(thetaAt(ph)),o={};for(const k in u)o[k]=V(u[k].x*SC,u[k].y*SC);return o;}; // relative to O
+
+/* ===== the bicycle: State Bicycle Co. 4130 All-Road, Medium (51 cm), 700 × 38c ===== */
+const BK={R:.349,BB:V(0,.274),RA:V(-.4437,.349),FA:V(.6104,.349),STt:V(-.145,.763),HTt:V(.3715,.8765),HTb:V(.424,.720),saddle:V(-.2045,.9645),rackY:.80,rackX:[-.62,-.24],C:2.16,ring:42,cogs:[11,13,15,17,19,21,24,28,32,36,42]};
+const MODES={bike:{name:'Bicycle',O:V(-.50,DROP+.039),vmin:1,vmax:7,v:2.5},pack:{name:'Backpack',O:V(-.52,DROP),vmin:.5,vmax:1.9,v:1.3}};
+const S={mode:'bike',v:2.5,cog:24,ph:0,dist:0,playing:true,view:'3d',tab:'build',step:-1,sound:false,bare:false};
+const Om=()=>MODES[S.mode].O;
+const BASE=-.25; // base rails 250 mm below O
+const ARM={pivot:V(-.45,BASE),wheelX:-.58,r:.0975,C:2*Math.PI*.0975}; // 200 × 50 pneumatic, loaded rolling radius
+const PLY=.012,WASH=.0016,PITCH=PLY+WASH,BARW=.045,PLATE_Z=.13,LAYER0=.205,HUB=[.165,.199];
+const layerZ=L=>LAYER0+(L-1)*PITCH;
+
+/* ===== derived numbers ===== */
+let K={};
+function derive(){const dx=(PU[TD].H.x-PU[LO].H.x)*SC,adv=dx/DUTY;
+  let best=null;for(let a=10;a<=20;a++)for(let b=20;b<=60;b++){const e=Math.abs(ARM.C*b/a-adv);if(!best||e<best.e-1e-6)best={a,b,e};}
+  const advG=ARM.C*best.b/best.a;let slip=0;for(let k=TD;k!==LO;k=(k-1+NS)%NS){const k2=(k-1+NS)%NS;slip+=Math.abs((PU[k2].H.x-PU[k].H.x)*SC+advG/NS);}
+  const O=Om(),wheel=V(O.x+ARM.wheelX,ARM.r),piv=add(O,ARM.pivot);
+  const chain=(cd,t1,t2,p)=>{let n=2*cd/p+(t1+t2)/2+p*(t2-t1)**2/(4*Math.PI**2*cd);n=Math.ceil(n);if(n%2)n++;return n;};
+  K={adv,dx,T2:best.a,TJ:best.b,advG,slip,f:S.v/advG,cad:S.v/(BK.C*BK.ring/S.cog)*60,lift:(YMAXH-YMIN)*SC,O,wheel,piv,armLen:len(sub(wheel,piv)),clear:O.y-DROP,
+    ch1:chain(len(sub(wheel,piv)),15,15,.009525),ch2:chain(len(sub(O,piv)),best.a,best.b,.009525)};}
+derive();
+
+/* ===== layer plan (parts, bolt columns and the shaft end) ===== */
+function segDist(a,b,c,d){const f=(p,q,r)=>{const l2=(r.x-q.x)**2+(r.y-q.y)**2;let t=l2?((p.x-q.x)*(r.x-q.x)+(p.y-q.y)*(r.y-q.y))/l2:0;t=Math.max(0,Math.min(1,t));return Math.hypot(p.x-q.x-t*(r.x-q.x),p.y-q.y-t*(r.y-q.y));};
+  const o=(p,q,r)=>Math.sign((q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x));if(o(a,b,c)*o(a,b,d)<0&&o(c,d,a)*o(c,d,b)<0)return 0;return Math.min(f(a,c,d),f(b,c,d),f(c,a,b),f(d,a,b));}
+const bodyEdges=b=>b.j.length===2?[[b.j[0],b.j[1]]]:[[b.j[0],b.j[1]],[b.j[1],b.j[2]],[b.j[2],b.j[0]]];
+const LAYERS={},JSTACK={};
+(function(){const n=BODIES.length,conf=[...Array(n)].map(()=>Array(n).fill(false)),gap=(BARW+.006)/SC;
+  for(let a=0;a<n;a++)for(let b=a+1;b<n;b++){const A=BODIES[a],Bb=BODIES[b];if(A.j.some(x=>Bb.j.includes(x))){conf[a][b]=conf[b][a]=true;continue;}
+    for(let k=0;k<NS&&!conf[a][b];k+=5){const P=PU[k];for(const [p,q] of bodyEdges(A))for(const [r,t] of bodyEdges(Bb))if(segDist(P[p],P[q],P[r],P[t])<gap)conf[a][b]=conf[b][a]=true;}}
+  const COLJ=[...JOINTS,'O'],near=BODIES.map(b=>{const o={},r=(BARW/2+.012)/SC;for(const J of COLJ){o[J]=false;for(let k=0;k<NS&&!o[J];k+=3){const P=PU[k];for(const [p,q] of bodyEdges(b))if(segDist(P[J],P[J],P[p],P[q])<r){o[J]=true;break;}}}return o;});
+  let best=null;for(let kc=2;kc<=7&&!best;kc++){const asg=Array(n).fill(0);
+    const rec=i=>{if(i===n){for(const J of COLJ){const ls=BODIES.map((b,bi)=>b.j.includes(J)?asg[bi]:null).filter(x=>x!==null);const lo=J==='B'?1:Math.min(...ls),hi=Math.max(...ls);for(let bi=0;bi<n;bi++)if(!BODIES[bi].j.includes(J)&&near[bi][J]&&asg[bi]>=lo&&asg[bi]<=hi)return;}
+        let cost=0;for(const J of JOINTS){const ls=BODIES.map((b,bi)=>b.j.includes(J)?asg[bi]:null).filter(x=>x!==null);const lo=J==='B'?1:Math.min(...ls),hi=Math.max(...ls);cost+=hi-lo+1-ls.length;}if(!best||cost<best.cost)best={cost,asg:asg.slice()};return;}
+      for(let L=1;L<=kc;L++){if(i===0&&L!==1)continue;let ok=true;for(let p=0;p<i;p++)if(conf[i][p]&&asg[p]===L){ok=false;break;}if(ok){asg[i]=L;rec(i+1);}}};rec(0);}
+  BODIES.forEach((b,i)=>LAYERS[b.id]=best.asg[i]);LAYERS.n=Math.max(...best.asg);
+  const SH=[10,12,16,20,25,30,35,40,45,50,55,60,70,80];
+  for(const J of JOINTS){const bs=BODIES.filter(b=>b.j.includes(J)).map(b=>({b,L:LAYERS[b.id]}));const ls=bs.map(x=>x.L);const lo=J==='B'?1:Math.min(...ls),hi=Math.max(...ls);
+    const span=hi-lo+1,stack=span*PLY+(span-1)*WASH+(J==='B'?WASH:0);JSTACK[J]={bodies:bs,lo,hi,spacers:span-ls.length,stack,shoulder:SH.find(x=>x/1000>=stack-.0005)||80};}})();
+
+/* ===== human motion ===== */
+function twoBone(h,t,L1,L2,bend){const d=sub(t,h),dl=Math.min(len(d),L1+L2-1e-4),a=Math.atan2(d.y,d.x),al=Math.acos(Math.max(-1,Math.min(1,(L1*L1+dl*dl-L2*L2)/(2*L1*dl))));return V(h.x+Math.cos(a+bend*al)*L1,h.y+Math.sin(a+bend*al)*L1);}
+const strideH=v=>.72*v+.45; // walking stride (two steps), metres
+function riderBike(){const pedPh=S.dist/(BK.C*BK.ring/S.cog);const psiR=-TAU*pedPh+Math.PI/2,legs=[];const hip=V(-.19,1.04);
+  for(const [psi,side] of [[psiR+Math.PI,-1],[psiR,1]]){const pd=V(.17*Math.cos(psi),BK.BB.y+.17*Math.sin(psi)),ank=V(pd.x-.035,pd.y+.07),kn=twoBone(hip,ank,.47,.47,1);legs.push({side,hip,kn,ank,toe:V(pd.x+.09,pd.y+.01),pd});}
+  const sh=V(.15,1.42),hand=V(.50,.93),el=twoBone(sh,hand,.31,.29,-1);return {legs,hip,sh,el,hand,head:V(.24,1.58),psiR,pelvis:V(-.2,1.03)};}
+function walker(){const Sh=strideH(S.v),p0=S.dist/Sh,legs=[];const bob=.02*Math.cos(TAU*2*p0);const hip=V(0,.95+bob);
+  for(const [off,side] of [[0,-1],[.5,1]]){const p=((p0+off)%1+1)%1;let x,y;if(p<.62){const u=p/.62;x=Sh*(.31-.62*u);y=.08;}else{const u=(p-.62)/.38,s=u*u*(3-2*u);x=Sh*(-.31+.62*s);y=.08+.11*Math.sin(Math.PI*u);}
+    const ank=V(x,y),kn=twoBone(hip,ank,.45,.45,1);legs.push({side,hip,kn,ank,toe:V(x+.15,Math.max(.02,y-.06))});}
+  const sh=V(.03,1.45+bob),sw=Math.sin(TAU*p0)*.18;return {legs,hip,sh,arms:[-1,1].map(sd=>{const hand=V(.05+sd*sw,.82+bob);return {side:sd,el:twoBone(sh,hand,.3,.28,1),hand};}),head:V(.05,1.64+bob)};}
+
+/* ===== sound ===== */
+const AU={};function audio(){if(AU.c){if(AU.c.state==='suspended')AU.c.resume();return AU.c;}try{const c=new (window.AudioContext||window.webkitAudioContext)();const o=c.createGain();o.gain.value=.7;o.connect(c.destination);const nb=c.createBuffer(1,c.sampleRate,c.sampleRate),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;Object.assign(AU,{c,o,nb});return c;}catch(e){return null;}}
+function knock(f,dur,g){if(!S.sound)return;const c=audio();if(!c)return;const t=c.currentTime,s=c.createBufferSource(),bp=c.createBiquadFilter(),gn=c.createGain();s.buffer=AU.nb;bp.type='bandpass';bp.frequency.value=f;bp.Q.value=3;gn.gain.setValueAtTime(g,t);gn.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(bp);bp.connect(gn);gn.connect(AU.o);s.start(t);s.stop(t+dur+.02);
+  const o=c.createOscillator(),g2=c.createGain();o.frequency.value=f/3;g2.gain.setValueAtTime(g*.4,t);g2.gain.exponentialRampToValueAtTime(.0001,t+dur*3);o.connect(g2);g2.connect(AU.o);o.start(t);o.stop(t+dur*3+.02);try{navigator.vibrate&&navigator.vibrate(8);}catch(e){}}
+
+/* ===== 3D ===== */
+const c3=$('c3'),c2=$('c2');let R3=null,RENDERER=null;
+function build3D(){
+  if(!RENDERER){RENDERER=new T.WebGLRenderer({canvas:c3,antialias:true});RENDERER.setPixelRatio(Math.min(2,devicePixelRatio||1));RENDERER.shadowMap.enabled=true;RENDERER.shadowMap.type=T.PCFSoftShadowMap;RENDERER.outputEncoding=T.sRGBEncoding;RENDERER.toneMapping=T.ACESFilmicToneMapping;RENDERER.toneMappingExposure=1.1;}
+  const renderer=RENDERER,scene=new T.Scene(),camera=new T.PerspectiveCamera(32,1,.05,40);scene.background=new T.Color(C.view||'#d9d4cb').convertSRGBToLinear();
+  scene.add(new T.HemisphereLight(0xfff4e0,0x6b5a44,.7));const sun=new T.DirectionalLight(0xffffff,1.0);sun.position.set(1.2,3,2.4);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-2.4,right:2.2,top:2.2,bottom:-1,near:.5,far:8});sun.shadow.bias=-.0005;scene.add(sun);
+  const rim=new T.DirectionalLight(0xc8d6ff,.3);rim.position.set(-2,1.5,-1.5);scene.add(rim);
+  const srgb=c=>new T.Color(c).convertSRGBToLinear();
+  const tex=(w,h,draw)=>{const cv=document.createElement('canvas');cv.width=w;cv.height=h;draw(cv.getContext('2d'),w,h);const t=new T.CanvasTexture(cv);t.encoding=T.sRGBEncoding;t.anisotropy=8;t.wrapS=T.RepeatWrapping;return t;};
+  const wallT=tex(2048,512,(g,w,h)=>{g.fillStyle='#16130f';g.fillRect(0,0,w,h);const px=w/4;for(let i=0;i<=40;i++){const x=i*px/10;g.strokeStyle=i%5?'rgba(235,225,200,.35)':'rgba(235,225,200,.8)';g.lineWidth=i%5?2:4;g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
+    for(let j=0;j<=20;j++){const y=h-j*h/20;g.strokeStyle=j%5?'rgba(235,225,200,.25)':'rgba(235,225,200,.7)';g.lineWidth=j%5?2:4;g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
+    g.fillStyle='rgba(235,225,200,.85)';g.font='bold 34px monospace';for(let i=0;i<8;i++)g.fillText(String(i+1),i*px/2+10,46);});
+  const wall=new T.Mesh(new T.PlaneGeometry(4,2),new T.MeshStandardMaterial({map:wallT,roughness:.95}));wall.position.set(-.3,1,-1.1);wall.receiveShadow=true;scene.add(wall);
+  const floorT=tex(1024,1024,(g,w,h)=>{g.fillStyle='#8c7a63';g.fillRect(0,0,w,h);for(let i=0;i<4000;i++){g.fillStyle=`rgba(${60+Math.random()*60},${50+Math.random()*40},${30+Math.random()*30},.25)`;g.fillRect(Math.random()*w,Math.random()*h,2,2);}g.strokeStyle='rgba(240,230,210,.55)';g.lineWidth=3;for(let i=0;i<=10;i++){g.beginPath();g.moveTo(i*w/10,0);g.lineTo(i*w/10,h);g.stroke();}});
+  floorT.wrapT=T.RepeatWrapping;floorT.repeat.set(4,4);
+  const floor=new T.Mesh(new T.PlaneGeometry(4,4),new T.MeshStandardMaterial({map:floorT,roughness:.95}));floor.rotation.x=-Math.PI/2;floor.position.set(-.3,0,.8);floor.receiveShadow=true;scene.add(floor);
+  const woodT=tex(512,128,(g,w,h)=>{g.fillStyle='#c79f68';g.fillRect(0,0,w,h);for(let i=0;i<60;i++){g.strokeStyle=`rgba(${110+Math.random()*40},${70+Math.random()*30},30,${.12+Math.random()*.18})`;g.lineWidth=1+Math.random()*2;g.beginPath();const y=Math.random()*h;g.moveTo(0,y);for(let x=0;x<=w;x+=32)g.lineTo(x,y+Math.sin(x/60+i)*3);g.stroke();}
+    for(let i=0;i<14;i++){g.fillStyle=`rgba(90,55,20,${.08+Math.random()*.1})`;g.beginPath();g.ellipse(Math.random()*w,Math.random()*h,20+Math.random()*60,6+Math.random()*12,0,0,TAU);g.fill();}});
+  woodT.wrapT=T.RepeatWrapping;
+  const MT={wood:()=>new T.MeshStandardMaterial({map:woodT,roughness:.62}),bone:()=>new T.MeshStandardMaterial({color:srgb('#d8c296'),roughness:.7}),steel:()=>new T.MeshStandardMaterial({color:srgb('#b9bfc4'),metalness:.8,roughness:.32}),
+    bronze:()=>new T.MeshStandardMaterial({color:srgb('#b0803f'),metalness:.7,roughness:.35}),alu:()=>new T.MeshStandardMaterial({color:srgb('#c3c8cc'),metalness:.55,roughness:.4}),frame:()=>new T.MeshStandardMaterial({color:srgb('#1f2226'),metalness:.35,roughness:.42}),
+    black:()=>new T.MeshStandardMaterial({color:srgb('#1d1b19'),roughness:.8}),chain:()=>new T.MeshStandardMaterial({color:srgb('#4b4a48'),metalness:.6,roughness:.5}),rider:()=>new T.MeshStandardMaterial({color:srgb('#6f6a64'),roughness:.85}),
+    hoof:()=>new T.MeshStandardMaterial({color:srgb('#3a2c22'),roughness:.6}),hair:()=>new T.LineBasicMaterial({color:srgb('#2b1d14')}),pack:()=>new T.MeshStandardMaterial({color:srgb('#4a5a3a'),roughness:.9}),yellow:()=>new T.MeshStandardMaterial({color:srgb('#e0a936'),roughness:.7})};
+  const ALL=[];function reg(o,tag,name){o.traverse(m=>{if(m.isMesh){m.castShadow=true;m.receiveShadow=true;m.userData.tag=tag;m.userData.name=name;m.material=m.material.clone();ALL.push(m);}});return o;}
+  const v3=(x,y,z)=>new T.Vector3(x,y,z);
+  const cyl=(a,b,r,mat,seg=12)=>{const d=new T.Vector3().subVectors(b,a),L=d.length();const m=new T.Mesh(new T.CylinderGeometry(r,r,L,seg),mat);m.position.copy(a).addScaledVector(d,.5);m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),d.normalize());return m;};
+  const box=(a,b,w,h,mat)=>{const d=new T.Vector3().subVectors(b,a),L=d.length();const m=new T.Mesh(new T.BoxGeometry(w,L,h),mat);m.position.copy(a).addScaledVector(d,.5);m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),d.normalize());return m;};
+  const sprocket=(T_,pitch,tag,name)=>{const r=pitch/(2*Math.sin(Math.PI/T_));const g=new T.Group();const disc=new T.Mesh(new T.CylinderGeometry(r-.003,r-.003,.003,48),MT.steel());disc.rotation.x=Math.PI/2;g.add(disc);
+    for(let i=0;i<T_;i++){const tt=new T.Mesh(new T.BoxGeometry(pitch*.45,pitch*.6,.003),disc.material);const a=i/T_*TAU;tt.position.set(Math.cos(a)*r,Math.sin(a)*r,0);tt.rotation.z=a+Math.PI/2;g.add(tt);}reg(g,tag,name);return {g,r};};
+  function chainLoop(c1,r1,c2,r2,z,tag,name){const d=c2.clone().sub(c1),L=d.length(),a=Math.atan2(d.y,d.x),beta=Math.asin((r1-r2)/L),pts=[];const n1=a+Math.PI/2+beta,n2=a-Math.PI/2-beta;
+    const arc=(c,r,from,to,stp)=>{for(let k=0;k<=stp;k++){const ang=from+(to-from)*k/stp;pts.push(v3(c.x+Math.cos(ang)*r,c.y+Math.sin(ang)*r,z));}};arc(c1,r1,n1,n2+TAU,24);arc(c2,r2,n2,n1,16);
+    return reg(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts,true),200,.003,6,true),MT.chain()),tag,name);}
+  const root=new T.Group();scene.add(root);const O=Om();const wheelsSpin=[];let crankG=null,rider=null;
+  function wheel3(A,r,tw,tag,name){const g=new T.Group();g.position.set(A.x,A.y,0);g.add(new T.Mesh(new T.TorusGeometry(r-tw/2,tw/2,14,64),MT.black()));g.add(new T.Mesh(new T.TorusGeometry(r-tw-.006,.007,8,64),MT.alu()));const hub=new T.Mesh(new T.CylinderGeometry(.022,.022,.12,16),MT.alu());hub.rotation.x=Math.PI/2;g.add(hub);
+    const sp=[];for(let i=0;i<28;i++){const a=i/28*TAU,z=i%2?.03:-.03;sp.push(v3(0,0,z),v3(Math.cos(a)*(r-tw-.012),Math.sin(a)*(r-tw-.012),0));}g.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(sp),new T.LineBasicMaterial({color:0x9aa0a6})));root.add(g);reg(g,tag,name);wheelsSpin.push({g,r});return g;}
+  /* --- bicycle --- */
+  if(S.mode==='bike'){const bike=new T.Group();root.add(bike);const fm=MT.frame(),p=(q,z=0)=>v3(q.x,q.y,z);
+    for(const [a,b,r] of [[BK.BB,BK.STt,.0145],[BK.STt,BK.HTt,.0135],[BK.BB,BK.HTb,.0165],[BK.HTb,BK.HTt,.019]])bike.add(cyl(p(a),p(b),r,fm));
+    for(const z of [-.065,.065]){bike.add(cyl(p(BK.BB,z*.4),p(BK.RA,z),.0095,fm));bike.add(cyl(p(V(-.135,.72),z*.3),p(BK.RA,z),.008,fm));bike.add(cyl(p(BK.HTb,z*.5),p(BK.FA,z*.75),.012,fm));}
+    bike.add(cyl(p(BK.STt),p(BK.saddle),.0136,MT.steel()));const sad=new T.Mesh(new T.BoxGeometry(.27,.045,.14),MT.black());sad.position.set(BK.saddle.x-.02,BK.saddle.y+.02,0);bike.add(sad);
+    bike.add(cyl(p(BK.HTt),p(V(.37,.91)),.0143,MT.black()));bike.add(cyl(p(V(.365,.905)),p(V(.46,.93)),.016,MT.steel()));
+    for(const z of [-.21,.21]){const pts=[v3(.46,.93,z*.5),v3(.47,.93,z),v3(.56,.93,z),v3(.6,.88,z*1.04),v3(.57,.8,z*1.06),v3(.5,.79,z*1.06)];bike.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),24,.012,8),MT.black()));}
+    bike.add(cyl(v3(.46,.93,-.105),v3(.46,.93,.105),.016,MT.black()));
+    const rk=MT.black();for(const z of [-.065,.065]){bike.add(cyl(v3(BK.rackX[0],BK.rackY,z),v3(BK.rackX[1],BK.rackY,z),.005,rk));bike.add(cyl(v3(BK.rackX[0]+.03,BK.rackY,z),p(BK.RA,z*1.1),.005,rk));bike.add(cyl(v3(BK.rackX[1],BK.rackY,z),v3(-.14,.72,z*.5),.004,rk));}
+    for(const x of [BK.rackX[0],-.43,BK.rackX[1]])bike.add(cyl(v3(x,BK.rackY,-.065),v3(x,BK.rackY,.065),.004,rk));
+    const rot=new T.Mesh(new T.CylinderGeometry(.08,.08,.002,40),MT.steel());rot.rotation.x=Math.PI/2;rot.position.set(BK.RA.x,BK.RA.y,-.055);bike.add(rot);const cas=new T.Mesh(new T.CylinderGeometry(.085,.03,.04,24),MT.steel());cas.rotation.x=Math.PI/2;cas.position.set(BK.RA.x,BK.RA.y,.045);bike.add(cas);
+    reg(bike,'bike','State Bicycle Co. 4130 All-Road, Medium, 700 × 38c (yours)');
+    wheel3(BK.FA,BK.R,.038,'bike','700 × 38c Vittoria Terreno Zero');wheel3(BK.RA,BK.R,.038,'bike','700 × 38c Vittoria Terreno Zero, 12 × 142 thru-axle');
+    const cr=sprocket(BK.ring,.0127,'bike','Chainring 42T, 170 mm All-Road 1 crank');cr.g.position.set(0,BK.BB.y,.05);bike.add(cr.g);
+    crankG=new T.Group();crankG.position.set(BK.BB.x,BK.BB.y,0);bike.add(crankG);for(const side of [1,-1]){const arm=new T.Group();const bar=new T.Mesh(new T.BoxGeometry(.17,.022,.012),MT.black());bar.position.x=.085;arm.add(bar);const ped=new T.Mesh(new T.BoxGeometry(.1,.02,.09),MT.black());ped.position.set(.17,0,side*.05);arm.add(ped);arm.position.z=side*.085;if(side<0)arm.rotation.z=Math.PI;crankG.add(arm);}
+    reg(crankG,'bike','Cranks 170 mm');crankG.userData.ring=cr.g;
+    root.add(chainLoop(v3(0,BK.BB.y,0),cr.r,v3(BK.RA.x,BK.RA.y,0),.042,.05,'bike','Bike chain, 1 × 11, unchanged'));}
+  /* --- frame pack --- */
+  if(S.mode==='pack'){const pk=new T.Group();root.add(pk);const fr=MT.alu();
+    for(const z of [-.13,.13])pk.add(cyl(v3(-.17,.92,z),v3(-.17,1.55,z),.011,fr));for(const y of [.95,1.2,1.5])pk.add(cyl(v3(-.17,y,-.13),v3(-.17,y,.13),.009,fr));
+    const bag=new T.Mesh(new T.BoxGeometry(.18,.4,.3),MT.pack());bag.position.set(-.27,1.36,0);bag.scale.y=.75;pk.add(bag);
+    const belt=new T.Mesh(new T.TorusGeometry(1,.035,10,40),MT.pack());belt.scale.set(.17,.16,1);belt.rotation.x=Math.PI/2;belt.position.set(-.02,.98,0);pk.add(belt);
+    for(const z of [-1,1])pk.add(cyl(v3(-.06,.98,z*.17),v3(O.x+.22,O.y+BASE,z*.11),.01,MT.steel()));
+    reg(pk,'pack','External-frame backpack, hip belt and two hitch poles');}
+  {const RM=MT.rider(),g=new T.Group();root.add(g);const limb=r=>{const q=new T.Group();const c=new T.Mesh(new T.CylinderGeometry(r,r*.85,1,12),RM);q.add(c);q.userData.c=c;g.add(q);return q;};
+    rider={th:[limb(.062),limb(.062)],sh:[limb(.046),limb(.046)],ft:[limb(.032),limb(.032)],ua:[limb(.04),limb(.04)],fa:[limb(.033),limb(.033)],torso:limb(.135)};const head=new T.Mesh(new T.SphereGeometry(.1,20,16),RM);g.add(head);rider.head=head;
+    const pelvis=new T.Mesh(new T.SphereGeometry(.14,16,12),RM);pelvis.scale.set(1,.7,1.05);g.add(pelvis);rider.pelvis=pelvis;reg(g,'rider',S.mode==='bike'?'Rider, 1.80 m: the pedalling legs read as forelegs':'Wearer, 1.80 m: your legs are the forelegs');}
+  /* --- the module, identical in both modes, built around O --- */
+  const mod=new T.Group();mod.position.set(O.x,O.y,0);root.add(mod);
+  {const base=new T.Group();for(const z of [-.11,.11])base.add(box(v3(.22,BASE,z),v3(-.62,BASE,z),.025,.025,MT.alu()));for(const x of [.18,-.10,-.55])base.add(box(v3(x,BASE,-.12),v3(x,BASE,.12),.025,.008,MT.alu()));
+    const B=V(-JU.a*SC,-JU.l*SC);const plate=z=>{const s=new T.Shape(),pts=[[.07,.07],[.07,-.10],[B.x-.05,B.y-.06],[B.x-.07,B.y+.08],[-.10,.12]];s.moveTo(...pts[0]);for(const q of pts.slice(1))s.lineTo(...q);s.lineTo(...pts[0]);
+      const h1=new T.Path();h1.absarc(0,0,.016,0,TAU,true);s.holes.push(h1);const h2=new T.Path();h2.absarc(B.x,B.y,.006,0,TAU,true);s.holes.push(h2);const m=new T.Mesh(new T.ExtrudeGeometry(s,{depth:.006,bevelEnabled:false}),MT.alu());m.position.z=z;return m;};
+    base.add(plate(PLATE_Z-.006));base.add(plate(-PLATE_Z));
+    for(const [x,top] of [[-.04,-.095],[B.x+.03,B.y-.06]])for(const z of [-.11,.11])base.add(box(v3(x,BASE,z),v3(x,top,z),.025,.025,MT.alu()));
+    if(S.mode==='bike')for(const x of [BK.rackX[0]+.05-O.x,BK.rackX[1]-.04-O.x])for(const z of [-.065,.065]){const r=new T.Mesh(new T.BoxGeometry(.04,.03,.03),MT.black());r.position.set(x,BK.rackY+.015-O.y,z);base.add(r);}
+    mod.add(base);reg(base,'frame','Module frame: 6 mm aluminium pelvis plates on 25 mm square aluminium rails');}
+  const shaftG=new T.Group();mod.add(shaftG);{const SHL=2*(LAYER0+PLY/2);const sh=new T.Mesh(new T.CylinderGeometry(.0095,.0095,SHL,20),MT.steel());sh.rotation.x=Math.PI/2;shaftG.add(sh);
+    for(const z of [-1,1]){const fl=new T.Mesh(new T.BoxGeometry(.11,.06,.012),MT.black());fl.position.set(0,0,z*(PLATE_Z+.006));mod.add(fl);reg(fl,'shaft','Flange bearing UCFL204-12 (3/4 in)');const col=new T.Mesh(new T.CylinderGeometry(.02,.02,.022,20),MT.black());col.rotation.x=Math.PI/2;col.position.z=z*(PLATE_Z+.023);mod.add(col);reg(col,'shaft','Bearing collar');
+      const hub=new T.Mesh(new T.CylinderGeometry(.022,.022,HUB[1]-HUB[0],20),MT.steel());hub.rotation.x=Math.PI/2;hub.position.z=z*(HUB[0]+HUB[1])/2;shaftG.add(hub);}
+    const sj=sprocket(K.TJ,.009525,'drive',`Jackshaft sprocket ${K.TJ}T #35, 3/4 in bore`);sj.g.position.z=-.06;shaftG.add(sj.g);shaftG.userData.r=sj.r;reg(shaftG,'shaft',`Jackshaft: 3/4 in keyed, ${Math.round(SHL*1000)} mm, ends flush with the crank arms`);}
+  const armG=new T.Group();mod.add(armG);const W=V(K.wheel.x-O.x,K.wheel.y-O.y),P=ARM.pivot;let wheelG,spPiv1,spPiv2,spW;
+  {for(const z of [-.04,.04])armG.add(box(v3(P.x,P.y,z),v3(W.x,W.y,z),.02,.02,MT.alu()));const pv=new T.Mesh(new T.CylinderGeometry(.008,.008,.24,12),MT.steel());pv.rotation.x=Math.PI/2;pv.position.set(P.x,P.y,0);armG.add(pv);
+    spPiv1=sprocket(15,.009525,'drive','Pivot sprocket 15T #35');spPiv1.g.position.set(P.x,P.y,-.06);armG.add(spPiv1.g);spPiv2=sprocket(K.T2,.009525,'drive',`Pivot sprocket ${K.T2}T #35`);spPiv2.g.position.set(P.x,P.y,-.075);armG.add(spPiv2.g);
+    wheelG=new T.Group();wheelG.position.set(W.x,W.y,0);wheelG.add(new T.Mesh(new T.TorusGeometry(ARM.r-.022,.025,12,40),MT.black()));const rim=new T.Mesh(new T.CylinderGeometry(.05,.05,.04,20),MT.alu());rim.rotation.x=Math.PI/2;wheelG.add(rim);
+    for(let i=0;i<5;i++){const s=new T.Mesh(new T.BoxGeometry(.012,.07,.03),MT.alu());s.rotation.z=i/5*TAU;wheelG.add(s);}armG.add(wheelG);spW=sprocket(15,.009525,'drive','Wheel sprocket 15T #35');spW.g.position.set(W.x,W.y,-.06);armG.add(spW.g);
+    armG.add(cyl(v3(P.x+.12,BASE,0),v3((P.x+W.x)/2,(P.y+W.y)/2,0),.006,MT.yellow()));
+    reg(armG,'drive','Drive arm: 200 × 50 pneumatic wheel on the ground; bungee keeps it down');}
+  mod.add(chainLoop(v3(W.x,W.y,0),spW.r,v3(P.x,P.y,0),spPiv1.r,-.06,'drive',`Chain 1, #35, ${K.ch1} links, on the arm`));
+  mod.add(chainLoop(v3(P.x,P.y,0),spPiv2.r,v3(0,0,0),shaftG.userData.r,-.075,'drive',`Chain 2, #35, ${K.ch2} links, pivot to jackshaft`));
+  {const spineG=new T.Group();mod.add(spineG);const sc=new T.CatmullRomCurve3([v3(.12,.07,0),v3(-.1,.08,0),v3(-.4,.075,0),v3(-.6,.02,0)]);spineG.add(new T.Mesh(new T.TubeGeometry(sc,40,.0125,10),MT.bone()));
+    for(let i=0;i<=16;i++){const t=i/16,q=sc.getPoint(t);const v=new T.Mesh(new T.CylinderGeometry(.02,.02,.022,12),MT.bone());v.rotation.z=Math.PI/2;v.position.copy(q);spineG.add(v);const hgt=.03+.04*Math.max(0,1-t*2.5);const pr=new T.Mesh(new T.BoxGeometry(.012,hgt,.012),MT.bone());pr.position.set(q.x,q.y+hgt/2+.012,0);pr.rotation.z=.25;spineG.add(pr);}
+    for(const x of [.06,-.3])spineG.add(cyl(v3(x,BASE,0),sc.getPoint(x>0?.08:.6),.008,MT.steel()));reg(spineG,'spine','Spine: 1 in EMT conduit, PVC vertebra rings');
+    const ribsG=new T.Group();for(let i=0;i<4;i++){const x=.10-i*.03,wd=.15-i*.004;for(const s of [-1,1])ribsG.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3([v3(x,.075,s*.03),v3(x-.005,0,s*wd*.85),v3(x-.012,-.1,s*wd),v3(x-.02,-.2,s*wd*.7)]),20,.008,8),MT.bone()));}
+    mod.add(ribsG);reg(ribsG,'ribs','Ribs: 1/2 in PVC conduit, heat-bent, 4 pairs');}
+  const tailG=new T.Group();tailG.position.set(-.62,.02,0);mod.add(tailG);const hairs=[];for(let i=0;i<60;i++){const a=Math.random()*TAU,r=Math.random()*.03;hairs.push({z:Math.cos(a)*r,y:Math.sin(a)*r,l:.45+Math.random()*.2});}
+  const hairGeo=new T.BufferGeometry(),hairPos=new Float32Array(hairs.length*16*3);hairGeo.setAttribute('position',new T.BufferAttribute(hairPos,3));tailG.add(new T.LineSegments(hairGeo,MT.hair()));const dock=new T.Mesh(new T.CylinderGeometry(.018,.012,.14,10),MT.bone());dock.rotation.z=-1.1;dock.position.set(-.05,-.03,0);tailG.add(dock);reg(tailG,'tail','Tail: horsehair switch, 60 cm');
+  function barShape(L,w){const r=w/2,s=new T.Shape();s.moveTo(0,-r);s.quadraticCurveTo(L/2,-r*.55,L,-r);s.absarc(L,0,r,-Math.PI/2,Math.PI/2,false);s.quadraticCurveTo(L/2,r*.55,0,r);s.absarc(0,0,r,Math.PI/2,Math.PI*1.5,false);return s;}
+  function plateShape(Pp,w){let pts=Pp.slice();const ar=(pts[1].x-pts[0].x)*(pts[2].y-pts[0].y)-(pts[2].x-pts[0].x)*(pts[1].y-pts[0].y);if(ar<0)pts=[pts[0],pts[2],pts[1]];const r=w/2,n=[];for(let i=0;i<3;i++){const a=pts[i],b=pts[(i+1)%3],dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy);n.push({x:dy/l,y:-dx/l});}
+    const s=new T.Shape(),ang=v=>Math.atan2(v.y,v.x);s.moveTo(pts[0].x+r*n[2].x,pts[0].y+r*n[2].y);for(let i=0;i<3;i++){const v=pts[i];let a0=ang(n[(i+2)%3]),a1=ang(n[i]);while(a1<a0)a1+=TAU;s.absarc(v.x,v.y,r,a0,a1,false);const nx=pts[(i+1)%3];s.lineTo(nx.x+r*n[i].x,nx.y+r*n[i].y);}
+    const la=Math.hypot(pts[1].x-pts[2].x,pts[1].y-pts[2].y),lb=Math.hypot(pts[0].x-pts[2].x,pts[0].y-pts[2].y),lc=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y),per=la+lb+lc;const ic={x:(la*pts[0].x+lb*pts[1].x+lc*pts[2].x)/per,y:(la*pts[0].y+lb*pts[1].y+lc*pts[2].y)/per},rho=Math.abs(ar)/per,inset=.028;
+    if(rho>inset+.025){const f=(rho-inset)/rho,q=pts.map(p=>({x:ic.x+(p.x-ic.x)*f,y:ic.y+(p.y-ic.y)*f})),h=new T.Path();h.moveTo(q[0].x,q[0].y);h.lineTo(q[2].x,q[2].y);h.lineTo(q[1].x,q[1].y);h.lineTo(q[0].x,q[0].y);s.holes.push(h);}return s;}
+  const ref=legL(0),legs=[];
+  for(const side of [1,-1]){const lg=new T.Group();mod.add(lg);const bodies={};
+    for(const b of BODIES){const Pp=b.j.map(k=>ref[k]),p0=Pp[0],a=Math.atan2(Pp[1].y-p0.y,Pp[1].x-p0.x),ca=Math.cos(-a),sa=Math.sin(-a);const L=Pp.map(p=>V((p.x-p0.x)*ca-(p.y-p0.y)*sa,(p.x-p0.x)*sa+(p.y-p0.y)*ca));
+      const isCrank=b.id==='crank',shp=b.j.length===2?barShape(L[1].x,isCrank?.04:BARW):plateShape(L,BARW);for(const q of L){const h=new T.Path();h.absarc(q.x,q.y,.0069,0,TAU,true);shp.holes.push(h);}
+      const geo=new T.ExtrudeGeometry(shp,{depth:PLY,bevelEnabled:true,bevelThickness:.0012,bevelSize:.0012,bevelSegments:2,curveSegments:16});geo.translate(0,0,-PLY/2);
+      const g=new T.Group();g.add(new T.Mesh(geo,isCrank?MT.steel():MT.wood()));for(const q of L)for(const f of [-1,1]){const bu=new T.Mesh(new T.CylinderGeometry(.007,.007,.0016,16),MT.bronze());bu.rotation.x=Math.PI/2;bu.position.set(q.x,q.y,f*(PLY/2+.0008));g.add(bu);}
+      g.position.z=side*layerZ(LAYERS[b.id]);lg.add(g);bodies[b.id]={g,j:b.j};reg(g,'links',`${b.name} ${b.j.join('–')} · ${isCrank?'12 mm steel':'12 mm Baltic birch'} · layer ${LAYERS[b.id]}`);}
+    const bolts={};for(const J of JOINTS){const st=JSTACK[J],z0=J==='B'?PLATE_Z-.006:layerZ(st.lo)-PLY/2,z1=layerZ(st.hi)+PLY/2+.004;const g=new T.Group();const shb=new T.Mesh(new T.CylinderGeometry(.005,.005,z1-z0,12),MT.steel());shb.rotation.x=Math.PI/2;shb.position.z=side*(z0+z1)/2;g.add(shb);
+      const hd=new T.Mesh(new T.CylinderGeometry(.009,.009,.006,6),MT.steel());hd.rotation.x=Math.PI/2;hd.position.z=side*(z1+.003);g.add(hd);lg.add(g);bolts[J]=g;reg(g,'links',`Pivot ${J}: ${J==='B'?'M12':'M10'} shoulder bolt, ${st.shoulder} mm`);}
+    const hoof=new T.Group(),hs=new T.Shape();hs.moveTo(-.055,0);hs.lineTo(.06,0);hs.quadraticCurveTo(.075,.03,.03,.085);hs.lineTo(-.04,.085);hs.quadraticCurveTo(-.06,.04,-.055,0);
+    const hm=new T.Mesh(new T.ExtrudeGeometry(hs,{depth:.07,bevelEnabled:true,bevelThickness:.006,bevelSize:.006,bevelSegments:3}),MT.hoof());hm.position.set(0,.015,-.035);hoof.add(hm);const pad=new T.Mesh(new T.BoxGeometry(.12,.015,.08),MT.black());pad.position.y=.0075;hoof.add(pad);
+    hoof.position.z=side*layerZ(LAYERS.t2);lg.add(hoof);reg(hoof,'hooves','Hoof: pine, 15 mm foam pad, tyre-tread sole');legs.push({side,bodies,bolts,hoof});}
+  const cam={tx:S.mode==='bike'?-.22:-.42,ty:.78,tz:0,r:4.4,th:.6,ph:1.3};
+  function updCam(){const sp=new T.Vector3(Math.sin(cam.ph)*Math.sin(cam.th),Math.cos(cam.ph),Math.sin(cam.ph)*Math.cos(cam.th)).multiplyScalar(cam.r/Math.pow(Math.min(1,camera.aspect),.55));camera.position.set(cam.tx+sp.x,cam.ty+sp.y,cam.tz+sp.z);camera.lookAt(cam.tx,cam.ty,cam.tz);}
+  function resize(){const w=c3.clientWidth||1,h=c3.clientHeight||1;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+  const setLimb=(g,a,b)=>{const d=new T.Vector3().subVectors(b,a),L=d.length();g.position.copy(a).addScaledVector(d,.5);g.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),d.clone().normalize());g.userData.c.scale.set(1,L,1);};
+  function pose(ph){for(const w of wheelsSpin)w.g.rotation.z=-S.dist/w.r;const wr=-S.dist/ARM.r;wheelG.rotation.z=wr;spW.g.rotation.z=wr;spPiv1.g.rotation.z=wr;spPiv2.g.rotation.z=wr;shaftG.rotation.z=thetaAt(ph);
+    for(const L of legs){const Pp=legL(ph+(L.side>0?.5:0));for(const id in L.bodies){const b=L.bodies[id],p0=Pp[b.j[0]],p1=Pp[b.j[1]];b.g.position.x=p0.x;b.g.position.y=p0.y;b.g.rotation.z=Math.atan2(p1.y-p0.y,p1.x-p0.x);}for(const J in L.bolts)L.bolts[J].position.set(Pp[J].x,Pp[J].y,0);L.hoof.position.x=Pp.H.x;L.hoof.position.y=Pp.H.y;}
+    if(S.mode==='bike'){const r=riderBike();crankG.rotation.z=r.psiR;crankG.userData.ring.rotation.z=r.psiR;r.legs.forEach((l,i)=>{const z=l.side*.1;setLimb(rider.th[i],v3(l.hip.x,l.hip.y,z),v3(l.kn.x,l.kn.y,z));setLimb(rider.sh[i],v3(l.kn.x,l.kn.y,z),v3(l.ank.x,l.ank.y,z));setLimb(rider.ft[i],v3(l.ank.x,l.ank.y,z),v3(l.toe.x,l.toe.y,z));
+        setLimb(rider.ua[i],v3(r.sh.x,r.sh.y,l.side*.19),v3(r.el.x,r.el.y,l.side*.22));setLimb(rider.fa[i],v3(r.el.x,r.el.y,l.side*.22),v3(r.hand.x,r.hand.y,l.side*.21));});setLimb(rider.torso,v3(r.pelvis.x,r.pelvis.y,0),v3(r.sh.x-.02,r.sh.y,0));rider.head.position.set(r.head.x,r.head.y,0);rider.pelvis.position.set(r.pelvis.x,r.pelvis.y,0);}
+    else{const r=walker();r.legs.forEach((l,i)=>{const z=l.side*.1;setLimb(rider.th[i],v3(l.hip.x,l.hip.y,z),v3(l.kn.x,l.kn.y,z));setLimb(rider.sh[i],v3(l.kn.x,l.kn.y,z),v3(l.ank.x,l.ank.y,z));setLimb(rider.ft[i],v3(l.ank.x,l.ank.y,z),v3(l.toe.x,l.toe.y,z));});
+      r.arms.forEach((a,i)=>{setLimb(rider.ua[i],v3(r.sh.x,r.sh.y,a.side*.2),v3(a.el.x,a.el.y,a.side*.22));setLimb(rider.fa[i],v3(a.el.x,a.el.y,a.side*.22),v3(a.hand.x,a.hand.y,a.side*.22));});setLimb(rider.torso,v3(r.hip.x,r.hip.y+.05,0),v3(r.sh.x,r.sh.y,0));rider.head.position.set(r.head.x,r.head.y,0);rider.pelvis.position.set(r.hip.x,r.hip.y+.03,0);}
+    let k=0;const sw=Math.sin(TAU*ph*2)*.04;for(const hh of hairs){for(let sg=0;sg<8;sg++){const f=t=>[-.06-t*.1-sw*t*t*.5,-t*hh.l,hh.z*(1+t*2)+sw*t*t];const a=f(sg/8),b=f((sg+1)/8);hairPos.set([a[0],a[1]+hh.y,a[2],b[0],b[1]+hh.y,b[2]],k);k+=6;}}hairGeo.attributes.position.needsUpdate=true;
+    floorT.offset.x=S.dist;wallT.offset.x=S.dist/4;}
+  function highlight(tags){for(const m of ALL){const on=!tags||tags.includes(m.userData.tag);m.material.transparent=!on;m.material.opacity=on?1:.12;m.material.depthWrite=on;}}
+  function bare(on){for(const m of ALL)if(['rider','ribs','spine','tail'].includes(m.userData.tag))m.visible=!on;}
+  const ray=new T.Raycaster();function pick(x,y){const r=c3.getBoundingClientRect();ray.setFromCamera({x:(x-r.left)/r.width*2-1,y:-(y-r.top)/r.height*2+1},camera);const h=ray.intersectObjects(ALL.filter(m=>m.visible&&(!m.material.transparent||m.material.opacity>.5)),false);return h.length?h[0].object.userData.name:null;}
+  return {renderer,scene,camera,cam,updCam,resize,pose,highlight,bare,pick,render:()=>renderer.render(scene,camera)};}
+
+/* ===== 2D ===== */
+const C={};let MONO='monospace',BODY='sans-serif';function readC(){for(const k of ['view','panel','ink','ink-2','ink-3','rule','accent','ok','warn'])C[k]=css('--'+k);MONO=css('--f-mono');BODY=css('--f-body');}readC();
+function fit2(cv){const r=cv.getBoundingClientRect(),dp=Math.min(2,devicePixelRatio||1),w=Math.max(1,Math.round(r.width*dp)),h=Math.max(1,Math.round(r.height*dp));if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}const g=cv.getContext('2d');g.setTransform(dp,0,0,dp,0,0);return {g,w:r.width,h:r.height};}
+const LX=(()=>{const xs=PU.flatMap(p=>Object.values(p).map(q=>q.x)),ys=PU.flatMap(p=>Object.values(p).map(q=>q.y));return {min:Math.min(...xs)*SC,max:Math.max(...xs)*SC,ymax:Math.max(...ys)*SC};})();
+function sceneBox(){const O=Om();return {x0:Math.min(O.x+LX.min-.06,O.x+ARM.wheelX-.12),x1:S.mode==='bike'?BK.FA.x+BK.R+.03:.42,y1:Math.max(1.72,O.y+LX.ymax+.04)};}
+function machine2D(g,M,ph,st,dist){const O=Om(),u=Math.abs(M(V(1,0)).x-M(V(0,0)).x);
+  const L=(a,b,col,w)=>{g.strokeStyle=col;g.lineWidth=w;g.beginPath();g.moveTo(M(a).x,M(a).y);g.lineTo(M(b).x,M(b).y);g.stroke();};
+  const circle=(c,r,col,w,fill)=>{const p=M(c);g.beginPath();g.arc(p.x,p.y,r*u,0,TAU);if(fill){g.fillStyle=fill;g.fill();}if(col){g.strokeStyle=col;g.lineWidth=w;g.stroke();}};
+  const W=p=>add(O,p);g.lineCap='round';g.lineJoin='round';
+  const legDraw=(P,col,alpha)=>{g.globalAlpha=alpha;for(const [a,b] of LINKS){if(a==='O'){L(W(P.O),W(P.C),st.ink,.04*u);continue;}L(W(P[a]),W(P[b]),col,BARW*u);}for(const k of ['B','C','D','E','F','G'])circle(W(P[k]),.008,null,0,st.ink);const h=M(W(P.H));g.fillStyle=st.hoof;g.beginPath();g.ellipse(h.x,h.y-.045*u,.06*u,.045*u,0,0,TAU);g.fill();g.globalAlpha=1;};
+  legDraw(legL(ph),st.far,.55);
+  const piv=W(ARM.pivot),wh=V(O.x+ARM.wheelX,ARM.r);L(piv,wh,st.ink,.02*u);circle(wh,ARM.r-.012,st.ink,.024*u);circle(wh,.05,st.thin,1);for(let i=0;i<5;i++){const a=i/5*TAU-dist/ARM.r;L(wh,V(wh.x+Math.cos(a)*.05,wh.y+Math.sin(a)*.05),st.thin,1);}L(piv,O,st.chain,1.2);
+  g.globalAlpha=.9;g.fillStyle=st.plate;g.beginPath();const B=V(-JU.a*SC,-JU.l*SC);[[.07,.07],[.07,-.10],[B.x-.05,B.y-.06],[B.x-.07,B.y+.08],[-.10,.12]].forEach((p,i)=>{const q=M(W(V(p[0],p[1])));i?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y);});g.closePath();g.fill();g.globalAlpha=1;
+  L(W(V(.22,BASE)),W(V(-.62,BASE)),st.ink,.025*u);for(const [x,top] of [[-.04,-.095],[B.x+.03,B.y-.06]])L(W(V(x,BASE)),W(V(x,top)),st.ink,.022*u);
+  if(S.mode==='bike'){for(const A of [BK.FA,BK.RA]){circle(A,BK.R-.019,st.ink,.038*u);circle(A,BK.R-.045,st.thin,1);for(let i=0;i<14;i++){const a=i/14*TAU-dist/BK.R;L(A,V(A.x+Math.cos(a)*(BK.R-.045),A.y+Math.sin(a)*(BK.R-.045)),st.thin,.6);}}
+    for(const [a,b] of [[BK.BB,BK.STt],[BK.STt,BK.HTt],[BK.BB,BK.HTb],[BK.HTb,BK.HTt],[BK.BB,BK.RA],[V(-.135,.72),BK.RA],[BK.HTb,BK.FA],[BK.STt,BK.saddle],[BK.HTt,V(.46,.93)]])L(a,b,st.ink,.02*u);
+    L(V(BK.saddle.x-.15,BK.saddle.y+.02),V(BK.saddle.x+.1,BK.saddle.y+.02),st.ink,.035*u);g.strokeStyle=st.ink;g.lineWidth=.022*u;g.beginPath();[V(.46,.93),V(.56,.93),V(.6,.88),V(.57,.8),V(.5,.79)].forEach((p,i)=>{const q=M(p);i?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y);});g.stroke();
+    L(V(BK.rackX[0],BK.rackY),V(BK.rackX[1],BK.rackY),st.ink,.012*u);L(V(BK.rackX[0]+.03,BK.rackY),BK.RA,st.ink,.01*u);L(V(BK.rackX[1],BK.rackY),V(-.14,.72),st.ink,.01*u);
+    const r=riderBike();for(const [i,col] of [[0,st.far],[1,st.rider]]){const l=r.legs[i];L(l.hip,l.kn,col,.115*u);L(l.kn,l.ank,col,.09*u);L(l.ank,l.toe,col,.055*u);L(BK.BB,l.pd,st.ink,.02*u);}
+    L(r.pelvis,r.sh,st.rider,.25*u);L(r.sh,r.el,st.rider,.075*u);L(r.el,r.hand,st.rider,.062*u);circle(r.head,.1,null,0,st.rider);}
+  else{const r=walker();L(V(-.17,.92),V(-.17,1.55),st.ink,.02*u);g.fillStyle=st.packc;const a=M(V(-.36,1.5)),b=M(V(-.18,1.21));g.fillRect(a.x,a.y,b.x-a.x,b.y-a.y);L(V(-.06,.98),W(V(.22,BASE)),st.ink,.02*u);
+    for(const [i,col] of [[0,st.far],[1,st.rider]]){const l=r.legs[i];L(l.hip,l.kn,col,.115*u);L(l.kn,l.ank,col,.09*u);L(l.ank,l.toe,col,.06*u);}
+    L(r.hip,r.sh,st.rider,.25*u);const am=r.arms[1];L(r.sh,am.el,st.rider,.075*u);L(am.el,am.hand,st.rider,.062*u);circle(r.head,.1,null,0,st.rider);L(V(-.17,.97),V(.12,.97),st.packc,.05*u);}
+  g.strokeStyle=st.bone;g.lineWidth=.025*u;g.beginPath();[V(.12,.07),V(-.1,.08),V(-.4,.075),V(-.6,.02)].forEach((p,i)=>{const q=M(W(p));i?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y);});g.stroke();
+  for(let i=0;i<4;i++){const x=.10-i*.03;g.lineWidth=.016*u;g.beginPath();[V(x,.075),V(x-.005,0),V(x-.012,-.1),V(x-.02,-.2)].forEach((p,k)=>{const q=M(W(p));k?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y);});g.stroke();}
+  g.strokeStyle=st.hair;g.lineWidth=1;const sw=Math.sin(TAU*ph*2)*.04;for(let i=0;i<9;i++){const a=M(W(V(-.64,.01))),b=M(W(V(-.74-sw-i*.008,-.42+i*.012))),c=M(W(V(-.68-i*.004,-.2)));g.beginPath();g.moveTo(a.x,a.y);g.quadraticCurveTo(c.x,c.y,b.x,b.y);g.stroke();}
+  legDraw(legL(ph+.5),st.fill,1);return legL(ph+.5);}
+const ST_EL=()=>({ink:C.ink,far:'#b9a98c',fill:'#c9a46c',bone:'#cbb48a',thin:C['ink-3'],rider:'#8c867e',plate:'#b8bdc1',hoof:'#3a2c22',chain:C.ok,hair:'#3b2a1d',packc:'#6b7a58'});
+const ST_PL={ink:'#efe4cc',far:'rgba(239,228,204,.35)',fill:'#efe4cc',bone:'rgba(239,228,204,.7)',thin:'rgba(239,228,204,.35)',rider:'rgba(239,228,204,.75)',plate:'rgba(239,228,204,.3)',hoof:'#efe4cc',chain:'rgba(239,228,204,.4)',hair:'rgba(239,228,204,.6)',packc:'rgba(239,228,204,.5)'};
+const vstat=t=>{$('vstat').textContent=t;};
+function drawElev(){const {g,w,h}=fit2(c2);g.fillStyle=C.view;g.fillRect(0,0,w,h);const top=54,bot=44,bx=sceneBox();const u=Math.min((w-30)/(bx.x1-bx.x0),(h-top-bot)/bx.y1);const ox=(w-(bx.x1-bx.x0)*u)/2-bx.x0*u,oy=h-bot;const M=p=>V(ox+p.x*u,oy-p.y*u);
+  g.strokeStyle=C.rule;g.lineWidth=1;for(let x=Math.ceil(bx.x0*10)/10;x<=bx.x1;x+=.1){const X=M(V(x,0)).x;g.globalAlpha=Math.abs(Math.round(x*10)%5)===0?.8:.35;g.beginPath();g.moveTo(X,oy);g.lineTo(X,M(V(0,bx.y1)).y);g.stroke();}g.globalAlpha=1;
+  g.strokeStyle=C['ink-2'];g.lineWidth=1.5;g.beginPath();g.moveTo(0,oy);g.lineTo(w,oy);g.stroke();const O=Om();
+  g.strokeStyle=C.warn;g.lineWidth=1.3;g.beginPath();for(let k=0;k<=NS;k+=3){const q=M(add(O,legL(k/NS).H));k?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y);}g.stroke();
+  const P=machine2D(g,M,S.ph,ST_EL(),S.dist);g.font='600 10px '+BODY;g.fillStyle=C.ink;g.textAlign='left';for(const k of ['O','B','C','D','E','F','G','H']){const q=M(add(O,P[k]));g.fillText(k,q.x+6,q.y-5);}
+  const dimH=(a,b,y,txt)=>{const A=M(V(a,y)),Bq=M(V(b,y));g.strokeStyle=C.accent;g.lineWidth=1;g.beginPath();g.moveTo(A.x,A.y);g.lineTo(Bq.x,Bq.y);g.stroke();for(const q of [A,Bq]){g.beginPath();g.moveTo(q.x,q.y-4);g.lineTo(q.x,q.y+4);g.stroke();}g.font='10px '+MONO;g.textAlign='center';const tw=g.measureText(txt).width;g.fillStyle=C.view;g.fillRect((A.x+Bq.x)/2-tw/2-3,A.y-12,tw+6,11);g.fillStyle=C.accent;g.fillText(txt,(A.x+Bq.x)/2,A.y-3);};
+  const dimV=(x,a,b,txt)=>{const A=M(V(x,a)),Bq=M(V(x,b));g.strokeStyle=C.accent;g.lineWidth=1;g.beginPath();g.moveTo(A.x,A.y);g.lineTo(Bq.x,Bq.y);g.stroke();for(const q of [A,Bq]){g.beginPath();g.moveTo(q.x-4,q.y);g.lineTo(q.x+4,q.y);g.stroke();}g.save();g.translate(A.x-5,(A.y+Bq.y)/2);g.rotate(-Math.PI/2);g.font='10px '+MONO;g.textAlign='center';g.fillStyle=C.accent;g.fillText(txt,0,0);g.restore();};
+  dimV(O.x+.24,0,O.y,'O '+mm(O.y));dimH(bx.x0+.06,bx.x1-.03,bx.y1-.02,'overall '+mm(bx.x1-bx.x0-.09));
+  if(S.mode==='bike'){dimH(BK.RA.x,BK.FA.x,.04,'wheelbase 1054 mm');dimV(BK.rackX[0]-.03,0,BK.rackY,'rack '+mm(BK.rackY));}
+  g.font='10px '+MONO;g.fillStyle=C['ink-2'];g.textAlign='left';g.fillText(S.mode==='bike'?`hooves ${mm(K.clear)} off the road`:`hooves on the ground ${Math.round(DUTY*100)}% of each cycle`,6,oy+13);
+  vstat(`elevation · ${MODES[S.mode].name.toLowerCase()} · right side · near leg tan, far leg pale · red = hoof path`);}
+function drawPlate(){const {g,w,h}=fit2(c2);g.fillStyle='#14110d';g.fillRect(0,0,w,h);const top=60,bot=72,pad=6,bx=sceneBox(),ar=(bx.x1-bx.x0)/bx.y1;let cols=3,bu=0;for(const c of [2,3,4,6]){const r=Math.ceil(12/c),cw0=(w-pad*(c+1))/c,ch0=(h-top-bot-pad*(r+1))/r,u0=Math.min(cw0/ar,ch0);if(u0>bu){bu=u0;cols=c;}}const rows=Math.ceil(12/cols),cw=(w-pad*(cols+1))/cols,ch=(h-top-bot-pad*(rows+1))/rows;
+  for(let i=0;i<12;i++){const c=i%cols,r=Math.floor(i/cols),x=pad+c*(cw+pad),y=top+pad+r*(ch+pad);g.save();g.beginPath();g.rect(x,y,cw,ch);g.clip();g.fillStyle='#1c1813';g.fillRect(x,y,cw,ch);
+    const u=Math.min(cw/(bx.x1-bx.x0),ch/bx.y1)*.96,ox=x+(cw-(bx.x1-bx.x0)*u)/2-bx.x0*u,oy=y+ch-3;g.strokeStyle='rgba(239,228,204,.18)';g.lineWidth=1;for(let k=-24;k<=12;k++){const X=ox+k*.1*u;g.beginPath();g.moveTo(X,y);g.lineTo(X,oy);g.stroke();}for(let k=0;k<=18;k++){const Y=oy-k*.1*u;g.beginPath();g.moveTo(x,Y);g.lineTo(x+cw,Y);g.stroke();}
+    const ph=i/12,dd=S.dist-((S.ph-ph+1)%1)*K.advG,saved=S.dist;S.dist=dd;machine2D(g,p=>V(ox+p.x*u,oy-p.y*u),ph,ST_PL,dd);S.dist=saved;g.fillStyle='rgba(239,228,204,.9)';g.font='600 10px '+MONO;g.textAlign='left';g.fillText(String(i+1),x+5,y+13);g.restore();
+    if(Math.floor(S.ph*12)===i){g.strokeStyle=C.warn;g.lineWidth=2;g.strokeRect(x+1,y+1,cw-2,ch-2);}}
+  const fx=pad,fw=w-2*pad,fy=h-bot+6,rh=10;g.font='9px '+MONO;g.textAlign='left';const rowsF=[['LH',p=>onGround(p)],['RH',p=>onGround(p+.5)]];
+  if(S.mode==='pack'){const Sh=strideH(S.v),base=S.dist-S.ph*K.advG;rowsF.splice(1,0,['LF',p=>(((base+p*K.advG)/Sh)%1+1)%1<.62]);rowsF.push(['RF',p=>(((base+p*K.advG)/Sh+.5)%1+1)%1<.62]);}
+  rowsF.forEach(([l,f],i)=>{g.fillStyle='rgba(239,228,204,.7)';g.fillText(l,fx,fy+i*rh+8);for(let k=0;k<120;k++)if(f(k/120)){g.fillStyle=l[1]==='H'?'#efe4cc':'rgba(239,228,204,.55)';g.fillRect(fx+24+k/120*(fw-24),fy+i*rh+1,(fw-24)/120+.5,rh-3);}});
+  const X=fx+24+S.ph*(fw-24);g.strokeStyle=C.warn;g.lineWidth=1.5;g.beginPath();g.moveTo(X,fy-2);g.lineTo(X,fy+rowsF.length*rh);g.stroke();
+  g.fillStyle='#efe4cc';g.font='500 11px '+BODY;g.fillText(`Plate · ${MODES[S.mode].name.toLowerCase()} · ${(S.v*3.6).toFixed(1)} km/h · 12 exposures per leg cycle`,pad,top-6);
+  vstat(`plate · after Muybridge · rows: hind hooves on the ground${S.mode==='pack'?'; LF, RF = the wearer’s feet':' (they pass 39 mm above it)'}`);}
+function drawLeg(){const {g,w,h}=fit2(c2);g.fillStyle=C.view;g.fillRect(0,0,w,h);const P=legL(S.ph+.5),O=Om();const x0=LX.min-.08,x1=LX.max+.08,y0=-O.y-.03,y1=LX.ymax+.04;const top=106,bot=30;const u=Math.min((w-24)/(x1-x0),(h-top-bot)/(y1-y0));const ox=(w-(x1-x0)*u)/2-x0*u,oy=h-bot+y0*u;const M=p=>V(ox+p.x*u,oy-p.y*u);
+  const gy=M(V(0,-O.y)).y;g.strokeStyle=C['ink-2'];g.lineWidth=1.5;g.beginPath();g.moveTo(0,gy);g.lineTo(w,gy);g.stroke();
+  for(let k=0;k<NS;k+=2){const a=M(legL(k/NS).H),b=M(legL((k+2)/NS).H),on=onGround(k/NS);g.strokeStyle=on?C.warn:C['ink-3'];g.lineWidth=on?2.4:1.2;g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke();}
+  const o=M(P.O);g.strokeStyle=C['ink-3'];g.setLineDash([3,3]);g.beginPath();g.arc(o.x,o.y,.17*u,0,TAU);g.stroke();g.setLineDash([]);
+  const lc=['#7c4dcc','#d13f78','#d9822b','#21915f','#2f55c9'];for(const b of BODIES){g.strokeStyle=lc[(LAYERS[b.id]-1)%lc.length];g.lineWidth=Math.max(4,BARW*u*.55);g.lineCap='round';g.globalAlpha=.85;for(const [p,q] of bodyEdges(b)){const a=M(P[p]),c=M(P[q]);g.beginPath();g.moveTo(a.x,a.y);g.lineTo(c.x,c.y);g.stroke();}g.globalAlpha=1;}
+  g.font='10px '+MONO;g.textAlign='center';for(const [p,q,n] of LINKS){const a=P[p],b=P[q],m=M(V((a.x+b.x)/2,(a.y+b.y)/2)),t=mm(JU[n]*SC),tw=g.measureText(t).width;g.fillStyle=C.view;g.globalAlpha=.85;g.fillRect(m.x-tw/2-2,m.y-6,tw+4,11);g.globalAlpha=1;g.fillStyle=C.ink;g.fillText(t,m.x,m.y+3);}
+  for(const k of ['O','B','C','D','E','F','G','H']){const q=M(P[k]);g.fillStyle=C.panel;g.beginPath();g.arc(q.x,q.y,5,0,TAU);g.fill();g.strokeStyle=C.ink;g.lineWidth=1.5;g.stroke();g.fillStyle=C.ink;g.font='600 11px '+BODY;g.textAlign='left';g.fillText(k,q.x+7,q.y-6);}
+  g.font='10px '+MONO;g.fillStyle=C['ink-2'];let y=56;for(const t of [`crank 170 mm · O ${mm(O.y)} up · hoof drop ${mm(DROP)}`,`advance ${mm(K.adv)} per turn · on ground ${Math.round(DUTY*100)}%`,`hoof lifts ${mm(K.lift)} · slip ${mm(K.slip)} per step`,`${LAYERS.n} layers of 12 mm · colours = layer`]){g.fillText(t,10,y);y+=13;}
+  vstat('leg · Jansen linkage at the size where its crank is a 170 mm bicycle crank arm · red = hoof on the ground');}
+
+/* ===== scrub and speed ===== */
+const scrub=$('scrub');function drawScrub(){const {g,w,h}=fit2(scrub);g.clearRect(0,0,w,h);g.font='9px '+MONO;[['LH',p=>onGround(p)],['RH',p=>onGround(p+.5)]].forEach(([l,f],i)=>{g.fillStyle=C['ink-2'];g.fillText(l,0,9+i*12);g.fillStyle=C.ink;for(let k=0;k<120;k++)if(f(k/120))g.fillRect(20+k/120*(w-22),2+i*12,(w-22)/120+.5,8);});const X=20+S.ph*(w-22);g.strokeStyle=C.accent;g.lineWidth=2;g.beginPath();g.moveTo(X,0);g.lineTo(X,h);g.stroke();}
+let sDrag=false;const scrubAt=e=>{const r=scrub.getBoundingClientRect(),np=Math.max(0,Math.min(.999,(e.clientX-r.left-20)/(r.width-22)));S.dist+=(np-S.ph)*K.advG;S.ph=np;setPlaying(false);};
+scrub.addEventListener('pointerdown',e=>{scrub.setPointerCapture(e.pointerId);sDrag=true;scrubAt(e);});scrub.addEventListener('pointermove',e=>{if(sDrag)scrubAt(e);});scrub.addEventListener('pointerup',()=>sDrag=false);
+function setPlaying(p){S.playing=p;$('pi').className='ic '+(p?'pause-i':'play-i');$('play').setAttribute('aria-label',p?'Pause':'Play');}
+$('play').addEventListener('click',()=>{audio();setPlaying(!S.playing);});
+function syncSpeed(){const m=MODES[S.mode],el=$('spd');el.min=m.vmin;el.max=m.vmax;el.value=S.v;$('spdv').textContent=(S.v*3.6).toFixed(1)+' km/h';}
+$('spd').addEventListener('input',e=>{S.v=+e.target.value;MODES[S.mode].v=S.v;$('spdv').textContent=(S.v*3.6).toFixed(1)+' km/h';derive();header();if(S.tab==='drive')renderInsp();});
+
+/* ===== build steps ===== */
+function steps(){const f=v=>`<span class="num">${v}</span>`;return [
+ {ph:'Module · build once, use in both modes'},
+ {t:'Cut the links',d:`From 12 mm Baltic birch cut ${f('10 bars and 4 plates')} (Parts). Clamp each pair; drill the pivots together, ${f('13.8 mm')}, ±0.5 mm on centres.`,tags:['links']},
+ {t:'Press the bushings',d:`One sleeve bronze bushing per hole, ${f('10 × 14 × 12 mm')}; at B ${f('12 × 16 × 12 mm')} in a ${f('15.8 mm')} hole.`,tags:['links']},
+ {t:'Make the crank arms',d:`2 × steel flat bar 12 × 40 × 210 mm, each welded to a 3/4 in keyed weld-on hub on the inner face. Pin hole ${f('10 mm')} at ${f('170 mm')}.`,tags:['links']},
+ {t:'Cut the pelvis plates',d:`2 × 6 mm 6061 aluminium, ${f('560 × 230 mm')}. O: ${f('32 mm')} clear plus 2 × M10 holes 90 mm apart, vertical. B: tap M12, ${f(mm(JU.a*SC))} behind O and ${f(mm(JU.l*SC))} lower; add a 6 mm doubler.`,tags:['frame']},
+ {t:'Build the base',d:`2 rails of 25 mm square aluminium, ${f('840 mm')}, ${f('220 mm')} apart; 3 cross bars; posts up to the plates. O sits ${f('250 mm')} above the rails.`,tags:['frame']},
+ {t:'Fit shaft and bearings',d:`UCFL204-12 flange bearing on each plate’s outer face. Cut the 3/4 in keyed shaft to ${f('422 mm')}: it ends flush with the crank arms. Key the ${f(K.TJ+'T')} #35 sprocket inside the left plate.`,tags:['shaft','drive']},
+ {t:'Assemble the legs',d:`Stack by layer (Joints). Nylon washer between layers. M10 shoulder bolts at C, D, E, F, G; snug each nylock until it turns freely with no end play.`,tags:['links']},
+ {t:'Hang the legs',d:`Crank arms on the shaft ${f('180°')} apart. M12 shoulder bolt at B into plate and doubler, lock nut inside.`,tags:['links','frame']},
+ {t:'Build the drive arm',d:`2 × 20 mm square aluminium, ${f(mm(K.armLen))}, slotted at the wheel end. 5/8 in pivot shaft at the base rear with ${f('15T')} and ${f(K.T2+'T')}. 200 × 50 pneumatic wheel on a 5/8 in keyed axle with ${f('15T')}. A bungee holds the wheel down; a pin holds the arm up.`,tags:['drive']},
+ {t:'Fit the chains',d:`Chain 1, #35, ${f(K.ch1+' links')}, wheel to pivot. Chain 2, #35, ${f(K.ch2+' links')}, pivot to jackshaft. Tension at the slots to 8 mm slack mid-span.`,tags:['drive']},
+ {t:'Make the hooves',d:`Pine, ${f('120 × 85 × 80 mm')}. Glue a ${f('15 mm')} closed-cell foam pad and a tyre-tread sole underneath. Bolt to the shank plate at H.`,tags:['hooves']},
+ {t:'Spine and ribs',d:`1 in EMT spine, ${f('800 mm')}, on two struts; 17 PVC vertebra rings. 8 ribs of 1/2 in PVC, heat-bent to half-width ${f('150 mm')}, ahead of O.`,tags:['spine','ribs']},
+ {t:'Finish like bone',d:`Sand to 180. Black tea, 6 bags per litre, 3 coats. Amber shellac, 2 coats.`,tags:['links','spine','ribs','hooves']},
+ {t:'Tie the tail',d:`${f('60 cm')} horsehair switch to the spine end with waxed cord.`,tags:['tail']},
+ {ph:'Bicycle mode · your State All-Road, Medium'},
+ {t:'Clear the rack',d:`Take off the wire basket and the bungee net. Rack top: ${f('800 mm')} up.`,tags:['bike'],mode:'bike'},
+ {t:'Clamp the module',d:`4 × 30 mm risers on the rack rails. Clamp the base cross bars to the rails with 4 M6 U-clamps. Strap the base front to the seatpost. The module is about ${f('10 kg')}: check your rack’s rated load.`,tags:['frame','bike'],mode:'bike'},
+ {t:'Drop the drive wheel',d:`Pull the pin. The wheel rolls on the road ${f(mm(-(MODES.bike.O.x+ARM.wheelX)-BK.R+BK.RA.x*-1-ARM.r))} behind your rear tyre. Hooves ride ${f(mm(K.clear))} above the road and walk at road pace.`,tags:['drive'],mode:'bike'},
+ {t:'Ride',d:`Leg rate = speed ÷ ${f(mm(K.advG))}. Above ${f('2.2 Hz')} (${f((2.2*K.advG*3.6).toFixed(0)+' km/h')}) pin the arm up and the legs stop. Your gears and coasting do not affect them.`,tags:null,mode:'bike'},
+ {ph:'Backpack mode · walking'},
+ {t:'Fit the hitch',d:`External-frame backpack with a padded hip belt. Bolt 2 hitch poles (20 mm aluminium tube, M8 rod-end ball joints) from the belt’s side plates to the base front.`,tags:['pack'],mode:'pack'},
+ {t:'Set the height',d:`Adjust the arm slot until O is ${f(mm(DROP))} up: the hoof pads just touch level ground. The wheel carries about ${f('60%')} of the module; the belt about ${f('4 kg')}.`,tags:['drive','pack'],mode:'pack'},
+ {t:'Walk',d:`Chalk the soles; walk ${f('20 m')}. Each smear should be under ${f(mm(K.slip))}. Your stride and the hind legs run at nearly the same rate but are not locked together.`,tags:null,mode:'pack'}];}
+
+/* ===== parts ===== */
+function partsRows(){return BODIES.filter(b=>b.id!=='crank').map(b=>({part:b.name,joints:b.j.join('–'),centres:bodyEdges(b).map(([p,q])=>mm(JU[LINKS.find(l=>(l[0]===p&&l[1]===q)||(l[0]===q&&l[1]===p))[2]]*SC)).join(' / '),form:b.j.length===2?'bar, 45 mm wide':'plate, cut-out',layer:LAYERS[b.id]}));}
+function bom(){const nb=2*JOINTS.reduce((a,J)=>a+JSTACK[J].bodies.length,0),R=(item,qty,how,where,cost,mode)=>({item,qty,how,where,cost,mode});return [
+ R('State 4130 All-Road, Medium, 700 × 38c, rear rack','1','have','Yours',0,'bike'),
+ R('Baltic birch 12 mm, 1525 × 1525','1','buy','Lumber yard',75),
+ R('Sleeve bronze bushing 10 × 14 × 12 (12 × 16 × 12 at B)',String(nb),'buy','Industrial supply',nb*1.5),
+ R('Shoulder bolts ISO 7379 M10 / M12, nylocks, nylon washers','12 + 60','buy','Industrial supply',60),
+ R('Steel flat bar 12 × 40 × 210; weld-on keyed hub 3/4 in','2 + 2','buy','Metal supplier; fab shop for 2 welds',40),
+ R('Aluminium plate 6 mm, 600 × 250; doublers','2','buy','Metal supplier',60),
+ R('Aluminium square tube 25 mm × 3 m; 20 mm × 2 m','1 + 1','buy','Metal supplier',45),
+ R('Flange bearing UCFL204-12; keyed shaft 3/4 × 422 mm','2 + 1','buy','Industrial supply',45),
+ R(`#35 sprockets: ${K.TJ}T 3/4 bore; 15T + ${K.T2}T 5/8 bore; 15T wheel`,'4','buy','Go-kart supply',48),
+ R(`#35 chain, ${K.ch1+K.ch2} links`,'1','buy','Go-kart supply',20),
+ R('200 × 50 pneumatic wheel, 5/8 keyed axle; pivot shaft; bearings','1 set','buy','Go-kart or hand-truck supply',35),
+ R('EMT 1 in × 3 m; PVC 1/2 in × 3 m; PVC 1-1/4 in × 0.5 m','1 each','buy','Hardware store',22),
+ R('Pine 2 × 4 offcut, foam pad, old tyre','1','salvage','Scrap',0),
+ R('Black tea, amber shellac','1','buy','Grocery, hardware',22),
+ R('Horsehair tail switch, 60 cm','1','buy','Tack shop',35),
+ R('M6 U-clamps, aluminium risers, seatpost strap','4 + 4 + 1','buy','Hardware store',15,'bike'),
+ R('External-frame backpack with hip belt','1','salvage','Used outdoor gear',40,'pack'),
+ R('Hitch poles 20 mm aluminium, M8 rod-end ball joints','2 + 4','buy','Hardware or industrial supply',30,'pack')];}
+
+/* ===== inspector ===== */
+function header(){$('hstat').textContent=S.mode==='bike'?`legs ${K.f.toFixed(2)} Hz · ${Math.round(K.cad)} rpm in 42×${S.cog} · hooves ${mm(K.clear)} up`:`legs ${K.f.toFixed(2)} Hz · your stride ${(S.v/strideH(S.v)).toFixed(2)} Hz · slip ${mm(K.slip)}`;
+  const wn=$('warn');if(K.f>2.2){wn.hidden=false;wn.textContent=`Legs at ${K.f.toFixed(1)} Hz: pin the drive arm up`;}else wn.hidden=true;}
+function renderInsp(){const el=$('insp');let h='';const t=S.tab;
+  if(t==='build'){const st=steps();let n=0;h=`<section><div class="grid2"><div class="cell"><small>Per leg cycle</small><span class="big">${K.advG.toFixed(2)}</span> m</div><div class="cell"><small>${S.mode==='bike'?'Hooves above road':'Hoof slip per step'}</small><span class="big">${((S.mode==='bike'?K.clear:K.slip)*1000).toFixed(0)}</span> mm</div></div><ol class="steps">${st.map((s,i)=>s.ph?`<li class="ph">${s.ph}</li>`:`<li data-i="${i}" class="${S.step===i?'cur':''}${s.mode&&s.mode!==S.mode?' off':''}"><span class="no">${++n}</span><span><b>${s.t}</b><span class="d">${s.d}</span></span></li>`).join('')}</ol></section>`;}
+  if(t==='parts'){const pr=partsRows(),bm=bom(),tot=bm.reduce((a,r)=>a+r.cost,0);h=`<section><h2>Cut list · 12 mm Baltic birch · 2 of each</h2><div class="tw"><table><thead><tr><th>Part</th><th>Pivots</th><th>Centres</th><th>Layer</th></tr></thead><tbody>${pr.map(r=>`<tr><td>${r.part}<br><span class="muted">${r.form}</span></td><td class="m">${r.joints}</td><td class="m">${r.centres}</td><td class="n">${r.layer}</td></tr>`).join('')}<tr><td>Crank arm<br><span class="muted">12 × 40 steel, welded hub</span></td><td class="m">O–C</td><td class="m">170 mm</td><td class="n">1</td></tr></tbody></table></div>
+    <h2>Buy, salvage, have</h2><div class="tw"><table><thead><tr><th>Item</th><th>Qty</th><th>How</th><th>$</th></tr></thead><tbody>${bm.map(r=>`<tr style="${r.mode&&r.mode!==S.mode?'opacity:.45':''}"><td>${r.item}<br><span class="muted">${r.where}${r.mode?' · '+MODES[r.mode].name.toLowerCase()+' mode':''}</span></td><td class="m">${r.qty}</td><td><span class="tag ${r.how}">${r.how}</span></td><td class="n">${r.cost.toFixed(0)}</td></tr>`).join('')}<tr><td><b>Both modes, estimated</b></td><td></td><td></td><td class="n"><b>${tot.toFixed(0)}</b></td></tr></tbody></table></div><p class="muted">Prices are estimates, not quotes.</p></section>`;}
+  if(t==='drive'){h=`<section><div class="grid2"><div class="cell"><small>Legs</small><span class="big">${K.f.toFixed(2)}</span> Hz</div><div class="cell"><small>${S.mode==='bike'?'Your cadence':'Your stride rate'}</small><span class="big">${S.mode==='bike'?Math.round(K.cad):(S.v/strideH(S.v)).toFixed(2)}</span> ${S.mode==='bike'?'rpm':'Hz'}</div><div class="cell"><small>Wheel → pivot</small><span class="big">15:15</span></div><div class="cell"><small>Pivot → jackshaft</small><span class="big">${K.T2}:${K.TJ}</span></div></div>
+    ${S.mode==='bike'?`<div class="sl"><label for="cog">Cassette cog</label><select id="cog">${BK.cogs.map(c=>`<option value="${c}"${c===S.cog?' selected':''}>42 × ${c}</option>`).join('')}</select><span class="val">${(BK.C*42/S.cog).toFixed(2)} m/rev</span></div>`:''}
+    <dl class="kv"><dt>Drive wheel</dt><dd>200 × 50, rolls ${mm(ARM.C)} per turn</dd><dt>Advance needed per leg turn</dt><dd>${mm(K.adv)}</dd><dt>From the gearing</dt><dd>${mm(K.advG)} (${mm(ARM.C)} × ${K.TJ}/${K.T2})</dd><dt>Pivot O</dt><dd>${mm(K.O.y)} up${S.mode==='bike'?`, ${mm(-K.O.x)} behind the bottom bracket`:''}</dd><dt>Hooves</dt><dd>${S.mode==='bike'?mm(K.clear)+' above the road':'touch, '+Math.round(DUTY*100)+'% of each cycle'}</dd><dt>Chains</dt><dd>${K.ch1} + ${K.ch2} links, #35</dd>${S.mode==='bike'?`<dt>Your bike</dt><dd>State All-Road M: wheelbase 1054, chainstay 450, BB drop 75, 170 cranks, 42T × 11–42</dd>`:''}</dl>
+    <p class="muted">The legs take their drive from their own wheel on the ground, so the same module, gearing and direction work behind your bike and behind you. Leg rate is always speed ÷ ${mm(K.advG)}.</p></section>`;}
+  if(t==='joints'){h=`<section><h2>Layers, inside to outside</h2><p class="muted">Computed: no two parts on one layer come within a bar width of each other, and no part crosses a bolt or the shaft end on a layer that bolt occupies.</p>
+    <div class="tw"><table><thead><tr><th>Layer</th><th>Parts</th><th>Out from plate</th></tr></thead><tbody>${[...Array(LAYERS.n)].map((_,i)=>{const L=i+1;return `<tr><td class="n">${L}</td><td>${BODIES.filter(b=>LAYERS[b.id]===L).map(b=>b.name+' '+b.j.join('–')).join(', ')}</td><td class="n">${mm(layerZ(L)-PLATE_Z)}</td></tr>`;}).join('')}</tbody></table></div>
+    <h2>Pivots</h2><div class="tw"><table><thead><tr><th>Pivot</th><th>Parts (layer)</th><th>Stack</th><th>Bolt</th></tr></thead><tbody>${JOINTS.map(J=>{const s=JSTACK[J];return `<tr><td class="m">${J}</td><td>${s.bodies.map(x=>x.b.name+' ('+x.L+')').join(', ')}${J==='B'?', plate':''}</td><td class="n">${mm(s.stack)}</td><td class="m">${J==='B'?'M12':'M10'} × ${s.shoulder}</td></tr>`;}).join('')}<tr><td class="m">O</td><td>Crank arm (1) on shaft</td><td class="n">—</td><td class="m">welded hub</td></tr></tbody></table></div></section>`;}
+  el.innerHTML=h;wire();}
+function wire(){const el=$('insp');el.querySelectorAll('ol.steps li[data-i]').forEach(li=>li.addEventListener('click',()=>{const i=+li.dataset.i,st=steps()[i];if(st.mode&&st.mode!==S.mode)setMode(st.mode);S.step=S.step===i?-1:i;if(R3)R3.highlight(S.step<0?null:steps()[S.step].tags);renderInsp();knock(1800,.02,.12);}));
+  const cog=$('cog');if(cog)cog.addEventListener('change',()=>{S.cog=+cog.value;derive();header();renderInsp();});}
+function setMode(m){if(m===S.mode)return;S.mode=m;S.v=MODES[m].v;document.querySelectorAll('.mode button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));derive();syncSpeed();header();if(T){R3=build3D();R3.resize();R3.bare(S.bare);if(S.step>=0)R3.highlight(steps()[S.step].tags);}renderInsp();knock(700,.06,.25);}
+document.querySelectorAll('.mode button').forEach(b=>b.addEventListener('click',()=>{audio();S.step=-1;setMode(b.dataset.m);}));
+
+/* ===== view, input, loop ===== */
+document.querySelectorAll('.vseg button[data-v]').forEach(b=>b.addEventListener('click',()=>{S.view=b.dataset.v;document.querySelectorAll('.vseg button[data-v]').forEach(x=>x.setAttribute('aria-pressed',x===b));c3.hidden=S.view!=='3d';c2.hidden=S.view==='3d';$('v3opts').style.visibility=S.view==='3d'?'visible':'hidden';if(R3)R3.resize();knock(1500,.015,.1);}));
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{S.tab=b.dataset.t;document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));renderInsp();$('insp').scrollTop=0;}));
+$('snd').addEventListener('click',e=>{S.sound=!S.sound;e.currentTarget.setAttribute('aria-pressed',S.sound);if(S.sound){audio();knock(900,.05,.25);}});
+$('xray').addEventListener('click',e=>{S.bare=!S.bare;e.currentTarget.setAttribute('aria-pressed',S.bare);if(R3)R3.bare(S.bare);});
+$('fit').addEventListener('click',()=>{if(R3)Object.assign(R3.cam,{th:.6,ph:1.3,r:4.4,tx:S.mode==='bike'?-.22:-.42,ty:.78});});
+if(T){R3=build3D();const ptr=new Map();let g0=null;
+  c3.addEventListener('pointerdown',e=>{c3.setPointerCapture(e.pointerId);ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});if(ptr.size===2){const [a,b]=[...ptr.values()];g0={pinch:1,d:Math.hypot(a.x-b.x,a.y-b.y),r:R3.cam.r};}else g0={x:e.clientX,y:e.clientY,th:R3.cam.th,ph:R3.cam.ph,mv:false};});
+  c3.addEventListener('pointermove',e=>{if(!ptr.has(e.pointerId)||!g0)return;ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});if(g0.pinch){if(ptr.size===2){const [a,b]=[...ptr.values()];R3.cam.r=Math.max(.8,Math.min(9,g0.r*g0.d/Math.max(1,Math.hypot(a.x-b.x,a.y-b.y))));}return;}const dx=e.clientX-g0.x,dy=e.clientY-g0.y;if(Math.hypot(dx,dy)>5)g0.mv=true;R3.cam.th=g0.th-dx*.008;R3.cam.ph=Math.max(.2,Math.min(1.55,g0.ph-dy*.006));});
+  c3.addEventListener('pointerup',e=>{const p=ptr.get(e.pointerId);ptr.delete(e.pointerId);if(g0&&!g0.pinch&&!g0.mv&&p){const n=R3.pick(e.clientX,e.clientY);if(n){vstat(n);S.hold=performance.now()+3500;knock(2200,.015,.1);}}if(!ptr.size)g0=null;});
+  c3.addEventListener('pointercancel',e=>{ptr.delete(e.pointerId);if(!ptr.size)g0=null;});
+  c3.addEventListener('wheel',e=>{e.preventDefault();R3.cam.r=Math.max(.8,Math.min(9,R3.cam.r*Math.exp(e.deltaY*.0012)));},{passive:false});
+  $('loading').remove();}else $('loading').textContent='3D library did not load. Elevation, Plate and Leg still work.';
+new ResizeObserver(()=>{if(R3)R3.resize();}).observe($('view'));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{readC();if(R3)R3.scene.background=new T.Color(C.view).convertSRGBToLinear();});
+let last=performance.now(),lastCon=[false,false];
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(S.playing){S.dist+=S.v*dt;S.ph=((S.ph+S.v*dt/K.advG)%1+1)%1;}
+  const con=[0,.5].map(o=>onGround(S.ph+o));if(S.mode==='pack')con.forEach((c,i)=>{if(c&&!lastCon[i])knock(i?520:600,.06,.3);});lastCon=con;
+  if(S.view==='3d'&&R3){R3.pose(S.ph);R3.updCam();R3.render();if(!S.hold||now>S.hold){const st=S.step>=0?steps()[S.step]:null;vstat(st?st.t:`3d · ${MODES[S.mode].name.toLowerCase()} mode · drag to orbit, tap a part · Bare hides body, ribs, tail`);}}
+  else if(S.view==='elev')drawElev();else if(S.view==='plate')drawPlate();else drawLeg();
+  drawScrub();requestAnimationFrame(frame);}
+if(R3)R3.resize();syncSpeed();header();renderInsp();requestAnimationFrame(frame);
+})();
+</script>
+
+</html>

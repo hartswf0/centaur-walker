@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="en"><head><link rel="icon" href="favicon.svg" type="image/svg+xml"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Centaur Walker Build Book</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#e9e7e2;--panel:#f7f6f2;--paper:#f4f2ec;--ink:#17150f;--ink-2:#5a554b;--ink-3:#8d877b;--rule:#d0cabe;--accent:#2f55c9;--accent-ink:#fff;--hot:#e2591b;--ok:#15803d;--box:#dfe5ef;--box-edge:#b7c2d4;
+  --f-body:'IBM Plex Sans',system-ui,sans-serif;--f-mono:'IBM Plex Mono',ui-monospace,monospace;--f-disp:'Bodoni Moda',Georgia,serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f0e0c;--panel:#171512;--paper:#1d1a16;--ink:#ece7dd;--ink-2:#a9a293;--ink-3:#736c60;--rule:#2d2924;--accent:#8fa8ff;--accent-ink:#0d1014;--hot:#ff8a4c;--ok:#4ade80;--box:#232a36;--box-edge:#36415a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f0e0c;--panel:#171512;--paper:#1d1a16;--ink:#ece7dd;--ink-2:#a9a293;--ink-3:#736c60;--rule:#2d2924;--accent:#8fa8ff;--accent-ink:#0d1014;--hot:#ff8a4c;--ok:#4ade80;--box:#232a36;--box-edge:#36415a;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-body);display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+header{display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid var(--rule);background:var(--panel);min-width:0}
+h1{font:500 17px var(--f-disp);letter-spacing:.14em;text-transform:uppercase;margin:0;white-space:nowrap}
+.bags{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0}.bags::-webkit-scrollbar{display:none}
+.bag{display:flex;align-items:center;gap:7px;border:1px solid var(--rule);background:var(--paper);border-radius:999px;padding:4px 10px 4px 5px;font:600 12px var(--f-body);color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.bag i{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ink-3);color:var(--panel);font:700 11px var(--f-mono);font-style:normal}
+.bag[aria-current="true"]{border-color:var(--accent);color:var(--ink)}.bag[aria-current="true"] i{background:var(--accent);color:var(--accent-ink)}
+.bag.done i{background:var(--ok)}
+.bag b{display:block;height:3px;width:34px;background:var(--rule);border-radius:2px;overflow:hidden}.bag b span{display:block;height:100%;background:var(--ok)}
+a.lnk{font:500 12px var(--f-body);color:var(--accent);white-space:nowrap;text-decoration:none}
+main{display:grid;grid-template-columns:1fr 380px;min-height:0}
+.page{position:relative;background:var(--paper);min-height:0;overflow:hidden;touch-action:none}
+.page canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#ov{pointer-events:none}
+aside{background:var(--panel);border-left:1px solid var(--rule);display:flex;flex-direction:column;min-height:0}
+.sh{display:flex;align-items:baseline;gap:10px;padding:12px 16px 8px}
+.sh .bn{font:600 11px var(--f-mono);letter-spacing:.06em;color:var(--accent);text-transform:uppercase}
+.sh .t{font-weight:700;font-size:16px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sh .of{font:12px var(--f-mono);color:var(--ink-3)}
+.pbx{flex-shrink:0;margin:0 12px;background:var(--box);border:1.5px solid var(--box-edge);border-radius:12px;position:relative;min-height:96px}
+.pbx canvas{display:block;width:100%}
+.say{flex-shrink:0;padding:10px 16px 4px;margin:0;font-size:14px;color:var(--ink)}
+.chk{flex-shrink:0;display:flex;gap:10px;align-items:flex-start;margin:6px 12px 0;padding:9px 10px;border:1px solid var(--rule);border-radius:9px;cursor:pointer;background:var(--paper)}
+.chk input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--ok);flex-shrink:0}
+.chk span{font-size:13px;color:var(--ink-2)}.chk span b{color:var(--ink);font-weight:600}
+.chk.on{border-color:var(--ok)}
+.sp{flex:1}
+.modes{display:flex;gap:4px;padding:8px 10px 0;flex-shrink:0}
+.modes button{flex:1;height:34px;border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);border-radius:8px;font:600 13px var(--f-body);cursor:pointer}
+.modes button[aria-selected="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.pane{display:flex;flex-direction:column;flex:1;min-height:0}.pane[hidden]{display:none}
+#paneM,#paneX{overflow:auto;padding-bottom:10px}
+.row{display:flex;align-items:center;gap:10px;padding:10px 14px 0;flex-shrink:0}
+.row input[type=range]{flex:1;accent-color:var(--accent)}
+.lab{font:600 11px var(--f-mono);color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em}.val{font:600 12px var(--f-mono);min-width:64px;text-align:right}
+.seg{display:flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden;flex:1}.seg button{flex:1;height:34px;border:0;background:var(--paper);color:var(--ink-2);font:600 13px var(--f-body);cursor:pointer}.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.tg{gap:16px;font-size:13px;flex-wrap:wrap}.tg label{display:flex;align-items:center;gap:6px;cursor:pointer}.tg input{accent-color:var(--accent);width:16px;height:16px}.hint{font-size:11px;color:var(--ink-3)}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px 12px 0;flex-shrink:0}.nums div{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:6px 8px}.nums b{display:block;font:600 16px var(--f-mono)}.nums small{font-size:11px;color:var(--ink-2)}
+.pow{margin:10px 12px 0;padding:0;list-style:none;counter-reset:p;flex-shrink:0}.pow li{counter-increment:p;display:grid;grid-template-columns:24px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--rule);font-size:13px}
+.pow li::before{content:counter(p);display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--hot);color:#fff;font:700 11px var(--f-mono)}
+.pow li b{font-weight:600}.note{margin:8px 14px 0;font-size:12px;color:var(--ink-2);flex-shrink:0}.note.warn{color:var(--hot);font-weight:600}
+.tbl{padding:8px 10px 0}.tbl h3{font:600 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:12px 4px 4px}
+.tbl table{width:100%;border-collapse:collapse;font-size:12.5px}.tbl td{padding:5px 4px;border-bottom:1px solid var(--rule);vertical-align:top}.tbl td.q{font:600 12px var(--f-mono);width:30px}.tbl td.d{font:500 12px var(--f-mono);text-align:right;white-space:nowrap}.tbl td.k{font:700 12px var(--f-mono);color:var(--accent);width:18px}
+.tbl tr{cursor:pointer}.tbl tr:hover td{background:var(--paper)}.tbl tr.on td{background:var(--box)}.tbl small{color:var(--ink-3)}
+.ctl{display:flex;align-items:center;gap:8px;padding:10px 12px 12px;border-top:1px solid var(--rule)}
+.ctl button{height:40px;border-radius:8px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);cursor:pointer;display:grid;place-items:center;min-width:44px;font:600 14px var(--f-body)}
+.ctl .nx{background:var(--accent);color:var(--accent-ink);border:0;flex:0 0 auto;padding:0 18px}
+.ex{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.ex input{width:100%;accent-color:var(--accent)}
+.ex small{display:flex;justify-content:space-between;font:10px var(--f-mono);color:var(--ink-3)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:760px){
+  header{padding:7px 10px;gap:8px}h1{font-size:13px;letter-spacing:.08em}a.lnk{display:none}
+  .bag{padding:3px 8px 3px 4px;font-size:11px}.bag b{display:none}
+  main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+  aside{border-left:0;border-top:1px solid var(--rule);overflow:auto}
+  .sh{padding:8px 12px 6px}.say{padding:8px 12px 2px;font-size:13.5px}.chk{margin:6px 10px 0}.pbx{margin:0 10px;min-height:80px}
+  .ctl{padding:8px 10px 10px;position:sticky;bottom:0;background:var(--panel)}
+}
+</style></head>
+<body>
+<header><h1>Centaur Walker</h1><nav class="bags" id="bags" aria-label="Bags"></nav><a class="lnk" href="templates.html" target="_blank" rel="noopener">Templates</a><a class="lnk" href="walker.html" target="_blank" rel="noopener">Engineering</a></header>
+<main>
+  <section class="page" id="page"><canvas id="c3"></canvas><canvas id="ov"></canvas></section>
+  <aside>
+    <div class="modes" role="tablist"><button data-m="build" aria-selected="true">Build</button><button data-m="mech">Mechanism</button><button data-m="exp">Exploded</button></div>
+    <div class="pane" id="paneB">
+    <div class="sh"><span class="bn" id="bn"></span><span class="t" id="st"></span><span class="of" id="of"></span></div>
+    <div class="pbx" id="pbx"><canvas id="pb"></canvas></div>
+    <p class="say" id="say"></p>
+    <label class="chk" id="chk"><input type="checkbox" id="ck"><span id="cktxt"></span></label>
+    <div class="sp"></div>
+    <div class="ctl">
+      <button id="prev" aria-label="Previous step"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M9 2 4 7l5 5" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
+      <button id="play" aria-label="Pause"><svg id="playic" width="14" height="14" viewBox="0 0 14 14"></svg></button>
+      <div class="ex"><input type="range" id="ex" min="0" max="1000" value="1000" aria-label="Exploded to built"><small><span>apart</span><span>built</span></small></div>
+      <button class="nx" id="next">Next</button>
+    </div>
+    </div>
+    <div class="pane" id="paneM" hidden>
+      <div class="row"><div class="seg" id="mmode"><button data-v="ride" aria-pressed="true">On the bike</button><button data-v="walk">Walking</button></div></div>
+      <div class="row tg"><label><input type="checkbox" id="mskin"> Skin</label><label><input type="checkbox" id="mpow" checked> Power path</label><label><input type="checkbox" id="mplay" checked> Moving</label></div>
+      <div class="row"><span class="lab">Speed</span><input type="range" id="mv" min="10" max="50" value="22"><span class="val" id="mvv"></span></div>
+      <div class="nums" id="mnums"></div>
+      <ol class="pow" id="mpath"></ol>
+      <p class="note" id="mnote"></p>
+    </div>
+    <div class="pane" id="paneX" hidden>
+      <div class="row"><span class="lab">Together</span><input type="range" id="xe" min="0" max="1000" value="750"><span class="lab">Apart</span></div>
+      <div class="row tg"><label><input type="checkbox" id="xskin"> Skin</label><label><input type="checkbox" id="xlab" checked> Labels</label><span class="hint">Tap a row to find the part</span></div>
+      <div class="tbl" id="xtbl"></div>
+    </div>
+  </aside>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(()=>{
+const T=window.THREE,TAU=Math.PI*2,$=id=>document.getElementById(id),css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const V=(x,y)=>({x,y}),sub=(a,b)=>V(a.x-b.x,a.y-b.y),add=(a,b)=>V(a.x+b.x,a.y+b.y),len=v=>Math.hypot(v.x,v.y),mm=m=>Math.round(m*1000)+' mm',inch=m=>(m/.0254).toFixed(1)+' in';
+
+/* ================= THE LEG =================
+   Jansen's topology, evolved for a load-bearing walk: one hoof always on the ground, level stance, two planted
+   hooves moving together. Every length is a whole number of 3/4 in., so a tape measure marks every hole. */
+const PITCH=19.05; // mm: 3/4 in.
+const N={a:16,b:13,c:18,d:13,e:13,f:28,g:11,h:22,i:23,j:18,k:28,l:5,m:5};
+const J={};for(const k in N)J[k]=N[k]*PITCH;
+function circ(p,r1,q,r2,side){const dx=q.x-p.x,dy=q.y-p.y,d=Math.hypot(dx,dy);if(d<1e-9)return null;const a=(r1*r1-r2*r2+d*d)/(2*d),hh=r1*r1-a*a;if(hh<0)return null;const h=Math.sqrt(hh),mx=p.x+a*dx/d,my=p.y+a*dy/d;return V(mx-side*h*dy/d,my+side*h*dx/d);}
+function lk(th){const O=V(0,0),B=V(-J.a,-J.l),C=V(J.m*Math.cos(th),J.m*Math.sin(th));const D=circ(B,J.b,C,J.j,1),E=circ(B,J.c,C,J.k,-1);if(!D||!E)return null;const F=circ(B,J.d,D,J.e,1);if(!F)return null;const G=circ(F,J.f,E,J.g,-1);if(!G)return null;const H=circ(G,J.h,E,J.i,-1);if(!H)return null;return {O,B,C,D,E,F,G,H};}
+const NS=360,PU=[];for(let k=0;k<NS;k++)PU.push(lk(k/NS*TAU));
+const YMIN=Math.min(...PU.map(p=>p.H.y)),CONTACT=PU.map(p=>p.H.y<YMIN+6);let TD=0,LO=0;for(let k=0;k<NS;k++){if(CONTACT[k]&&!CONTACT[(k+1)%NS])TD=k;if(CONTACT[k]&&!CONTACT[(k-1+NS)%NS])LO=k;}
+const DUTY=CONTACT.filter(Boolean).length/NS,STX=PU.filter((p,i)=>CONTACT[i]).map(p=>p.H.x),ADV=(Math.max(...STX)-Math.min(...STX))/DUTY/1000,STMID=(Math.max(...STX)+Math.min(...STX))/2000,HT=-YMIN/1000;
+const LIFT=(Math.max(...PU.map(p=>p.H.y))-YMIN)/1000,STBOB=(Math.max(...PU.filter((p,i)=>CONTACT[i]).map(p=>p.H.y))-YMIN)/1000;
+const thetaAt=ph=>TD/NS*TAU-TAU*ph; // phase 0 = touchdown; the crank turns clockwise seen from the right as the ground drives it
+const idx=ph=>((Math.round(TD-NS*ph)%NS)+NS)%NS,onGround=ph=>CONTACT[idx(ph)];
+const legAt=ph=>{const u=PU[idx(ph)],o={};for(const k in u)o[k]=V(u[k].x/1000,u[k].y/1000);return o;}; // metres, relative to O, body frame
+// double-support slip: both hooves down, how much do their speeds disagree over one cycle
+let DSLIP=0;for(let k=0;k<NS;k++){const k2=(k+NS/2)%NS;if(CONTACT[k]&&CONTACT[k2]){const d1=PU[(k+1)%NS].H.x-PU[k].H.x,d2=PU[(k2+1)%NS].H.x-PU[k2].H.x;DSLIP+=Math.abs(d1-d2);}}DSLIP/=1000;
+
+/* bars: every link is a piece of 1×2 select pine (19 × 38 mm) with a 3/8 in. hole near each end. The distance between
+   the holes is a whole number of 3/4 in., so a tape measure in inches marks every bar. Triangles are three bars bolted at their corners. */
+const BARS=[{id:'m',name:'Crank',j:['O','C']},{id:'j',name:'Upper rod',j:['C','D']},{id:'k',name:'Lower rod',j:['C','E']},{id:'b',name:'Hip bar, front',j:['B','D']},{id:'d',name:'Hip bar, rear',j:['B','F']},{id:'e',name:'Hip bar, top',j:['D','F']},
+  {id:'c',name:'Thigh rod',j:['B','E']},{id:'f',name:'Gaskin rod',j:['F','G']},{id:'g',name:'Hock bar',j:['G','E']},{id:'h',name:'Cannon bar, rear',j:['G','H']},{id:'i',name:'Cannon bar, front',j:['E','H']}];
+const frac=x=>{const w=Math.floor(x+1e-9),r=x-w;return (w?w:'')+(r>.6?'-3/4':r>.4?'-1/2':r>.1?'-1/4':'')+'';};
+BARS.forEach(b=>{b.n=N[b.id];b.inch=b.n*.75;b.cut=b.inch+1.5+(b.id==='m'?1.3125:0);b.inchS=frac(b.inch).replace(/^-/,'')+' in.';b.cutS=frac(b.cut).replace(/^-/,'')+' in.';});
+const PIVOTS=['B','C','D','E','F','G','H'];
+function segDist(a,b,c,d){const f=(p,q,r)=>{const l2=(r.x-q.x)**2+(r.y-q.y)**2;let t=l2?((p.x-q.x)*(r.x-q.x)+(p.y-q.y)*(r.y-q.y))/l2:0;t=Math.max(0,Math.min(1,t));return Math.hypot(p.x-q.x-t*(r.x-q.x),p.y-q.y-t*(r.y-q.y));};const o=(p,q,r)=>Math.sign((q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x));if(o(a,b,c)*o(a,b,d)<0&&o(c,d,a)*o(c,d,b)<0)return 0;return Math.min(f(a,c,d),f(b,c,d),f(c,a,b),f(d,a,b));}
+const BAR_T=.019,BAR_W=.0381,WASH_T=.0016,PLATE_T=.012;
+const LAYER={},STACK={};
+(function plan(){const n=BARS.length,gap=BAR_W*1000+6,conf=[...Array(n)].map(()=>Array(n).fill(false));
+  for(let a=0;a<n;a++)for(let b=a+1;b<n;b++){const A=BARS[a],B_=BARS[b];if(A.j.some(x=>B_.j.includes(x))){conf[a][b]=conf[b][a]=true;continue;}for(let k=0;k<NS&&!conf[a][b];k+=3){const P=PU[k];if(segDist(P[A.j[0]],P[A.j[1]],P[B_.j[0]],P[B_.j[1]])<gap)conf[a][b]=conf[b][a]=true;}}
+  const COL=[...PIVOTS,'O'],near=BARS.map(b=>{const o={};for(const c of COL){o[c]=false;for(let k=0;k<NS&&!o[c];k+=3){const P=PU[k];if(segDist(P[c],P[c],P[b.j[0]],P[b.j[1]])<BAR_W*500+14)o[c]=true;}}return o;});
+  // bolt heads and nuts stand 8 mm proud of a stack, so no bar may pass over a pivot in the layer just outside its stack;
+  // the hub bolts sit in layer 2, so no bar that sweeps over the hub may use layer 2; D is over the plate, so its stack starts at layer 2
+  const hubNear=BARS.map(b=>{if(b.id==='m')return false;for(let k=0;k<NS;k+=2){const P=PU[k];if(segDist(P.O,P.O,P[b.j[0]],P[b.j[1]])<64)return true;}return false;});
+  let best=null;for(let kc=3;kc<=9&&!best;kc++){const as=Array(n).fill(0);const rec=i=>{if(i===n){for(const c of COL){const ls=BARS.map((b,bi)=>b.j.includes(c)?as[bi]:null).filter(x=>x!==null);const lo=(c==='B'||c==='O')?1:Math.min(...ls),hi=Math.max(...ls);for(let bi=0;bi<n;bi++)if(!BARS[bi].j.includes(c)&&near[bi][c]&&as[bi]>=lo-(c==='B'||c==='O'?0:1)&&as[bi]<=hi+1)return;if(c==='D'&&lo<2)return;}
+      let cost=0;for(const c of COL){const ls=BARS.map((b,bi)=>b.j.includes(c)?as[bi]:null).filter(x=>x!==null);cost+=Math.max(...ls)-((c==='B'||c==='O')?1:Math.min(...ls))+1-ls.length;}const hL=BARS.map((b,bi)=>b.j.includes('H')?as[bi]:null).filter(x=>x!==null);cost+=.5*(Math.min(...hL)+Math.max(...hL))/2; // keep the hoof near the centreline
+      if(!best||cost<best.cost)best={cost,as:as.slice()};return;}
+    for(let L=1;L<=kc;L++){if(i===0&&L!==1)continue;if(L===2&&hubNear[i])continue;let ok=true;for(let p=0;p<i;p++)if(conf[i][p]&&as[p]===L){ok=false;break;}if(ok){as[i]=L;rec(i+1);}}};rec(0);}
+  BARS.forEach((b,i)=>LAYER[b.id]=best.as[i]);LAYER.n=Math.max(...best.as);
+  for(const c of [...PIVOTS,'O']){const bs=BARS.filter(b=>b.j.includes(c));const ls=bs.map(b=>LAYER[b.id]);const lo=(c==='B'||c==='O')?1:Math.min(...ls),hi=Math.max(...ls);STACK[c]={bars:bs,lo,hi,spacers:hi-lo+1-ls.length};}})();
+const LZ=L=>PLATE_T/2+WASH_T+(L-1)*(BAR_T+WASH_T)+BAR_T/2; // centre of layer L, from the middle of the plate
+const HOOF_ANG=(()=>{const P=PU[(((Math.round(TD-NS*DUTY/2))%NS)+NS)%NS];return Math.atan2(P.H.y-P.E.y,P.H.x-P.E.x);})(); // hoof sole level at mid-stance
+const HOOF_INNER=()=>LZ(STACK.H.lo)-BAR_T/2;               // inner face of the H stack
+const HOOF_Z=()=>HOOF_INNER()+.0445;                         // 1×4 pad: inner edge flush with the stack's inner face, so it never crosses to the other leg
+const STOCK_IN=[2,2.5,3,3.5,4,4.5,5,5.5,6,7,8];
+function boltFor(c){const s=STACK[c];let grip;if(c==='B')grip=2*(LZ(s.hi)+BAR_T/2+WASH_T);else{const span=s.hi-s.lo+1;grip=span*BAR_T+(span+1)*WASH_T+(c==='H'?2*.0012:0);}const need=grip+.0032+.0095+.004;return {grip,len:STOCK_IN.find(x=>x*.0254>=need)||8,need};}
+/* ---------------- shared design numbers (same as the engineering page) ---------------- */
+const HOOF=.047,BODY_D=.63,SPINE_Y=.214;
+const BOD={front:.40,rear:-.70},XR=-.50,A0=.25,HOOPS=[.33,.12,-.10,-.31,-.49],HOOP_IN=[38,44,46,42,30];
+const cl01=x=>Math.max(0,Math.min(1,x));
+function bodyAt(x){let top=.20+.028*Math.exp(-(((x+.38)/.13)**2))-.035*cl01((x-.22)/.18),belly=-.30+.11*cl01((-.28-x)/.2)+.19*Math.pow(cl01(x/.26),.9),w=.235*(1-.18*cl01((x-.18)/.22));
+  if(x<XR){const f=Math.sqrt(Math.max(0,1-((XR-x)/(XR-BOD.rear))**2)),mid=(top+belly)/2+.03;top=mid+(top-mid)*f;belly=mid+(belly-mid)*Math.pow(f,.6);w*=Math.max(.02,f);}
+  const hh=(top-belly)/(1+Math.sqrt(Math.sin(A0))),yc=top-hh;return {top,belly,w,hh,yc};}
+const se=v=>Math.sign(v)*Math.sqrt(Math.abs(v));
+const ringPt=(x,a,sc=1)=>{const b=bodyAt(x);return {x,y:b.yc+b.hh*se(Math.sin(a))*sc,z:b.w*se(Math.cos(a))*sc};};
+const IN=x=>frac(x).replace(/^-/,'')+' in.';
+const fr32=x=>{let w=Math.floor(x+1e-9),r=Math.round((x-w)*32);if(r===32){w++;r=0;}if(!r)return `${w}`;let n=r,d=32;while(n%2===0){n/=2;d/=2;}return (w?w+'-':'')+n+'/'+d;};
+const fr16=x=>{let w=Math.floor(x+1e-9),r=Math.round((x-w)*16);if(r===16){w++;r=0;}if(!r)return `${w}`;let n=r,d=16;while(n%2===0){n/=2;d/=2;}return (w?w+'-':'')+n+'/'+d;};
+const BAR=Object.fromEntries(BARS.map(b=>[b.id,b]));
+// which layers are filled at each pivot (the C riser fills layer 2 at C)
+const RISER={c:'C',L:(()=>{const s=STACK.C;for(let L=s.lo;L<=s.hi;L++)if(!s.bars.some(b=>LAYER[b.id]===L))return L;return 0;})()};
+const filled=(c,L)=>STACK[c].bars.some(b=>LAYER[b.id]===L)||(c==='C'&&L===RISER.L);
+const PH_A=.32,PH_B=.82;
+const GAPS=[];for(const b of BARS)for(let s=0;s<2;s++)GAPS.push(b);
+
+/* ---------------- renderer and scene ---------------- */
+const c3=$('c3'),ov=$('ov'),page=$('page');
+const R=new T.WebGLRenderer({canvas:c3,antialias:true,alpha:false});R.setPixelRatio(Math.min(2,devicePixelRatio||1));R.shadowMap.enabled=true;R.shadowMap.type=T.PCFSoftShadowMap;R.outputEncoding=T.sRGBEncoding;
+const scene=new T.Scene(),camera=new T.PerspectiveCamera(30,1,.02,40),srgb=c=>new T.Color(c).convertSRGBToLinear();
+scene.add(new T.HemisphereLight(0xffffff,0x8a7d6a,.9));const sun=new T.DirectionalLight(0xffffff,.85);sun.position.set(1.4,3,2.4);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-2,right:2,top:2,bottom:-1.2,near:.5,far:8});sun.shadow.bias=-.0005;scene.add(sun);
+const fill=new T.DirectionalLight(0xe4e9ff,.4);fill.position.set(-2,1.2,-1.8);scene.add(fill);
+const ground=new T.Mesh(new T.PlaneGeometry(12,8),new T.ShadowMaterial({opacity:.16}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+const grid=new T.GridHelper(12,60,0x000000,0x000000);grid.material.transparent=true;grid.material.opacity=.06;scene.add(grid);
+const v3=(x,y,z)=>new T.Vector3(x,y,z);
+const mat=(c,o={})=>new T.MeshStandardMaterial(Object.assign({color:srgb(c),roughness:.62,metalness:0},o));
+const M={pine:()=>mat('#e6ca98',{roughness:.72}),end:()=>mat('#d5b37a'),ply:()=>mat('#d8b98a'),steel:()=>mat('#a3aab1',{metalness:.7,roughness:.33}),zinc:()=>mat('#c9ced3',{metalness:.55,roughness:.38}),
+  nylon:()=>mat('#f2efe6',{roughness:.5}),pvc:()=>mat('#f4f4f0',{roughness:.42}),rubber:()=>mat('#2a2826',{roughness:.92}),pex:()=>mat('#c8392f',{roughness:.5}),cloth:()=>mat('#dccca9',{roughness:.95,side:T.DoubleSide}),
+  black:()=>mat('#252321',{roughness:.8}),person:()=>mat('#8e887f',{roughness:.85}),blue:()=>mat('#2c5fb8',{roughness:.5}),dark:()=>mat('#3a3631')};
+const edgeMat=new T.LineBasicMaterial({color:srgb('#1b1a17'),transparent:true,opacity:.6});
+function edges(o){o.traverse(m=>{if(m.isMesh&&!m.userData.noEdge){m.castShadow=true;m.receiveShadow=true;const e=new T.LineSegments(new T.EdgesGeometry(m.geometry,30),edgeMat);e.userData.edge=1;e.raycast=()=>{};m.add(e);}});return o;}
+const cylZ=(r,len,m,seg=16)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,len,seg),m);o.rotation.x=Math.PI/2;return o;};
+const hexZ=(r,h,m)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,h,6),m);o.rotation.x=Math.PI/2;return o;};
+const ringZ=(ro,ri,h,m)=>{const s=new T.Shape();s.absarc(0,0,ro,0,TAU,false);const p=new T.Path();p.absarc(0,0,ri,0,TAU,true);s.holes.push(p);const g=new T.ExtrudeGeometry(s,{depth:h,bevelEnabled:false,curveSegments:24});g.translate(0,0,-h/2);return new T.Mesh(g,m);};
+const tube=(pts,r,m,seg=48)=>new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts,false,'catmullrom',.2),seg,r,10),m);
+
+/* ---------------- part builders (used in the scene and in the parts box) ---------------- */
+const MK={
+  bar(id){const b=BAR[id],Lc=b.n*PITCH/1000,holes=id==='m'?[-.0333,.0333,Lc]:[0,Lc],r=BAR_W/2,a=Math.min(...holes),s=new T.Shape();s.moveTo(a,-r);s.lineTo(Lc,-r);s.absarc(Lc,0,r,-Math.PI/2,Math.PI/2,false);s.lineTo(a,r);s.absarc(a,0,r,Math.PI/2,Math.PI*1.5,false);
+    for(const x of holes){const h=new T.Path();h.absarc(x,0,.0048,0,TAU,true);s.holes.push(h);}const g=new T.ExtrudeGeometry(s,{depth:BAR_T,bevelEnabled:true,bevelThickness:.0008,bevelSize:.0008,bevelSegments:1,curveSegments:14});g.translate(0,0,-BAR_T/2);
+    const grp=new T.Group(),m=new T.Mesh(g,M.pine());grp.add(m);return edges(grp);},
+  bolt(lenIn,headUp){const g=new T.Group(),L=lenIn*.0254,hd=hexZ(.0095,.0064,M.zinc());hd.position.z=-.0032;g.add(hd);const sh=cylZ(.00476,L,M.zinc(),12);sh.position.z=L/2;sh.userData.noEdge=1;g.add(sh);return edges(g);}, // origin under the head, shank along +z
+  nut(){const g=new T.Group(),n=hexZ(.0095,.0084,M.zinc());n.position.z=.0042;g.add(n);const ins=ringZ(.0075,.0048,.002,M.blue());ins.position.z=.0085;ins.userData.noEdge=1;g.add(ins);return edges(g);},
+  washer(){const g=new T.Group();g.add(ringZ(.0127,.0052,.0016,M.zinc()));return edges(g);},
+  nylon(){const g=new T.Group();const w=ringZ(.0095,.0052,.0016,M.nylon());g.add(w);return edges(g);},
+  riser(){const g=new T.Group(),s=new T.Shape(),r=.019;s.moveTo(-r,-r);s.lineTo(r,-r);s.lineTo(r,r);s.lineTo(-r,r);s.lineTo(-r,-r);const h=new T.Path();h.absarc(0,0,.0048,0,TAU,true);s.holes.push(h);const geo=new T.ExtrudeGeometry(s,{depth:BAR_T,bevelEnabled:false,curveSegments:14});geo.translate(0,0,-BAR_T/2);g.add(new T.Mesh(geo,M.pine()));return edges(g);},
+  plate(){const s=new T.Shape(),P=[[-.3239,-.127],[.0635,-.127],[.0635,.2032],[-.3239,.2032]];s.moveTo(...P[0]);for(const q of P.slice(1))s.lineTo(...q);s.lineTo(...P[0]);const h1=new T.Path();h1.absarc(0,0,.046,0,TAU,true);s.holes.push(h1);const h2=new T.Path();h2.absarc(-J.a/1000,-J.l/1000,.0048,0,TAU,true);s.holes.push(h2);
+    const geo=new T.ExtrudeGeometry(s,{depth:PLATE_T,bevelEnabled:false,curveSegments:32});geo.translate(0,0,-PLATE_T/2);const g=new T.Group();g.add(new T.Mesh(geo,M.ply()));return edges(g);},
+  ring(){const g=new T.Group(),L=2*(LZ(1)-BAR_T/2);g.add(ringZ(.0445,.039,L,M.pvc()));return edges(g);},
+  pad(){const g=new T.Group(),m=new T.Mesh(new T.BoxGeometry(.102,.019,.089),M.pine());g.add(m);return edges(g);},
+  rubber(){const g=new T.Group(),m=new T.Mesh(new T.BoxGeometry(.102,.004,.089),M.rubber());g.add(m);return edges(g);},
+  brace(){const g=new T.Group(),a=new T.Mesh(new T.BoxGeometry(.013,.05,.002),M.zinc());a.position.y=.025;g.add(a);const b=new T.Mesh(new T.BoxGeometry(.013,.002,.05),M.zinc());b.position.z=.025;g.add(b);return edges(g);}, // corner at origin: leg up +y, foot along +z
+  screw(){const g=new T.Group(),h=new T.Mesh(new T.CylinderGeometry(.004,.0015,.003,12),M.zinc());g.add(h);const s=new T.Mesh(new T.CylinderGeometry(.0018,.001,.016,8),M.zinc());s.position.y=-.009;g.add(s);return edges(g);},
+  emt(){const g=new T.Group();g.add(tube([v3(-.33,0,0),v3(BODY_D-.12,0,0)],.009,M.steel(),4));return edges(g);},
+  elbow(){const g=new T.Group();g.add(tube([v3(0,0,0),v3(.06,0,0),v3(.105,-.025,0),v3(.12,-.09,0),v3(.12,-.214,0)],.009,M.steel(),40));return edges(g);}, // starts at BODY_D-.12 on the spine
+  strap(){const g=new T.Group(),s=new T.Mesh(new T.TorusGeometry(.0105,.0025,6,16,Math.PI),M.zinc());s.rotation.y=Math.PI/2;g.add(s);const t=new T.Mesh(new T.BoxGeometry(.03,.002,.02),M.zinc());t.position.set(0,-.001,.018);g.add(t);return edges(g);},
+  bungee(){const g=new T.Group(),m=cylZ(.0035,.3,M.black(),8);m.rotation.x=0;m.userData.noEdge=1;g.add(m);for(const s of [-1,1]){const h=new T.Mesh(new T.TorusGeometry(.008,.0018,6,12,Math.PI*1.4),M.zinc());h.position.y=s*.158;g.add(h);}return g;},
+  pex(lenIn){const g=new T.Group(),r=lenIn*.0254/Math.PI;g.add(new T.Mesh(new T.TorusGeometry(r*.5,.008,8,40,Math.PI*1.6),M.pex()));return g;},
+  cloth(){const g=new T.Group(),m=new T.Mesh(new T.BoxGeometry(.3,.06,.22),M.cloth());g.add(m);return edges(g);},
+  rope(){const g=new T.Group();g.add(new T.Mesh(new T.TorusGeometry(.05,.008,8,30),mat('#a3824f')));return g;},
+  board(lenIn,wIn=5.5){const g=new T.Group(),m=new T.Mesh(new T.BoxGeometry(lenIn*.0254,.019,wIn*.0254),M.pine());g.add(m);return edges(g);},
+  stick(lenIn){const g=new T.Group(),m=new T.Mesh(new T.BoxGeometry(lenIn*.0254,.019,.038),M.pine());g.add(m);return edges(g);},
+  lazy(){const g=new T.Group(),a=new T.Mesh(new T.BoxGeometry(.152,.152,.004),M.zinc());a.position.z=-.004;g.add(a);const b=new T.Mesh(new T.BoxGeometry(.152,.152,.004),M.zinc());b.position.z=.004;b.rotation.z=Math.PI/4;g.add(b);return edges(g);},
+  hinge(){const g=new T.Group();for(const s of [-1,1]){const l=new T.Mesh(new T.BoxGeometry(.038,.076,.002),M.steel());l.position.x=s*.02;g.add(l);}const k=new T.Mesh(new T.CylinderGeometry(.0045,.0045,.076,12),M.steel());g.add(k);return edges(g);},
+  pin(){const g=new T.Group(),p=new T.Mesh(new T.CylinderGeometry(.0048,.0048,.05,12),M.zinc());g.add(p);const h=new T.Mesh(new T.CylinderGeometry(.008,.008,.004,16),M.zinc());h.position.y=.026;g.add(h);const c=new T.Mesh(new T.TorusGeometry(.012,.0013,6,20,Math.PI*1.6),M.zinc());c.position.y=-.02;c.rotation.y=Math.PI/2;g.add(c);return edges(g);},
+  belt(){const g=new T.Group(),b=new T.Mesh(new T.TorusGeometry(1,.028,10,40),M.black());b.scale.set(.17,.16,1);b.rotation.x=Math.PI/2;g.add(b);for(const z of [-1,1])g.add(tube([v3(-.17,.04,z*.08),v3(-.14,.3,z*.09),v3(-.07,.47,z*.11),v3(.07,.47,z*.11),v3(.15,.3,z*.1),v3(.15,.03,z*.1)],.012,M.black(),30));return g;},
+  fender(){const g=new T.Group();g.add(ringZ(.019,.0052,.0016,M.zinc()));return edges(g);},
+  clamp(){const g=new T.Group(),c=new T.Mesh(new T.TorusGeometry(.03,.004,6,24),M.steel());g.add(c);const s=new T.Mesh(new T.BoxGeometry(.014,.01,.012),M.steel());s.position.y=.032;g.add(s);return edges(g);},
+  tape(){const g=new T.Group();g.add(ringZ(.03,.02,.025,mat('#7a7a7a')));return edges(g);},
+  glue(){const g=new T.Group(),b=new T.Mesh(new T.CylinderGeometry(.02,.02,.12,16),mat('#d9d2c0'));b.rotation.z=Math.PI/2;g.add(b);const n=new T.Mesh(new T.ConeGeometry(.008,.04,12),mat('#c9542d'));n.rotation.z=-Math.PI/2;n.position.x=.08;g.add(n);return edges(g);},
+  grease(){const g=new T.Group(),b=new T.Mesh(new T.CylinderGeometry(.018,.018,.07,16),mat('#c9542d'));g.add(b);const c=new T.Mesh(new T.CylinderGeometry(.008,.01,.02,12),mat('#eee'));c.position.y=.045;g.add(c);return edges(g);},
+  bit(dIn=.375,lenIn=6){const g=new T.Group(),m=new T.Mesh(new T.CylinderGeometry(dIn*.0127,dIn*.0127,lenIn*.0254,12),M.steel());g.add(m);return edges(g);},
+  spade(){const g=new T.Group(),s=new T.Mesh(new T.CylinderGeometry(.003,.003,.12,8),M.steel());s.position.y=.06;g.add(s);const p=new T.Mesh(new T.BoxGeometry(.022,.03,.002),M.steel());p.position.y=-.005;g.add(p);return edges(g);},
+  holesaw(){const g=new T.Group();g.add(ringZ(.046,.043,.04,M.steel()));return edges(g);},
+  wrench(){const g=new T.Group(),h=new T.Mesh(new T.BoxGeometry(.16,.012,.004),M.steel());g.add(h);return edges(g);},
+};
+
+/* ---------------- the build: every part is a unit with a home pose and an approach vector ---------------- */
+const U={};          // id -> {obj, off: Vector3 (approach, parent frame), delay, center}
+const root=new T.Group();scene.add(root);
+const bodyG=new T.Group();bodyG.position.set(0,HT+HOOF,0);root.add(bodyG);
+function unit(id,obj,parent,off,delay=0){parent.add(obj);const bb=new T.Box3().setFromObject(obj);const c=new T.Vector3();bb.getCenter(c);obj.updateWorldMatrix(true,false);const center=obj.worldToLocal(c.clone());U[id]={id,obj,off:off||v3(0,0,0),delay,center,home:null};return U[id];}
+const LEG={};
+function buildLeg(side,tag){const lg=new T.Group();bodyG.add(lg);const L={side,lg,bars:{},bolts:{},wash:[],tag};LEG[tag]=L;
+  for(const b of BARS){const g=new T.Group();g.add(MK.bar(b.id));if(b.id==='m'){const r=MK.riser();r.position.set(b.n*PITCH/1000,0,side*(LZ(RISER.L)-LZ(1)));g.add(r);}
+    g.position.z=side*LZ(LAYER[b.id]);L.bars[b.id]=g;unit(`${tag}-bar-${b.id}`,g,lg,v3(0,0,side*.17),.12);}
+  for(const c of PIVOTS){if(c==='B')continue;const st=STACK[c],z0=LZ(st.lo)-BAR_T/2,z1=LZ(st.hi)+BAR_T/2;
+    // nylon washers between filled layers (not between the crank and its glued riser)
+    for(let Lr=st.lo;Lr<st.hi;Lr++){if(!filled(c,Lr)||!filled(c,Lr+1))continue;if(c==='C'&&Lr===1&&RISER.L===2)continue;const w=MK.nylon();w.position.z=side*(LZ(Lr)+BAR_T/2+WASH_T/2);const id=`${tag}-ny-${c}-${Lr+1}`;unit(id,w,lg,v3(0,0,side*.1),0);L.wash.push({id,c,L:Lr+1});}
+    const bolt=MK.bolt(boltFor(c).len);const bg=new T.Group();bg.add(bolt);const recess=c==='C';
+    const headZ=recess?z0+.0079:z0-WASH_T;bolt.position.z=0;bg.userData.headZ=headZ;
+    if(!recess){const w=MK.washer();w.position.z=WASH_T/2+.0001;w.rotation.y=0;bg.add(w);}
+    // the bolt group's origin sits at the underside of the head; flip for the mirrored leg
+    if(side<0)bg.rotation.y=Math.PI;
+    bg.userData.z=side*headZ;L.bolts[c]=bg;unit(`${tag}-bolt-${c}`,bg,lg,v3(0,0,-side*.16),0);
+    const ow=MK.washer();ow.userData.z=side*(z1+WASH_T/2);unit(`${tag}-ow-${c}`,ow,lg,v3(0,0,side*.09),.08);
+    const nt=MK.nut();if(side<0)nt.rotation.y=Math.PI;nt.userData.z=side*(z1+WASH_T);unit(`${tag}-nut-${c}`,nt,lg,v3(0,0,side*.13),.16);}
+  // hoof: pad + rubber sub-build, then two braces
+  const hoof=new T.Group();const pad=MK.pad();pad.position.y=-.0345;const rub=MK.rubber();rub.position.y=-.046;
+  const hp=new T.Group();hp.add(pad);hp.add(rub);hoof.add(hp);hoof.userData.z=side*HOOF_Z();L.hoof=hoof;lg.add(hoof);
+  U[`${tag}-pad`]={id:`${tag}-pad`,obj:pad,off:v3(0,0,0),delay:0,center:v3(0,0,0)};U[`${tag}-rubber`]={id:`${tag}-rubber`,obj:rub,off:v3(0,-.06,0),delay:0,center:v3(0,0,0)};
+  U[`${tag}-hoofpad`]={id:`${tag}-hoofpad`,obj:hp,off:v3(0,-.16,0),delay:0,center:v3(0,-.04,0)};
+  [[HOOF_INNER()-.001,-.016],[LZ(STACK.H.hi)+BAR_T/2+.001,.016]].forEach(([zf,bx],k)=>{const br=MK.brace();br.position.set(bx,-.025,side*(zf-HOOF_Z()));if(side<0)br.rotation.y=Math.PI;br.scale.z=1;
+    hoof.add(br);U[`${tag}-brace-${k}`]={id:`${tag}-brace-${k}`,obj:br,off:v3(0,0,(k?1:-1)*side*.09),delay:.1+k*.08,center:v3(0,.02,0)};});
+  return L;}
+const LA=buildLeg(1,'A'),LB=buildLeg(-1,'B');
+U.legA={id:'legA',obj:LA.lg,off:v3(0,0,.42),delay:0,center:v3(-.3,-.4,0)};U.legB={id:'legB',obj:LB.lg,off:v3(0,0,-.42),delay:0,center:v3(-.3,-.4,0)};
+// frame
+const plate=MK.plate();unit('plate',plate,bodyG,v3(0,.3,0));
+const ring=MK.ring();unit('ring',ring,bodyG,v3(0,0,.16));
+const hubG=new T.Group();bodyG.add(hubG);
+const hubZ=LZ(1)+BAR_T/2;
+['hb0','hb1'].forEach((id,k)=>{const x=k?.0333:-.0333;const g=new T.Group();const b=MK.bolt(3);b.rotation.y=Math.PI;b.position.z=hubZ+WASH_T;g.add(b);const w=MK.washer();w.position.z=hubZ+WASH_T/2;g.add(w);g.position.x=x;unit(id,g,hubG,v3(0,0,.16),k*.08);
+  const n=new T.Group();const nn=MK.nut();nn.rotation.y=Math.PI;nn.position.z=-(hubZ+WASH_T);n.add(nn);const w2=MK.washer();w2.position.z=-(hubZ+WASH_T/2);n.add(w2);n.position.x=x;unit(id+'n',n,hubG,v3(0,0,-.14),.2+k*.08);});
+const bB=new T.Group();{const zb=LZ(STACK.B.hi)+BAR_T/2+WASH_T;const b=MK.bolt(7);b.rotation.y=Math.PI;b.position.z=zb;bB.add(b);const w=MK.washer();w.position.z=zb-WASH_T/2;bB.add(w);bB.position.set(-J.a/1000,-J.l/1000,0);unit('boltB',bB,bodyG,v3(0,0,.3));
+  const n=new T.Group();const nn=MK.nut();nn.rotation.y=Math.PI;nn.position.z=-zb;n.add(nn);const w2=MK.washer();w2.position.z=-zb+WASH_T/2;n.add(w2);n.position.set(-J.a/1000,-J.l/1000,0);unit('nutB',n,bodyG,v3(0,0,-.14),.2);
+  // nylon washers either side of the plate at B
+  for(const s of [1,-1]){const w=MK.nylon();w.position.set(-J.a/1000,-J.l/1000,s*(PLATE_T/2+WASH_T/2));unit('nyB'+(s>0?'A':'B'),w,bodyG,v3(0,0,s*.1));}}
+// body
+const emt=MK.emt();emt.position.set(0,SPINE_Y,0);unit('emt',emt,bodyG,v3(0,.25,0));
+const elb=MK.elbow();elb.position.set(BODY_D-.12,SPINE_Y,0);unit('elbow',elb,bodyG,v3(.16,0,0),.1);
+[-.28,-.17,-.06,.03].forEach((x,k)=>{const s=MK.strap();s.position.set(x,SPINE_Y,0);unit('strap'+k,s,bodyG,v3(0,.08,0),.2+k*.05);});
+const bung=[];for(const L of [LA,LB]){const m=new T.Mesh(new T.CylinderGeometry(.0035,.0035,1,6),M.black());const g=new T.Group();g.add(m);bodyG.add(g);bung.push({g,m,L});U['bung'+L.tag]={id:'bung'+L.tag,obj:g,off:v3(0,.18,0),delay:L.tag==='B'?.1:0,center:v3(0,0,0)};}
+const hoops=[];HOOPS.forEach((x,k)=>{const pts=[];for(let i=0;i<=24;i++){const a=-A0+(Math.PI+2*A0)*i/24,q=ringPt(x,a,.985);pts.push(v3(q.x,q.y,q.z));}const g=new T.Group();g.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),40,.008,8),M.pex()));bodyG.add(g);U['hoop'+k]={id:'hoop'+k,obj:g,off:v3(0,.35,0),delay:k*.07,center:v3(x,.1,0)};hoops.push({g,x});});
+{const NX=44,NA=18,pos=[],ix=[];for(let i=0;i<=NX;i++){const x=BOD.rear+(BOD.front-BOD.rear)*i/NX;for(let k=0;k<=NA;k++){const q=ringPt(x,-A0+(Math.PI+2*A0)*k/NA,1.0);pos.push(q.x,q.y,q.z);}}
+  for(let i=0;i<NX;i++)for(let k=0;k<NA;k++){const a=i*(NA+1)+k,b=a+NA+1;ix.push(a,a+1,b,b,a+1,b+1);}const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(pos,3));geo.setIndex(ix);geo.computeVertexNormals();
+  const sk=new T.Mesh(geo,M.cloth());sk.castShadow=true;const g=new T.Group();g.add(sk);bodyG.add(g);U.skin={id:'skin',obj:g,off:v3(0,.5,0),delay:0,center:v3(-.15,.1,0)};}
+const tail=new T.Group();{const bt=bodyAt(BOD.rear+.06);tail.position.set(BOD.rear+.05,bt.top-.01,0);const pts=[];for(let i=0;i<36;i++){const a=Math.random()*TAU,r=Math.random()*.025,l=.45+Math.random()*.25,zz=Math.cos(a)*r,yy=Math.sin(a)*r;for(let s=0;s<8;s++){const f=t=>v3(-.03-t*.08,yy-t*l,zz*(1+t*2));pts.push(f(s/8),f((s+1)/8));}}
+  tail.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(pts),new T.LineBasicMaterial({color:srgb('#a3824f')})));const kn=new T.Mesh(new T.SphereGeometry(.028,10,8),mat('#a3824f'));tail.add(kn);}
+bodyG.add(tail);U.tail={id:'tail',obj:tail,off:v3(-.15,.1,0),delay:0,center:v3(0,-.2,0)};
+// hitch: board, lazy susan, hinge, pin (origin at the pin, on the end of the elbow)
+const hitchG=new T.Group();hitchG.position.set(BODY_D,0,0);bodyG.add(hitchG);
+const hb=MK.board(10);hb.rotation.z=Math.PI/2;hb.position.set(.03+.0095,.097,0);unit('hboard',hb,hitchG,v3(.18,0,0));
+const lz=MK.lazy();lz.rotation.y=Math.PI/2;lz.position.set(.03-.006,0,0);unit('lazy',lz,hitchG,v3(.0,0,.2),.05);
+const hg=MK.hinge();hg.rotation.y=Math.PI/2;hg.position.set(.03-.016,0,0);unit('hinge',hg,hitchG,v3(0,0,-.2),.12);
+const pin=MK.pin();pin.position.set(0,0,0);unit('pin',pin,hitchG,v3(0,.16,0));
+const belt=MK.belt();belt.position.set(.03+.019+.17,-.03,0);unit('belt',belt,hitchG,v3(.3,0,0));
+const fw=new T.Group();for(const y of [.03,.13]){const f=MK.fender();f.rotation.y=Math.PI/2;f.position.set(.03+.02,y,0);fw.add(f);}unit('fender',fw,hitchG,v3(.12,0,0),.1);
+// person (you)
+const PM=M.person(),person=new T.Group();bodyG.add(person);const limb=r=>{const q=new T.Group(),c=new T.Mesh(new T.CylinderGeometry(r,r*.85,1,12),PM);q.add(c);q.userData.c=c;person.add(q);return q;};
+const PL={th:[limb(.062),limb(.062)],sh:[limb(.046),limb(.046)],ua:[limb(.04),limb(.04)],fa:[limb(.033),limb(.033)],torso:limb(.13)};const head=new T.Mesh(new T.SphereGeometry(.1,20,16),PM);person.add(head);
+const setLimb=(g,a,b)=>{const d=new T.Vector3().subVectors(b,a),L=d.length();g.position.copy(a).addScaledVector(d,.5);g.quaternion.setFromUnitVectors(v3(0,1,0),d.clone().normalize());g.userData.c.scale.set(1,L,1);};
+U.person={id:'person',obj:person,off:v3(.6,0,0),delay:0,center:v3(.8,0,0)};
+// prep props
+const prop=new T.Group();root.add(prop);
+const cutG=new T.Group();prop.add(cutG);const CUT=[];{const pieces=GAPS.map(b=>({b,cut:b.cut})).sort((a,b)=>b.cut-a.cut),boards=[];for(const p of pieces){let s=boards.find(x=>x.free>=p.cut+.125);if(!s){s={free:96,pieces:[]};boards.push(s);}s.pieces.push(p);s.free-=p.cut+.125;}
+  boards.forEach((bd,bi)=>{let x=-48;bd.pieces.forEach((p,k)=>{const st=MK.stick(p.cut);const cx=(x+p.cut/2)*.0254,z=(bi-(boards.length-1)/2)*.075;st.position.set(cx,.0095,z);cutG.add(st);U[`cut-${bi}-${k}`]={id:`cut-${bi}-${k}`,obj:st,off:v3((k-(bd.pieces.length-1)/2)*.04,0,0),delay:0,center:v3(0,0,0),rev:true};CUT.push({id:`cut-${bi}-${k}`,b:p.b,cut:p.cut,obj:st});x+=p.cut+.125;});
+    if(bd.free>1){const st=MK.stick(bd.free-.125);st.position.set((x+(bd.free-.125)/2)*.0254,.0095,(bi-(boards.length-1)/2)*.075);st.traverse(m=>{if(m.isMesh){m.material=m.material.clone();m.material.color=srgb('#cdbf9f');}});cutG.add(st);}});
+  CUT.boards=boards.length;}
+const drillG=new T.Group();prop.add(drillG);{const sc=MK.board(30,3.5);sc.position.set(0,.0095,0);sc.traverse(m=>{if(m.isMesh){m.material=m.material.clone();m.material.color=srgb('#b9a383');}});drillG.add(sc);
+  const bar=MK.bar('k');const Lc=BAR.k.n*PITCH/1000;bar.rotation.x=-Math.PI/2;bar.position.set(-Lc/2,.019+BAR_T/2,0);drillG.add(bar);drillG.userData.bar=bar;drillG.userData.Lc=Lc;
+  for(const k of [0,1]){const b=MK.bit();b.position.set(-Lc/2+k*Lc,.019+BAR_T+.08,0);drillG.add(b);U['bit'+k]={id:'bit'+k,obj:b,off:v3(0,.12,0),delay:k*.25,center:v3(0,0,0)};}}
+const crankG=new T.Group();crankG.position.y=.06;prop.add(crankG);{const bar=MK.bar('m');crankG.add(bar);const r=MK.riser();const Lc=BAR.m.n*PITCH/1000;r.position.set(Lc,0,LZ(RISER.L)-LZ(1));crankG.add(r);U.riserSub={id:'riserSub',obj:r,off:v3(0,0,.12),delay:.15,center:v3(0,0,0)};
+  const cb=new T.Mesh(new T.CylinderGeometry(.0111,.0111,.0006,24),M.dark());cb.rotation.x=Math.PI/2;cb.position.set(Lc,0,-BAR_T/2-.0004);crankG.add(cb);
+  const sp=MK.spade();sp.rotation.x=-Math.PI/2;sp.position.set(Lc,0,-BAR_T/2-.02);crankG.add(sp);U.spade={id:'spade',obj:sp,off:v3(0,0,-.1),delay:0,center:v3(0,0,0)};crankG.userData.Lc=Lc;}
+const stackG=new T.Group();stackG.position.y=.06;prop.add(stackG);{const c='E',st=STACK[c];const items=[];let z=0;
+  const add=(o,label,dz)=>{z+=dz;o.position.z=z;stackG.add(o);items.push({o,label,z});};
+  const bolt=MK.bolt(boltFor(c).len);add(bolt,`${IN(boltFor(c).len)} bolt`,0);
+  add(MK.washer(),'steel washer',WASH_T/2);
+  for(let L=st.lo;L<=st.hi;L++){const b=st.bars.find(q=>LAYER[q.id]===L);const s=new T.Group(),m=new T.Mesh(new T.BoxGeometry(.06,.038,BAR_T),M.pine());s.add(m);edges(s);add(s,`layer ${L}: ${b.name.toLowerCase()}`,WASH_T/2+BAR_T/2);z+=BAR_T/2;if(L<st.hi)add(MK.nylon(),'nylon washer',WASH_T/2);}
+  add(MK.washer(),'steel washer',WASH_T);add(MK.nut(),'lock nut',WASH_T/2);
+  stackG.userData.items=items;items.forEach((it,k)=>{U['stk'+k]={id:'stk'+k,obj:it.o,off:v3(0,0,(k-(items.length-1)/2)*.03),delay:0,center:v3(0,0,0)};it.home=it.o.position.clone();});}
+const seatG=new T.Group();prop.add(seatG);{const post=new T.Mesh(new T.CylinderGeometry(.0136,.0136,.34,16),M.steel());post.position.y=.17;post.rotation.z=-.3;seatG.add(post);const sad=new T.Mesh(new T.BoxGeometry(.27,.045,.14),M.black());sad.position.set(.05+.1,.34,0);seatG.add(sad);edges(seatG);
+  const bd=MK.board(6);bd.rotation.z=Math.PI/2-.3;bd.position.set(-.05,.16,0);seatG.add(bd);U.postboard={id:'postboard',obj:bd,off:v3(-.15,0,0),delay:0,center:v3(0,0,0)};
+  for(const k of [0,1]){const c=MK.clamp();c.rotation.x=Math.PI/2;c.position.set(-.05+.03*Math.sin(.3)*(k?1:-1)*1.5,.16+(k?.05:-.05),0);seatG.add(c);U['clamp'+k]={id:'clamp'+k,obj:c,off:v3(0,0,.12),delay:.1+k*.1,center:v3(0,0,0)};}}
+
+/* ---------------- poses ---------------- */
+function poseLeg(L,ph){const P=legAt(ph);for(const id in L.bars){const b=BAR[id],g=L.bars[id],a=P[b.j[0]],c=P[b.j[1]];g.position.x=a.x;g.position.y=a.y;g.rotation.z=Math.atan2(c.y-a.y,c.x-a.x);}
+  for(const c in L.bolts){const g=L.bolts[c];g.position.set(P[c].x,P[c].y,g.userData.z);U[`${L.tag}-ow-${c}`].obj.position.set(P[c].x,P[c].y,U[`${L.tag}-ow-${c}`].obj.userData.z);U[`${L.tag}-nut-${c}`].obj.position.set(P[c].x,P[c].y,U[`${L.tag}-nut-${c}`].obj.userData.z);}
+  for(const w of L.wash){const o=U[w.id].obj;o.position.x=P[w.c].x;o.position.y=P[w.c].y;}
+  L.hoof.position.set(P.H.x,P.H.y,L.hoof.userData.z);L.hoof.rotation.z=Math.atan2(P.H.y-P.E.y,P.H.x-P.E.x)-HOOF_ANG;return P;}
+function poseAll(phA){const PA=poseLeg(LA,phA),PB=poseLeg(LB,phA+.5);hubG.rotation.z=Math.atan2(PA.C.y,PA.C.x);
+  for(const b of bung){const P=b.L===LA?PA:PB,s=b.L.side,a=v3(P.G.x-.05,SPINE_Y,s*.012),c=v3(P.G.x,P.G.y,s*(LZ(LAYER.g)+BAR_T/2+WASH_T+.01));const d=new T.Vector3().subVectors(c,a),Ld=d.length();b.m.position.copy(a).addScaledVector(d,.5);b.m.quaternion.setFromUnitVectors(v3(0,1,0),d.normalize());b.m.scale.set(1,Ld,1);}
+  // you: standing at the hitch, legs swinging with the walk
+  const hx=BODY_D+.03+.019+.17,w=TAU*phA;for(const [i,s] of [[0,1],[1,-1]]){const z=s*.09,sw=Math.sin(w+(i?Math.PI:0))*.32,hip=v3(hx,.06,z),kn=v3(hx+Math.sin(sw)*.45,.06-Math.cos(sw)*.45,z),an=v3(kn.x+Math.sin(sw-.15*Math.max(0,Math.sin(w+(i?Math.PI:0))))*.44,kn.y-.44,z);setLimb(PL.th[i],hip,kn);setLimb(PL.sh[i],kn,v3(an.x,Math.max(an.y,-HT-HOOF+.05),z));
+    const sh=v3(hx,.52,s*.2),el=v3(hx-Math.sin(sw)*.25,.25,s*.22),hd=v3(el.x-Math.sin(sw)*.2+.04,.02,s*.22);setLimb(PL.ua[i],sh,el);setLimb(PL.fa[i],el,hd);}
+  setLimb(PL.torso,v3(hx,.06,0),v3(hx,.55,0));head.position.set(hx,.7,0);}
+
+/* ---------------- steps ---------------- */
+const BAGS=[{n:0,name:'Prep'},{n:1,name:'Leg one'},{n:2,name:'Leg two'},{n:3,name:'Frame'},{n:4,name:'Body'},{n:5,name:'Hitch'}];
+const S=[];const step=o=>S.push(o);
+const legUnits=tag=>Object.keys(U).filter(k=>k.startsWith(tag+'-'));
+const pivBolt=c=>`3/8 × ${IN(boltFor(c).len)}`;
+const CAM={leg:{tx:-.32,ty:.5,tz:.05,r:2.15,th:.42,ph:1.38},legBack:{tx:-.32,ty:.5,tz:-.05,r:2.15,th:Math.PI-.5,ph:1.38},hoof:null,frame:{tx:-.14,ty:.9,tz:0,r:1.3,th:.45,ph:1.3},frameBack:{tx:-.14,ty:.9,tz:0,r:1.3,th:Math.PI-.55,ph:1.3},
+  full:{tx:-.1,ty:.62,tz:0,r:3.3,th:.72,ph:1.25},body:{tx:-.05,ty:.95,tz:0,r:2.4,th:.62,ph:1.12},hitch:{tx:.62,ty:.92,tz:0,r:.95,th:-.95,ph:1.3},walk:{tx:.05,ty:.75,tz:0,r:4.6,th:.82,ph:1.3}};
+// BAG 0
+step({bag:0,kind:'cover',t:'Centaur Walker',say:'A pair of walking hind legs and a horse body. It pins to your hip belt and walks when you walk. Everything comes off the shelf at Home Depot.',check:'<b>Before you start:</b> print the templates and check the 1 in. square.',cam:CAM.walk,anim:true});
+step({bag:0,kind:'cut',t:'Cut the pine',add:CUT.map(c=>c.id),say:`${CUT.boards} boards of 8 ft 1×2. Cut each piece square. Write its letter on it in pencil.`,check:`<b>22 pieces.</b> Two of each letter, one per leg.`,parts:[{k:'stick',len:96,q:CUT.boards,label:'1×2 × 8 ft'}],cam:{tx:0,ty:0,tz:0,r:4.3,th:0,ph:.42},labels:'cut'});
+step({bag:0,kind:'drill',t:'Mark and drill',add:['bit0','bit1'],say:'Tape the template strip to the bar, punch through each cross, and drill straight down with the 3/8 in. bit. Keep scrap underneath.',check:'<b>Every hole is 3/4 in. from its end.</b> Lay two bars of the same letter together: the holes line up.',parts:[{k:'bit',q:1,label:'3/8 in. bit'}],cam:{tx:0,ty:.03,tz:0,r:.95,th:.35,ph:.9},labels:'drill'});
+step({bag:0,kind:'crank',t:'Crank',sub:true,add:['spade','riserSub'],say:'On each crank: bore a 7/8 in. counterbore 5/16 in. deep on the inner face at C. Glue a 1-1/2 in. square of offcut, drilled 3/8 in., on the outer face over C.',check:'<b>The C hole goes straight through the block.</b> Push a bolt through to align it while the glue sets.',parts:[{k:'bar',id:'m',q:1,label:'crank'},{k:'riser',q:1,label:'1-1/2 in. block'},{k:'spade',q:1,label:'7/8 in. spade bit'},{k:'glue',q:1,label:'wood glue'}],cam:{tx:.05,ty:.06,tz:0,r:.55,th:-.75,ph:1.15},labels:'crank'});
+// BAG 1: leg one, layer by layer
+step({bag:1,kind:'bagopen',t:'Leg one',say:'Everything for one leg. Build it lying flat on the floor, layer 1 first; the pictures show it standing so you can see where each bar goes.',check:'<b>Find all 11 bars</b> and sort them by letter.'});
+for(let Lr=1;Lr<=LAYER.n;Lr++){const bs=BARS.filter(b=>LAYER[b.id]===Lr);const ws=LA.wash.filter(w=>w.L===Lr);
+  step({bag:1,kind:'build',t:`Layer ${Lr}`,add:ws.map(w=>w.id).concat(bs.map(b=>'A-bar-'+b.id)),new:bs.map(b=>'A-bar-'+b.id),
+    say:Lr===1?`Lay ${bs.map(b=>b.name.toLowerCase()).join(', ')} flat. Match each hole letter to the picture.`:`Put a nylon washer on each hole shown, then lay ${bs.map(b=>b.name.toLowerCase()).join(', ')} on top.`,
+    check:Lr===1?'<b>Crank riser up.</b> B stays open: it bolts through the plate in bag 3.':`<b>${ws.length} nylon washer${ws.length===1?'':'s'}.</b> Every hole sits over the hole below.`,
+    parts:(ws.length?[{k:'nylon',q:ws.length,label:'nylon washer'}]:[]).concat(bs.map(b=>({k:'bar',id:b.id,q:1,label:b.name,dim:IN(b.inch)}))),cam:CAM.leg,dims:bs.map(b=>({bar:'A-bar-'+b.id}))});}
+step({bag:1,kind:'sub',t:'How a pivot stacks',sub:true,add:Object.keys(U).filter(k=>k.startsWith('stk')),say:'Every pivot goes together the same way. This is E, which has all four layers. Grease the bolt first.',check:'<b>Head on the inside</b> (the side that will face the plate), nut on the outside.',parts:[{k:'grease',q:1,label:'lithium grease'}],cam:{tx:0,ty:.06,tz:.05,r:.5,th:1.42,ph:1.4},labels:'stack'});
+const piv=PIVOTS.filter(c=>c!=='B');
+[piv.slice(0,3),piv.slice(3)].forEach((grp,gi)=>{step({bag:1,kind:'build',t:`Bolts ${grp.join(', ')}`,add:grp.map(c=>'A-bolt-'+c),say:`From the inside, push a bolt with a steel washer through ${grp.join(', ')}.${grp.includes('C')?' At C the head drops into the counterbore.':''}`,check:`<b>Bolt lengths: ${grp.map(c=>c+' '+IN(boltFor(c).len)).join(', ')}.</b> Each comes through by about 1/2 in.`,
+  parts:grp.map(c=>({k:'bolt',len:boltFor(c).len,q:1,label:c,dim:IN(boltFor(c).len)})).concat(grp.includes('C')?[{k:'washer',q:grp.length-1,label:'steel washer'}]:[{k:'washer',q:grp.length,label:'steel washer'}]),cam:CAM.legBack,leaders:grp.map(c=>({u:'A-bolt-'+c,text:c}))});});
+step({bag:1,kind:'build',t:'Washers and nuts',add:piv.map(c=>'A-ow-'+c).concat(piv.map(c=>'A-nut-'+c)),say:'On the outside: a steel washer and a lock nut on every bolt.',check:'<b>6 nuts.</b> Do not tighten yet.',parts:[{k:'washer',q:piv.length,label:'steel washer'},{k:'nut',q:piv.length,label:'lock nut'}],cam:CAM.leg});
+step({bag:1,kind:'set',t:'Set the pivots',add:[],say:'Turn each nut until the stack just closes, then back it off a quarter turn. Nothing is clamped; the bars swing.',check:'<b>Lift the leg by the crank and let go:</b> every joint swings by its own weight.',parts:[{k:'wrench',q:2,label:'9/16 in. wrench'}],cam:CAM.leg,leaders:piv.map(c=>({u:'A-nut-'+c,text:'¼ turn back'})).slice(0,3),spin:true});
+step({bag:1,kind:'sub',t:'Hoof pad',sub:true,add:['A-pad','A-rubber'],say:'Cut 4 in. of 1×4. Glue rubber cut from a floor protector pad to the bottom.',check:'<b>Rubber covers the whole underside.</b> Let it set for an hour.',parts:[{k:'board',len:4,w:3.5,q:1,label:'1×4',dim:'4 in.'},{k:'rubber',q:1,label:'rubber pad'},{k:'glue',q:1,label:'construction adhesive'}],cam:'hoofSub',labels:'pad'});
+step({bag:1,kind:'build',t:'Fit the hoof',add:['A-hoofpad','A-brace-0','A-brace-1'],say:'Screw a corner brace to each outside face of the cannon bars, one in front of H, one behind. Feet point outward and rest on the pad; screw them down.',check:'<b>The pad’s inner edge lines up with the inner bar face</b> (template sheet H). Short screws in the pad: none come through the rubber.',parts:[{k:'brace',q:2,label:'2 in. corner brace'},{k:'screw',q:4,label:'#8 × 1-1/4'},{k:'screw',q:4,label:'#8 × 5/8'}],cam:'hoof'});
+step({bag:1,kind:'done',t:'Leg one done',say:'One leg: 11 bars, 6 bolts. Walk it across the floor by turning the crank by hand.',check:'<b>Turn the crank a full circle:</b> nothing touches, the hoof draws a flat line along the floor and lifts on the way back.',cam:CAM.leg,anim:'leg'});
+// BAG 2
+step({bag:2,kind:'mirror',t:'Leg two: mirror image',add:['legB'],say:`Repeat bag 1 for the second leg, mirror image: lay layer 1 face down and stack the other way. The crank riser and the hoof pad’s inner edge go on the opposite side.`,check:'<b>Hold the two legs face to face:</b> layer 1 touches layer 1, and the risers point away from each other.',parts:[{k:'x2'}],cam:{tx:-.32,ty:.5,tz:0,r:2.6,th:.95,ph:1.32}});
+// BAG 3
+step({bag:3,kind:'build',t:'Centre plate',add:['plate'],say:'Cut 15-1/4 × 13 in. from the plywood. Tape template sheets P1 and P2 to the lower corners. Bore the hub with the 3-5/8 in. hole saw; drill B 3/8 in.',check:'<b>B to the hub centre measures 12-9/16 in.</b>',parts:[{k:'plate',q:1,label:'1/2 in. plywood',dim:'15-1/4 × 13'},{k:'holesaw',q:1,label:'3-5/8 in. hole saw'}],cam:CAM.frame,hide:['legA','legB'],labels:'plate'});
+step({bag:3,kind:'build',t:'Hub ring',add:['ring'],say:`Cut a ring of 3 in. PVC a little over 5/8 in. long. Sand it down until it is as thick as the plate plus two nylon washers (${fr32(2*(LZ(1)-BAR_T/2)/.0254)} in.). Drop it in the hole.`,check:'<b>The ring turns freely in the plate</b> and stands proud of both faces by one washer.',parts:[{k:'ring',q:1,label:'3 in. PVC',dim:fr32(2*(LZ(1)-BAR_T/2)/.0254)+' in.'}],cam:CAM.frame,hide:['legA','legB']});
+step({bag:3,kind:'build',t:'Hang leg one',add:['nyBA','legA'],say:'Nylon washer on B. Lay leg one against the plate, layer 1 inward, crank flat on the ring, B over B.',check:'<b>Crank holes sit inside the ring.</b>',parts:[{k:'nylon',q:1,label:'nylon washer'}],cam:CAM.frame,hide:['legB']});
+step({bag:3,kind:'build',t:'Hang leg two',add:['nyBB','legB'],say:'Turn the plate over. Nylon washer on B, then leg two, its crank pointing the opposite way.',check:'<b>The two cranks point in opposite directions</b>, and their hub holes line up through the ring.',parts:[{k:'nylon',q:1,label:'nylon washer'}],cam:CAM.frameBack});
+step({bag:3,kind:'build',t:'Lock the hub',add:['hb0','hb1','hb0n','hb1n'],say:'Two 3 in. bolts through both cranks, inside the ring. Washers under head and nut. Tighten these fully.',check:'<b>Heads and nuts sit in layer 2</b>, where no bar passes.',parts:[{k:'bolt',len:3,q:2,label:'hub',dim:'3 in.'},{k:'washer',q:4,label:'steel washer'},{k:'nut',q:2,label:'lock nut'}],cam:CAM.frame,leaders:[{u:'hb0',text:'tight'}]});
+step({bag:3,kind:'build',t:'Pivot B',add:['boltB','nutB'],say:'The 7 in. bolt goes through B on leg one, the plate, and B on leg two. Quarter turn back, like the others.',check:'<b>Turn one crank:</b> both legs walk, half a turn apart.',parts:[{k:'bolt',len:7,q:1,label:'B',dim:'7 in.'},{k:'washer',q:2,label:'steel washer'},{k:'nut',q:1,label:'lock nut'}],cam:CAM.frame,leaders:[{u:'boltB',text:'B'}]});
+step({bag:3,kind:'done',t:'Frame done',say:'The hindquarters stand on their own. Push the plate forward along the floor and the legs walk.',check:'<b>Push it 10 ft:</b> one hoof is always on the floor.',cam:CAM.full,anim:'frame'});
+// BAG 4
+step({bag:4,kind:'build',t:'Spine',add:['emt','strap0','strap1','strap2','strap3'],say:'Strap the 1/2 in. conduit along the top edge of the plate with four one-hole straps.',check:'<b>The conduit runs straight back past the rear of the plate.</b>',parts:[{k:'emt',q:1,label:'1/2 in. EMT'},{k:'strap',q:4,label:'one-hole strap'},{k:'screw',q:4,label:'#8 × 1-1/4'}],cam:CAM.body});
+step({bag:4,kind:'build',t:'Tongue',add:['elbow'],say:'Fit the set-screw elbow and cut the drop so its end sits level with the hub, 25 in. in front of it. Drill 3/8 in. across the end for the pin.',check:'<b>The end is 25 in. ahead of the hub centre</b> and at the same height.',parts:[{k:'elbow',q:1,label:'EMT elbow'}],cam:CAM.body,labels:'tongue'});
+step({bag:4,kind:'build',t:'Bungees',add:['bungA','bungB'],say:'Hook a 24 in. bungee from the spine, just ahead of each hock, to the hock bolt G.',check:'<b>Hold the plate up:</b> each leg hangs with its hoof just touching the floor.',parts:[{k:'bungee',q:2,label:'24 in. bungee'}],cam:CAM.body});
+step({bag:4,kind:'build',t:'Hoops',add:hoops.map((_,k)=>'hoop'+k),say:`Cut PEX to ${HOOP_IN.join(', ')} in. Bend each into an arch over the spine and tie the top with two cable ties.`,check:'<b>Front to back: 38, 44, 46, 42, 30.</b> The feet hang free.',parts:HOOP_IN.map(l=>({k:'pex',len:l,q:1,label:'PEX',dim:l+' in.'})),cam:CAM.body,labels:'hoops'});
+step({bag:4,kind:'build',t:'Skin',add:['skin'],say:'Drape the drop cloth over the hoops. Trim 2 in. past the outline, fold the edge, and tie it to each hoop through small slits.',check:'<b>The belly stays open:</b> the legs come out there.',parts:[{k:'cloth',q:1,label:'drop cloth'}],cam:CAM.body});
+step({bag:4,kind:'build',t:'Tail',add:['tail'],say:'Cut 30 in. of manila rope, unlay the strands and comb them out. Tie it to the top of the rear hoop.',check:'<b>The tail clears the hooves</b> at the back of the stride.',parts:[{k:'rope',q:1,label:'manila rope',dim:'30 in.'}],cam:{tx:-.55,ty:.8,tz:0,r:2.6,th:-1.2,ph:1.3}});
+// BAG 5
+step({bag:5,kind:'sub',t:'Hitch',sub:true,add:['hboard','lazy','hinge'],say:'Screw the lazy susan to a 10 in. piece of 1×6, then the hinge to the lazy susan, knuckle facing back.',check:'<b>The hinge swings up and down; the lazy susan turns left and right.</b>',parts:[{k:'board',len:10,q:1,label:'1×6',dim:'10 in.'},{k:'lazy',q:1,label:'lazy susan'},{k:'hinge',q:1,label:'3 in. hinge'},{k:'screw',q:12,label:'#8 × 1-1/4'}],cam:CAM.hitch,hide:['legA','legB']});
+step({bag:5,kind:'build',t:'Belt',add:['belt','fender'],say:'Bolt the board upright through the back of the belt with fender washers. Its lower end sits 895 mm off the floor when you wear it.',check:'<b>Wear it and measure:</b> the hinge pin is 35-1/4 in. off the floor.',parts:[{k:'belt',q:1,label:'framer’s belt'},{k:'fender',q:4,label:'fender washer'},{k:'bolt',len:2.5,q:2,label:'',dim:'2-1/2 in.'}],cam:{tx:.78,ty:.85,tz:0,r:1.5,th:1.15,ph:1.25}});
+step({bag:5,kind:'build',t:'Pin on',add:['person','pin'],say:'Put the belt on. Lift the tongue onto the hinge and push the clevis pin through. Clip it.',check:'<b>Step forward:</b> the rear follows and the hind legs walk.',parts:[{k:'pin',q:1,label:'clevis pin'}],cam:{tx:.35,ty:.8,tz:0,r:3.1,th:.95,ph:1.3}});
+step({bag:5,kind:'done',t:'Walk',say:'Walk at an easy pace. One stride of yours is one cycle of the hind legs, and the four hooves land in a horse’s order.',check:'<b>Done.</b> To ride instead, clamp the same hitch to your seatpost.',cam:CAM.walk,anim:'walk'});
+step({bag:5,kind:'sub',t:'Or ride',sub:true,add:['postboard','clamp0','clamp1'],say:'Take the basket off. Wrap the seatpost in silicone tape. Clamp a 6 in. piece of 1×6 to it with two hose clamps, 890 mm off the ground, and move the lazy susan and hinge onto it.',check:'<b>Ride at walking pace</b> and turn wide.',parts:[{k:'board',len:6,q:1,label:'1×6',dim:'6 in.'},{k:'clamp',q:2,label:'hose clamp'},{k:'tape',q:1,label:'silicone tape'}],cam:{tx:-.05,ty:.2,tz:0,r:1.1,th:.7,ph:1.3}});
+S.forEach((s,i)=>{s.i=i;s.add=s.add||[];});
+const firstOf=id=>S.findIndex(s=>s.add.includes(id));
+for(const u of Object.values(U))u.home=u.obj.position.clone();
+
+/* ---------------- state ---------------- */
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+const ST={i:Math.min(S.length-1,store.get('cwb-step',0)),t:0,play:true,user:false,ph:PH_A,checks:store.get('cwb-checks',{}),cam:Object.assign({},CAM.walk),camT:null,orbit:null,last:performance.now(),spin:0};
+const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+
+/* ---------------- visibility and approach ---------------- */
+const ALLU=Object.values(U);
+function hideAll(){prop.children.forEach(c=>c.visible=false);bodyG.visible=true;for(const u of ALLU)u.obj.visible=true;}
+function setScene(st){hideAll();const k=st.kind;
+  // prep and sub-build scenes stand alone
+  bodyG.visible=!['cut','drill','crank'].includes(k)&&!(st.t==='How a pivot stacks')&&!(st.t==='Or ride');
+  cutG.visible=k==='cut';drillG.visible=k==='drill';crankG.visible=k==='crank';stackG.visible=st.t==='How a pivot stacks';seatG.visible=st.t==='Or ride';
+  if(!bodyG.visible)return;
+  const intro=id=>{const f=firstOf(id);return f>=0&&f<=st.i;};
+  for(const u of ALLU){if(u.obj.parent===cutG||u.obj.parent===drillG||u.obj.parent===crankG||u.obj.parent===stackG||u.obj.parent===seatG)continue;
+    if(u.id==='legA'||u.id==='legB')continue;let vis=intro(u.id);
+    // hoof parts are children of the hoof pad group: show them once the pad sub-build begins
+    u.obj.visible=vis;}
+  const L1=S.findIndex(s=>s.bag===1),coverOrDone=k==='cover'||(st.bag===5&&k==='done');
+  // legs: bag 1 builds leg A; bag 2 shows both; bag 3 hangs them
+  const showA=st.bag>=1,showB=st.bag>=2;LA.lg.visible=showA;LB.lg.visible=showB;
+  if(st.bag===2){for(const id of legUnits('B'))U[id].obj.visible=U[id.replace(/^B-/,'A-')].obj.visible;}
+  if(st.bag>=3){for(const id of legUnits('B'))U[id].obj.visible=true;}
+  for(const id of (st.hide||[]))U[id].obj.visible=false;
+  // hoof sub-build: only the pad, at the bench
+  if(st.cam==='hoofSub'){LA.lg.visible=true;for(const id of legUnits('A'))U[id].obj.visible=false;LA.hoof.visible=true;U['A-pad'].obj.visible=true;U['A-rubber'].obj.visible=true;U['A-hoofpad'].obj.visible=true;U['A-brace-0'].obj.visible=false;U['A-brace-1'].obj.visible=false;}
+  else{const hp=intro('A-hoofpad');U['A-hoofpad'].obj.visible=hp;U['A-pad'].obj.visible=hp;U['A-rubber'].obj.visible=hp;}
+  if(st.sub&&st.cam!=='hoofSub'){const keep=new Set(st.add);for(const u of ALLU)if(!keep.has(u.id)&&u.obj.parent!==hitchG)u.obj.visible=false;else if(!keep.has(u.id))u.obj.visible=false;LA.lg.visible=LB.lg.visible=false;}
+  if(k==='cover'){for(const u of ALLU)if(u.obj.parent!==cutG&&u.obj.parent!==drillG&&u.obj.parent!==crankG&&u.obj.parent!==stackG&&u.obj.parent!==seatG)u.obj.visible=true;LA.lg.visible=LB.lg.visible=true;U['A-pad'].obj.visible=U['B-pad'].obj.visible=true;}
+  if(st.bag>=3||k==='cover'){for(const L of [LA,LB])L.hoof.visible=true;}
+  // the person appears from the pin-on step, the hitch board from the hitch step
+}
+function approach(st,t){const res=[];for(const id of st.add){const u=U[id];if(!u)continue;const u0=cl01((t-.12-u.delay)/.42),e=ease(u0);const k=u.rev?e:1-e;res.push({u,k,e});}return res;}
+
+/* ---------------- parts box (thumbnails rendered with the same builders) ---------------- */
+const TR=new T.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});TR.outputEncoding=T.sRGBEncoding;TR.setPixelRatio(1);
+const TS=new T.Scene();TS.add(new T.HemisphereLight(0xffffff,0x8a7d6a,1));const tl=new T.DirectionalLight(0xffffff,.8);tl.position.set(1,2,3);TS.add(tl);
+const TC=new T.OrthographicCamera(-1,1,1,-1,.01,10);const thumbCache=new Map();
+function protoFor(p){switch(p.k){case 'bar':return MK.bar(p.id);case 'bolt':return MK.bolt(p.len);case 'stick':return MK.stick(Math.min(p.len,30));case 'board':return MK.board(p.len,p.w||5.5);case 'pex':return MK.pex(p.len);default:return MK[p.k]?MK[p.k]():null;}}
+function thumb(p,ppm,dpr){const key=JSON.stringify(p)+'|'+ppm.toFixed(1)+'|'+dpr;if(thumbCache.has(key))return thumbCache.get(key);const o=protoFor(p);if(!o)return null;
+  if(p.k==='bolt'){o.rotation.y=Math.PI/2;}if(p.k==='screw'){o.rotation.z=Math.PI/2;}if(p.k==='bungee'){o.rotation.z=Math.PI/2;}if(p.k==='spade'||p.k==='bit'||p.k==='grease'){o.rotation.z=p.k==='grease'?0:Math.PI/2;}
+  if(p.k==='lazy'||p.k==='hinge'||p.k==='nylon'||p.k==='washer'||p.k==='fender'||p.k==='ring'||p.k==='nut'||p.k==='tape'){o.rotation.x=-.5;}
+  if(p.k==='brace'){o.rotation.y=-.7;}
+  TS.add(o);o.updateMatrixWorld(true);const dir=v3(.18,.42,1).normalize();const bb=new T.Box3().setFromObject(o),c=new T.Vector3(),sz=new T.Vector3();bb.getCenter(c);bb.getSize(sz);
+  TC.position.copy(c).addScaledVector(dir,2);TC.up.set(0,1,0);TC.lookAt(c);TC.updateMatrixWorld(true);
+  // projected size
+  const corners=[];for(const x of [bb.min.x,bb.max.x])for(const y of [bb.min.y,bb.max.y])for(const z of [bb.min.z,bb.max.z])corners.push(v3(x,y,z).applyMatrix4(TC.matrixWorldInverse));
+  const xs=corners.map(q=>q.x),ys=corners.map(q=>q.y),w=Math.max(...xs)-Math.min(...xs),h=Math.max(...ys)-Math.min(...ys);
+  let s=ppm;const minPx=28;if(Math.max(w,h)*s<minPx)s=minPx/Math.max(w,h,1e-4);if(w*s>Math.max(230,ppm*.8))s=Math.max(230,ppm*.8)/w;if(h*s>Math.max(70,ppm*.12))s=Math.max(70,ppm*.12)/h;
+  const pw=Math.max(8,Math.ceil(w*s+6)),phh=Math.max(8,Math.ceil(h*s+6));TC.left=-pw/2/s;TC.right=pw/2/s;TC.top=phh/2/s;TC.bottom=-phh/2/s;TC.updateProjectionMatrix();
+  TR.setSize(pw*dpr,phh*dpr,false);TR.setClearColor(0x000000,0);TR.render(TS,TC);const cv=document.createElement('canvas');cv.width=pw*dpr;cv.height=phh*dpr;cv.getContext('2d').drawImage(TR.domElement,0,0);TS.remove(o);
+  const r={cv,w:pw,h:phh};thumbCache.set(key,r);return r;}
+const pb=$('pb');
+function drawBox(st){const items=(st.kind==='bagopen'?(OW>700?[]:bagParts(st.bag)):(st.parts||[]));const dpr=Math.min(2,devicePixelRatio||1);let W0=0;$('pbx').style.display=items.length?'block':'none';if(!items.length)return;const g=pb.getContext('2d');const W2=pb.parentElement.clientWidth-3;
+  // shared scale: the longest bar sets it
+  const longest=Math.max(...items.map(p=>p.k==='bar'?BAR[p.id].n*PITCH/1000+.04:p.k==='bolt'?p.len*.0254:p.k==='board'?p.len*.0254:p.k==='stick'?.76:.08));const W_=W2||360;const ppm=Math.min(400,(W_-40)/Math.max(.05,longest));
+  const cells=[];for(const p of items){if(p.k==='x2'){cells.push({p,w:70,h:56,x2:true});continue;}const th=thumb(p,ppm,dpr);if(!th)continue;g.font=`11px ${css('--f-body')}`;const lw=Math.max(g.measureText((p.label||'').slice(0,22)).width,(p.dim?g.measureText(p.dim).width+30:0));cells.push({p,th,w:Math.max(th.w,64,lw+4),h:th.h+30});}
+  let x=10,y=10,rowH=0;const pos=[];const W=W_;for(const c of cells){if(x+c.w>W-8&&x>10){x=10;y+=rowH+8;rowH=0;}pos.push({c,x,y});x+=c.w+14;rowH=Math.max(rowH,c.h);}
+  const H=Math.max(80,y+rowH+10);pb.width=W*dpr;pb.height=H*dpr;pb.style.height=H+'px';g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
+  const ink=css('--ink'),ink2=css('--ink-2'),mono=css('--f-mono'),body=css('--f-body');
+  for(const {c,x,y} of pos){if(c.x2){g.fillStyle=ink;g.font=`700 34px ${body}`;g.textBaseline='middle';g.fillText('2×',x+6,y+26);g.font=`11px ${body}`;g.fillStyle=ink2;g.fillText('mirror image',x+4,y+52);continue;}
+    g.drawImage(c.th.cv,x,y,c.th.w,c.th.h);g.textBaseline='alphabetic';g.fillStyle=ink;g.font=`700 13px ${body}`;const q=`${c.p.q||1}×`;g.fillText(q,x,y+c.th.h+14);const qw=g.measureText(q).width;
+    if(c.p.dim){g.font=`600 11px ${mono}`;g.fillText(c.p.dim,x+qw+6,y+c.th.h+14);}g.font=`11px ${body}`;g.fillStyle=ink2;g.fillText((c.p.label||'').slice(0,22),x,y+c.th.h+27);}}
+function bagParts(bag){const m=new Map();for(const s of S)if(s.bag===bag)for(const p of (s.parts||[])){if(p.k==='x2')continue;const k=JSON.stringify(Object.assign({},p,{q:0}));const e=m.get(k);if(e)e.q+=p.q||1;else m.set(k,Object.assign({},p,{q:p.q||1}));}return [...m.values()];}
+
+/* ---------------- overlay: step number, dimensions, labels, arrows ---------------- */
+const og=ov.getContext('2d');let OW=0,OH=0;
+function proj(v){const p=v.clone().project(camera);return {x:(p.x+1)/2*OW,y:(1-p.y)/2*OH,z:p.z};}
+function wpos(obj,local){obj.updateWorldMatrix(true,false);return obj.localToWorld((local||v3(0,0,0)).clone());}
+function arrow(a,b,col){const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy);if(l<14)return;const ux=dx/l,uy=dy/l;og.strokeStyle=col;og.fillStyle=col;og.lineWidth=2.4;og.beginPath();og.moveTo(a.x,a.y);og.lineTo(b.x-ux*9,b.y-uy*9);og.stroke();og.beginPath();og.moveTo(b.x,b.y);og.lineTo(b.x-ux*11-uy*6,b.y-uy*11+ux*6);og.lineTo(b.x-ux*11+uy*6,b.y-uy*11-ux*6);og.closePath();og.fill();}
+function dimLine(A,B,text,offPx,col){let dx=B.x-A.x,dy=B.y-A.y;const l=Math.hypot(dx,dy);if(l<20)return;let nx=-dy/l,ny=dx/l;if(ny>0){nx=-nx;ny=-ny;}const a={x:A.x+nx*offPx,y:A.y+ny*offPx},b={x:B.x+nx*offPx,y:B.y+ny*offPx};
+  og.strokeStyle=col;og.lineWidth=1;og.setLineDash([]);og.beginPath();og.moveTo(A.x+nx*4,A.y+ny*4);og.lineTo(a.x+nx*4,a.y+ny*4);og.moveTo(B.x+nx*4,B.y+ny*4);og.lineTo(b.x+nx*4,b.y+ny*4);og.moveTo(a.x,a.y);og.lineTo(b.x,b.y);og.stroke();
+  const ux=dx/l,uy=dy/l;for(const [p,s] of [[a,1],[b,-1]]){og.beginPath();og.moveTo(p.x,p.y);og.lineTo(p.x+s*(ux*7-uy*3),p.y+s*(uy*7+ux*3));og.lineTo(p.x+s*(ux*7+uy*3),p.y+s*(uy*7-ux*3));og.closePath();og.fillStyle=col;og.fill();}
+  let ang=Math.atan2(dy,dx);if(ang>Math.PI/2)ang-=Math.PI;if(ang<-Math.PI/2)ang+=Math.PI;og.save();og.translate((a.x+b.x)/2,(a.y+b.y)/2);og.rotate(ang);og.font=`600 11px ${css('--f-mono')}`;const tw=og.measureText(text).width;og.fillStyle=css('--paper');og.fillRect(-tw/2-3,-8,tw+6,14);og.fillStyle=col;og.textAlign='center';og.textBaseline='middle';og.fillText(text,0,0);og.restore();}
+function leader(P,text,dx=26,dy=-26){const col=css('--ink');og.strokeStyle=col;og.lineWidth=1;og.beginPath();og.moveTo(P.x,P.y);og.lineTo(P.x+dx,P.y+dy);og.lineTo(P.x+dx+(dx>0?8:-8),P.y+dy);og.stroke();og.fillStyle=col;og.beginPath();og.arc(P.x,P.y,2.2,0,TAU);og.fill();
+  og.font=`600 11.5px ${css('--f-body')}`;og.textBaseline='middle';og.textAlign=dx>0?'left':'right';const tx=P.x+dx+(dx>0?11:-11),tw=og.measureText(text).width;og.fillStyle=css('--paper');og.globalAlpha=.85;og.fillRect(dx>0?tx-2:tx-tw-2,P.y+dy-8,tw+4,16);og.globalAlpha=1;og.fillStyle=col;og.fillText(text,tx,P.y+dy);og.textAlign='left';}
+function drawOverlay(st,ap){const dpr=Math.min(2,devicePixelRatio||1);if(ov.width!==Math.round(OW*dpr)||ov.height!==Math.round(OH*dpr)){ov.width=Math.round(OW*dpr);ov.height=Math.round(OH*dpr);}og.setTransform(dpr,0,0,dpr,0,0);og.clearRect(0,0,OW,OH);
+  const ink=css('--ink'),hot=css('--hot'),acc=css('--accent'),body=css('--f-body'),mono=css('--f-mono');
+  // sub-build frame
+  if(st.sub){og.strokeStyle=acc;og.lineWidth=2;const r=14,x=10,y=10,w=OW-20,h=OH-20;og.beginPath();og.moveTo(x+r,y);og.arcTo(x+w,y,x+w,y+h,r);og.arcTo(x+w,y+h,x,y+h,r);og.arcTo(x,y+h,x,y,r);og.arcTo(x,y,x+w,y,r);og.stroke();og.fillStyle=acc;og.font=`700 10px ${mono}`;const tw=og.measureText('SUB-BUILD').width;og.fillRect(OW-20-tw-14,10,tw+14,18);og.fillStyle=css('--accent-ink');og.fillText('SUB-BUILD',OW-20-tw-7,23);}
+  // arrows for parts on their way in
+  for(const a of ap){if(a.u.rev||a.k<.04)continue;const o=a.u.obj;if(!o.visible)continue;const home=wpos(o.parent,o.position.clone().sub(a.u.off.clone().multiplyScalar(a.k)).add(a.u.center.clone().applyQuaternion(o.quaternion))),cur=wpos(o.parent,o.position.clone().add(a.u.center.clone().applyQuaternion(o.quaternion)));
+    const A=proj(cur),B=proj(home);const dx=B.x-A.x,dy=B.y-A.y,l=Math.hypot(dx,dy);if(l<18)continue;og.globalAlpha=Math.min(1,a.k*2.5);arrow({x:A.x+dx*.12,y:A.y+dy*.12},{x:A.x+dx*.82,y:A.y+dy*.82},hot);og.globalAlpha=1;}
+  // dimensions on new bars
+  if(st.dims)for(const d of st.dims){const u=U[d.bar];if(!u||!u.obj.visible)continue;const id=d.bar.split('-').pop(),Lc=BAR[id].n*PITCH/1000,z=0;const A=proj(wpos(u.obj,v3(0,0,z))),B=proj(wpos(u.obj,v3(Lc,0,z)));dimLine(A,B,IN(BAR[id].inch),22,acc);}
+  if(st.leaders)for(const l of st.leaders){const u=U[l.u];if(!u||!u.obj.visible)continue;leader(proj(wpos(u.obj,u.center)),l.text);}
+  // labels for prep pages
+  if(st.labels==='cut'){const seen={};for(const c of CUT){if(!c.obj.visible)continue;const P=proj(wpos(c.obj,v3(0,.012,0)));og.font=`700 11px ${mono}`;og.fillStyle=ink;og.textAlign='center';og.textBaseline='middle';og.fillText(c.b.id,P.x,P.y-1);if(OW>560){og.font=`10px ${mono}`;og.fillStyle=css('--ink-2');og.fillText(fr16(c.cut),P.x,P.y+11);}og.textAlign='left';}}
+  if(st.labels==='drill'){const bar=drillG.userData.bar,Lc=drillG.userData.Lc;const e0=proj(wpos(bar,v3(-.019,0,0))),h0=proj(wpos(bar,v3(0,0,0))),h1=proj(wpos(bar,v3(Lc,0,0)));dimLine(e0,h0,'3/4',18,acc);dimLine(h0,h1,IN(BAR.k.inch)+' (lower rod, k)',34,acc);}
+  if(st.labels==='crank'){const Lc=crankG.userData.Lc,b=crankG.children[0];leader(proj(wpos(b,v3(Lc,0,-BAR_T/2))),'counterbore 7/8 in., 5/16 deep (inner face)',30,40);leader(proj(wpos(b,v3(Lc,.019,BAR_T))),'glue the block here (outer face)',30,-40);dimLine(proj(wpos(b,v3(-.0333,0,0))),proj(wpos(b,v3(.0333,0,0))),'2-5/8',-20,acc);dimLine(proj(wpos(b,v3(.0333,0,0))),proj(wpos(b,v3(Lc,0,0))),IN(BAR.m.inch)+' to C',-20,acc);}
+  if(st.labels==='stack'){const its=stackG.userData.items;its.forEach((it,k)=>{const up=k%2===0,lvl=Math.floor(k/2)%2;const P=proj(wpos(it.o,v3(0,up?.02:-.02,0)));leader(P,it.label,8,(up?-1:1)*(28+lvl*26));});}
+  if(st.labels==='pad'){const pad=U['A-pad'].obj;dimLine(proj(wpos(pad,v3(-.051,-.0095,.0445))),proj(wpos(pad,v3(.051,-.0095,.0445))),'4 in.',20,acc);dimLine(proj(wpos(pad,v3(.051,-.0095,.0445))),proj(wpos(pad,v3(.051,-.0095,-.0445))),'3-1/2 in.',20,acc);}
+  if(st.labels==='plate'){const p=plate;const c=(x,y)=>proj(wpos(p,v3(x,y,PLATE_T/2)));dimLine(c(-.3239,.2032),c(.0635,.2032),'15-1/4 in.',18,acc);dimLine(c(.0635,.2032),c(.0635,-.127),'13 in.',18,acc);dimLine(c(0,0),c(-J.a/1000,-J.l/1000),'12-9/16 in.',16,hot);leader(c(0,.046),'hub, 3-5/8 in. hole saw',30,-30);leader(c(-J.a/1000,-J.l/1000),'B, 3/8 in.',-30,30);}
+  if(st.labels==='tongue'){dimLine(proj(wpos(bodyG,v3(0,0,0))),proj(wpos(bodyG,v3(BODY_D,0,0))),'25 in.',-24,acc);}
+  if(st.labels==='hoops'){hoops.forEach((h,k)=>{if(!h.g.visible)return;const q=ringPt(h.x,-A0*.6,1);leader(proj(wpos(bodyG,v3(q.x,q.y,q.z))),HOOP_IN[k]+' in.',22,26+(k%2)*18);});}
+  if(st.kind==='set'){const t=performance.now()/1000;for(const c of piv){const o=U['A-nut-'+c].obj;if(!o.visible)continue;const P=proj(wpos(o,v3(0,0,0)));og.strokeStyle=hot;og.lineWidth=2;const a0=-Math.PI/2,a1=a0-Math.PI/2*ease((t%1.6)/1.6);og.beginPath();og.arc(P.x,P.y,15,a1,a0);og.stroke();const hx=P.x+15*Math.cos(a1),hy=P.y+15*Math.sin(a1);og.beginPath();og.arc(hx,hy,3,0,TAU);og.fillStyle=hot;og.fill();}}
+  if(st.kind==='mirror'){const A=proj(wpos(bodyG,v3(-.3,-.35,0)));og.strokeStyle=css('--ink-3');og.setLineDash([6,5]);og.lineWidth=1.2;og.beginPath();og.moveTo(A.x,40);og.lineTo(A.x,OH-30);og.stroke();og.setLineDash([]);og.font=`600 11px ${body}`;og.fillStyle=css('--ink-2');og.textAlign='center';og.fillText('mirror',A.x,OH-16);og.textAlign='left';}
+  // bag open / done pages
+  if(st.kind==='bagopen'){const wide=OW>700,tx=20,ty=wide?OH/2:OH/2+10;og.fillStyle=acc;og.font=`600 12px ${mono}`;og.fillText(`BAG ${st.bag}`,tx,ty-42);og.fillStyle=ink;og.font=`500 ${wide?44:30}px ${css('--f-disp')}`;og.fillText(st.t,tx,ty);og.font=`13px ${body}`;og.fillStyle=css('--ink-2');og.fillText(`${S.filter(s=>s.bag===st.bag&&!['bagopen','done'].includes(s.kind)).length} steps · every part, counted${wide?'':' below'}`,tx,ty+26);
+    if(wide)spread(bagParts(st.bag),wide?Math.max(300,OW*.36):16,wide?40:ty+50,wide?OW-Math.max(300,OW*.36)-20:OW-32,wide?OH-60:OH-ty-70);}
+  if(st.kind==='done'&&st.bag<5){og.fillStyle=css('--ok');og.font=`700 12px ${mono}`;og.fillText(`BAG ${st.bag} DONE`,20,OH-24);}
+  // big step number
+  const n=stepNo(st.i);if(n){og.fillStyle=ink;og.textBaseline='alphabetic';og.font=`700 ${OW>560?46:34}px ${body}`;og.fillText(String(n),18,OW>560?58:46);}
+  if(st.kind==='cover'){og.fillStyle=ink;og.font=`500 ${OW>560?40:28}px ${css('--f-disp')}`;og.fillText('CENTAUR WALKER',20,OW>560?58:44);og.font=`13px ${body}`;og.fillStyle=css('--ink-2');og.fillText(`Build book · ${S.filter(s=>stepNo(s.i)).length} steps in 5 bags`,22,OW>560?82:64);}}
+function spread(items,x0,y0,W,H){const dpr=Math.min(2,devicePixelRatio||1);const longest=Math.max(...items.map(p=>p.k==='bar'?BAR[p.id].n*PITCH/1000+.04:.08));let ppm=Math.min(600,(W-20)/longest);
+  for(let tries=0;tries<6;tries++){let x=x0,y=y0,rowH=0,ok=true;const pos=[];for(const p of items){const th=thumb(p,ppm,dpr);if(!th)continue;og.font=`11px ${css('--f-body')}`;const lw=Math.max(og.measureText(p.label||'').width,p.dim?og.measureText(p.dim).width+34:0);const w=Math.max(th.w,lw+4,60),h=th.h+30;if(x+w>x0+W&&x>x0){x=x0;y+=rowH+10;rowH=0;}pos.push({p,th,x,y});x+=w+18;rowH=Math.max(rowH,h);}
+    if(y+rowH>y0+H&&tries<5){ppm*=.8;continue;}
+    og.fillStyle=css('--box');og.strokeStyle=css('--box-edge');og.lineWidth=1.5;const bh=Math.min(H,y+rowH-y0+16);og.beginPath();og.roundRect?og.roundRect(x0-10,y0-10,W+20,bh+4,12):og.rect(x0-10,y0-10,W+20,bh+4);og.fill();og.stroke();
+    for(const {p,th,x,y} of pos){og.drawImage(th.cv,x,y,th.w,th.h);og.fillStyle=css('--ink');og.font=`700 13px ${css('--f-body')}`;const q=`${p.q||1}×`;og.fillText(q,x,y+th.h+14);const qw=og.measureText(q).width;if(p.dim){og.font=`600 11px ${css('--f-mono')}`;og.fillText(p.dim,x+qw+6,y+th.h+14);}og.font=`11px ${css('--f-body')}`;og.fillStyle=css('--ink-2');og.fillText(p.label||'',x,y+th.h+27);}break;}}
+const stepNo=i=>{const s=S[i];if(['cover','bagopen','done'].includes(s.kind))return 0;return S.slice(0,i+1).filter(q=>!['cover','bagopen','done'].includes(q.kind)).length;};
+
+/* ---------------- camera ---------------- */
+function camFor(st){if(st.cam==='hoofSub')return {tx:0,ty:.04,tz:0,r:.6,th:.7,ph:1.15,hoofSub:true};if(st.cam==='hoof'){const P=legAt(PH_A);return {tx:P.H.x,ty:HT+HOOF+P.H.y+.02,tz:HOOF_Z(),r:.75,th:.55,ph:1.3};}return st.cam||CAM.full;}
+function updCam(){const c=ST.cam,asp=camera.aspect,k=1/Math.pow(Math.min(1,asp),.75);const sp=v3(Math.sin(c.ph)*Math.sin(c.th),Math.cos(c.ph),Math.sin(c.ph)*Math.cos(c.th)).multiplyScalar(c.r*k);camera.position.set(c.tx+sp.x,c.ty+sp.y,c.tz+sp.z);camera.lookAt(c.tx,c.ty,c.tz);}
+function resize(){const r=page.getBoundingClientRect();OW=r.width;OH=r.height;R.setSize(OW,OH,false);camera.aspect=OW/Math.max(1,OH);camera.updateProjectionMatrix();drawBox(S[ST.i]);}
+addEventListener('resize',resize);
+// orbit
+{const pts=new Map();let g0=null;page.addEventListener('pointerdown',e=>{page.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===1)g0={th:ST.cam.th,ph:ST.cam.ph,x:e.clientX,y:e.clientY};if(pts.size===2){const [a,b]=[...pts.values()];g0={pinch:Math.hypot(a.x-b.x,a.y-b.y),r:ST.cam.r};}});
+  page.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!g0)return;ST.camT=null;if(pts.size===2&&g0.pinch){const [a,b]=[...pts.values()];ST.cam.r=Math.max(.2,Math.min(8,g0.r*g0.pinch/Math.hypot(a.x-b.x,a.y-b.y)));}else if(pts.size===1&&!g0.pinch){ST.cam.th=g0.th-(e.clientX-g0.x)*.008;ST.cam.ph=Math.max(.15,Math.min(1.62,g0.ph-(e.clientY-g0.y)*.006));}});
+  const up=e=>{pts.delete(e.pointerId);if(!pts.size)g0=null;};page.addEventListener('pointerup',up);page.addEventListener('pointercancel',up);
+  page.addEventListener('wheel',e=>{e.preventDefault();ST.camT=null;ST.cam.r=Math.max(.2,Math.min(8,ST.cam.r*Math.exp(e.deltaY*.001)));},{passive:false});}
+
+/* ---------------- UI ---------------- */
+const bagsEl=$('bags');BAGS.forEach(b=>{const el=document.createElement('button');el.className='bag';el.innerHTML=`<i>${b.n}</i>${b.name}<b><span></span></b>`;el.onclick=()=>go(S.findIndex(s=>s.bag===b.n));bagsEl.appendChild(el);b.el=el;});
+function refreshBags(){const cur=S[ST.i].bag;for(const b of BAGS){const steps=S.filter(s=>s.bag===b.n),done=steps.filter(s=>ST.checks[s.i]).length;b.el.setAttribute('aria-current',b.n===cur);b.el.classList.toggle('done',done===steps.length);b.el.querySelector('b span').style.width=(done/steps.length*100)+'%';}
+  const el=BAGS[cur].el;el.scrollIntoView({block:'nearest',inline:'nearest'});}
+const playIc=$('playic');function setPlay(p){ST.play=p;playIc.innerHTML=p?'<rect x="3" y="2" width="3" height="10" fill="currentColor"/><rect x="8" y="2" width="3" height="10" fill="currentColor"/>':'<path d="M3 2l9 5-9 5z" fill="currentColor"/>';$('play').setAttribute('aria-label',p?'Pause':'Play');}
+function go(i){ST.i=Math.max(0,Math.min(S.length-1,i));store.set('cwb-step',ST.i);const st=S[ST.i];ST.t=0;setPlay(true);ST.camT={from:Object.assign({},ST.cam),to:Object.assign({},camFor(st)),t0:performance.now()};
+  $('bn').textContent=`Bag ${st.bag} · ${BAGS[st.bag].name}`;$('st').textContent=st.t;const n=stepNo(st.i),tot=S.filter(s=>stepNo(s.i)).length;$('of').textContent=n?`${n} / ${tot}`:'';
+  $('say').textContent=st.say;$('cktxt').innerHTML=st.check;$('ck').checked=!!ST.checks[st.i];$('chk').classList.toggle('on',!!ST.checks[st.i]);
+  $('next').textContent=ST.i===S.length-1?'Start over':'Next';setScene(st);drawBox(st);refreshBags();}
+$('prev').onclick=()=>go(ST.i-1);$('next').onclick=()=>go(ST.i===S.length-1?0:ST.i+1);$('play').onclick=()=>setPlay(!ST.play);
+$('ck').onchange=e=>{ST.checks[ST.i]=e.target.checked;store.set('cwb-checks',ST.checks);$('chk').classList.toggle('on',e.target.checked);refreshBags();if(e.target.checked&&ST.i<S.length-1)setTimeout(()=>go(ST.i+1),450);};
+$('ex').oninput=e=>{setPlay(false);ST.t=.12+.6*(+e.target.value/1000);};
+addEventListener('keydown',e=>{if(e.key==='ArrowRight')go(ST.i+1);if(e.key==='ArrowLeft')go(ST.i-1);if(e.key===' '){e.preventDefault();setPlay(!ST.play);}});
+
+/* ================= MECHANISM AND EXPLODED VIEWS ================= */
+// your bike and you, in world coordinates (ground y = 0, bike bottom bracket at x = 0)
+const BK={R:.349,BB:V(0,.274),RA:V(-.4437,.349),FA:V(.6104,.349),STt:V(-.145,.763),HTt:V(.3715,.8765),HTb:V(.424,.720),saddle:V(-.2045,.9645),C:2.16};
+const HITCHW={walk:V(-.17,.895),ride:V(-.183,.89)};
+function twoBone(h,t,L1,L2,bend){const d=sub(t,h),dl=Math.min(len(d),L1+L2-1e-4),a=Math.atan2(d.y,d.x),al=Math.acos(Math.max(-1,Math.min(1,(L1*L1+dl*dl-L2*L2)/(2*L1*dl))));return V(h.x+Math.cos(a+bend*al)*L1,h.y+Math.sin(a+bend*al)*L1);}
+function walkerP(ph){const Sh=ADV,p0=ph-.25,legs=[],bob=.018*Math.cos(TAU*2*(p0+.05)),hip=V(0,.93+bob);
+  for(const [off,side] of [[0,-1],[.5,1]]){const p=((p0+off)%1+1)%1;let x,y;if(p<.6){const u=p/.6;x=Sh*(.3-.6*u);y=.075;}else{const u=(p-.6)/.4,s2=u*u*(3-2*u);x=Sh*(-.3+.6*s2);y=.075+.09*Math.sin(Math.PI*u);}
+    const ank=V(x,y),kn=twoBone(hip,ank,.45,.44,1);legs.push({side,hip,kn,ank,toe:V(x+.15,Math.max(.02,y-.06))});}
+  const sh=V(.04,1.45+bob),sw=Math.sin(TAU*p0)*.16;return {legs,hip,sh,bob,arms:[-1,1].map(sd=>{const hand=V(.06+sd*sw,.8+bob);return {side:sd,el:twoBone(sh,hand,.3,.28,1),hand};}),head:V(.06,1.64+bob)};}
+function riderP(dist){const psi=-TAU*dist/(BK.C*42/28)+Math.PI/2,hip=V(-.19,1.04),legs=[];for(const [ps,side] of [[psi+Math.PI,-1],[psi,1]]){const pd=V(.17*Math.cos(ps),BK.BB.y+.17*Math.sin(ps)),ank=V(pd.x-.035,pd.y+.07),kn=twoBone(hip,ank,.47,.47,1);legs.push({side,hip,kn,ank,toe:V(pd.x+.09,pd.y+.01)});}
+  const sh=V(.15,1.42),hand=V(.5,.93);return {legs,hip,sh,arms:[-1,1].map(sd=>({side:sd,el:twoBone(sh,hand,.31,.29,-1),hand})),head:V(.24,1.58),psi};}
+function poseW(ph,ride){const hz=ride?HITCHW.ride:add(HITCHW.walk,V(0,walkerP(ph).bob*.6));let pitch=0,O;const L1=legAt(ph),L2=legAt(ph+.5);
+  for(let it=0;it<3;it++){const c=Math.cos(pitch),s2=Math.sin(pitch),rot=p=>V(p.x*c-p.y*s2,p.x*s2+p.y*c);const yl=Math.min(rot(L1.H).y,rot(L2.H).y);O=V(hz.x-BODY_D*c,-yl+HOOF);pitch=Math.max(-.12,Math.min(.12,Math.atan2(hz.y-O.y,hz.x-O.x)));}
+  return {O,pitch,hz};}
+const worldG=new T.Group();scene.add(worldG);
+const cylW=(a,b,r,m,seg=14)=>{const d=new T.Vector3().subVectors(b,a),L=d.length(),o=new T.Mesh(new T.CylinderGeometry(r,r,L,seg),m);o.position.copy(a).addScaledVector(d,.5);o.quaternion.setFromUnitVectors(v3(0,1,0),d.normalize());return o;};
+const bike=new T.Group();worldG.add(bike);const wheels=[];let bcrank=null;
+{const fm=mat('#1f2226',{metalness:.35,roughness:.42}),alu=mat('#c3c8cc',{metalness:.55,roughness:.4}),p=(q,z=0)=>v3(q.x,q.y,z);
+  for(const [a,b,r] of [[BK.BB,BK.STt,.0145],[BK.STt,BK.HTt,.0135],[BK.BB,BK.HTb,.0165],[BK.HTb,BK.HTt,.019]])bike.add(cylW(p(a),p(b),r,fm));
+  for(const z of [-.065,.065]){bike.add(cylW(p(BK.BB,z*.4),p(BK.RA,z),.0095,fm));bike.add(cylW(p(V(-.135,.72),z*.3),p(BK.RA,z),.008,fm));bike.add(cylW(p(BK.HTb,z*.5),p(BK.FA,z*.75),.012,fm));}
+  bike.add(cylW(p(BK.STt),p(BK.saddle),.0136,M.steel()));const sad=new T.Mesh(new T.BoxGeometry(.27,.045,.14),M.black());sad.position.set(BK.saddle.x-.02,BK.saddle.y+.02,0);bike.add(sad);
+  bike.add(cylW(p(BK.HTt),p(V(.37,.91)),.0143,M.black()));bike.add(cylW(p(V(.365,.905)),p(V(.46,.93)),.016,M.steel()));for(const z of [-.21,.21])bike.add(tube([v3(.46,.93,z*.5),v3(.47,.93,z),v3(.56,.93,z),v3(.6,.88,z*1.04),v3(.57,.8,z*1.06),v3(.5,.79,z*1.06)],.012,M.black(),24));
+  for(const z of [-.065,.065]){bike.add(cylW(v3(-.62,.788,z),v3(-.24,.788,z),.005,M.black()));bike.add(cylW(v3(-.59,.788,z),p(BK.RA,z*1.1),.005,M.black()));}
+  for(const A of [BK.FA,BK.RA]){const g=new T.Group();g.position.set(A.x,A.y,0);g.add(new T.Mesh(new T.TorusGeometry(BK.R-.019,.019,14,64),M.black()));g.add(new T.Mesh(new T.TorusGeometry(BK.R-.045,.007,8,64),alu));const sp=[];for(let i=0;i<28;i++){const a=i/28*TAU,z=i%2?.03:-.03;sp.push(v3(0,0,z),v3(Math.cos(a)*(BK.R-.05),Math.sin(a)*(BK.R-.05),0));}g.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(sp),new T.LineBasicMaterial({color:0x9aa0a6})));
+    // a painted stripe so you can see the wheel turn
+    const mk=new T.Mesh(new T.BoxGeometry(.05,.02,.045),mat('#e2591b'));mk.position.set(0,BK.R-.019,0);g.add(mk);bike.add(g);wheels.push(g);}
+  bcrank=new T.Group();bcrank.position.set(BK.BB.x,BK.BB.y,0);bike.add(bcrank);for(const side of [1,-1]){const arm=new T.Group(),b=new T.Mesh(new T.BoxGeometry(.17,.022,.012),M.black());b.position.x=.085;arm.add(b);const ped=new T.Mesh(new T.BoxGeometry(.1,.02,.09),M.black());ped.position.set(.17,0,side*.05);arm.add(ped);arm.position.z=side*.085;if(side<0)arm.rotation.z=Math.PI;bcrank.add(arm);}
+  bcrank.add(new T.Mesh(new T.TorusGeometry(.09,.006,6,40),M.steel()));
+  for(const dy of [-.035,.035]){const cl=new T.Mesh(new T.TorusGeometry(.017,.004,6,20),M.steel());cl.rotation.x=Math.PI/2;cl.position.set(HITCHW.ride.x+.01,HITCHW.ride.y+dy+.02,0);bike.add(cl);}
+  const pb2=new T.Mesh(new T.BoxGeometry(.019,.152,.14),M.pine());pb2.position.set(HITCHW.ride.x+.04,HITCHW.ride.y+.02,0);bike.add(pb2);}
+const personW=new T.Group();worldG.add(personW);const PW={th:[],sh:[],ft:[],ua:[],fa:[]};
+const PWM=M.person();{const pm=PWM,limbW=r=>{const q=new T.Group(),c=new T.Mesh(new T.CylinderGeometry(r,r*.85,1,12),pm);q.add(c);q.userData.c=c;personW.add(q);return q;};for(let i=0;i<2;i++){PW.th.push(limbW(.062));PW.sh.push(limbW(.046));PW.ft.push(limbW(.032));PW.ua.push(limbW(.04));PW.fa.push(limbW(.033));}PW.torso=limbW(.13);PW.head=new T.Mesh(new T.SphereGeometry(.1,20,16),pm);personW.add(PW.head);}
+function posePersonW(f,ride){f.legs.forEach((l,i)=>{const z=l.side*(ride?.1:.09);setLimb(PW.th[i],v3(l.hip.x,l.hip.y,z),v3(l.kn.x,l.kn.y,z));setLimb(PW.sh[i],v3(l.kn.x,l.kn.y,z),v3(l.ank.x,l.ank.y,z));setLimb(PW.ft[i],v3(l.ank.x,l.ank.y,z),v3(l.toe.x,l.toe.y,z));});
+  f.arms.forEach((a,i)=>{setLimb(PW.ua[i],v3(f.sh.x,f.sh.y,a.side*.2),v3(a.el.x,a.el.y,a.side*.22));setLimb(PW.fa[i],v3(a.el.x,a.el.y,a.side*.22),v3(a.hand.x,a.hand.y,a.side*.22));});
+  setLimb(PW.torso,v3(f.hip.x,f.hip.y+.05,0),v3(f.sh.x,f.sh.y,0));PW.head.position.set(f.head.x,f.head.y,0);}
+
+const MECH={ride:true,skin:false,power:true,play:true,v:2.2/3.6,dist:0},EXP={e:.75,skin:false,labels:true,hi:null};
+const SKID={wet:1.7,grass:2.4,asphalt:3.3}; // km/h, from the engineering page (hoof grip versus leg inertia)
+// how far each part moves in the exploded view (parent frame, metres at full spread)
+function expOff(u){const id=u.id;let m;
+  if((m=id.match(/^([AB])-bar-(\w)$/))){const sd=m[1]==='A'?1:-1;return v3(0,0,sd*(.02+.065*LAYER[m[2]]));}
+  if((m=id.match(/^([AB])-ny-(\w)-(\d)$/))){const sd=m[1]==='A'?1:-1;return v3(0,0,sd*(.02+.065*(+m[3]-.5)));}
+  if((m=id.match(/^([AB])-bolt-(\w)$/))){const sd=m[1]==='A'?1:-1;return v3(0,0,-sd*.07);}
+  if((m=id.match(/^([AB])-ow-(\w)$/))){const sd=m[1]==='A'?1:-1;return v3(0,0,sd*(.02+.065*(STACK[m[2]].hi+.55)));}
+  if((m=id.match(/^([AB])-nut-(\w)$/))){const sd=m[1]==='A'?1:-1;return v3(0,0,sd*(.02+.065*(STACK[m[2]].hi+.85)));}
+  if((m=id.match(/^([AB])-hoofpad$/)))return v3(0,-.11,0);if((m=id.match(/^([AB])-rubber$/)))return v3(0,-.04,0);
+  if((m=id.match(/^([AB])-brace-(\d)$/))){const sd=m[1]==='A'?1:-1;return v3(0,.02,(+m[2]?1:-1)*sd*.06);}
+  const T_={legA:v3(0,0,.42),legB:v3(0,0,-.42),ring:v3(0,0,.1),hb0:v3(0,0,.2),hb1:v3(0,0,.2),hb0n:v3(0,0,-.2),hb1n:v3(0,0,-.2),boltB:v3(0,0,.8),nutB:v3(0,0,-.8),nyBA:v3(0,0,.06),nyBB:v3(0,0,-.06),
+    emt:v3(0,.24,0),elbow:v3(.14,.24,0),strap0:v3(0,.31,0),strap1:v3(0,.31,0),strap2:v3(0,.31,0),strap3:v3(0,.31,0),bungA:v3(0,.12,.1),bungB:v3(0,.12,-.1),skin:v3(0,.85,0),tail:v3(-.25,.05,0),
+    pin:v3(0,.12,0),hinge:v3(.06,0,0),lazy:v3(.14,0,0),hboard:v3(.24,0,0),fender:v3(.3,0,0),belt:v3(.42,0,0),plate:v3(0,0,0)};
+  if(id.startsWith('hoop'))return v3(0,.5+.0*(+id.slice(4)),0);return T_[id]||v3(0,0,0);}
+const XLAB=[];   // labels on the exploded model
+for(const b of BARS)XLAB.push({u:'A-bar-'+b.id,local:v3(b.n*PITCH/2000,0,0),text:`${b.id} · ${IN(b.inch)}`,key:'bar-'+b.id});
+for(const c of PIVOTS)if(c!=='B')XLAB.push({u:'A-bolt-'+c,local:v3(0,0,.04),text:`${c} bolt ${IN(boltFor(c).len)}`,key:'bolt-'+c});
+XLAB.push({u:'plate',local:v3(-.25,.17,0),text:'plate 15-1/4 × 13',key:'plate'},{u:'ring',local:v3(0,.044,0),text:`PVC ring ${fr32(2*(LZ(1)-BAR_T/2)/.0254)}`,key:'ring'},{u:'hb0',local:v3(0,0,0),text:'hub bolts 3 in.',key:'hub'},{u:'boltB',local:v3(0,0,0),text:'B bolt 7 in.',key:'boltB'},
+  {u:'emt',local:v3(-.1,0,0),text:'1/2 EMT, 33 in.',key:'emt'},{u:'elbow',local:v3(.12,-.12,0),text:'EMT elbow',key:'elbow'},{u:'A-hoofpad',local:v3(0,-.04,.04),text:'hoof 1×4 × 4 in.',key:'hoof'},{u:'A-brace-1',local:v3(0,.025,0),text:'2 in. brace',key:'brace'},
+  {u:'hboard',local:v3(0,0,0),text:'1×6 × 10 in.',key:'hboard'},{u:'lazy',local:v3(0,0,0),text:'lazy susan',key:'lazy'},{u:'hinge',local:v3(0,0,0),text:'3 in. hinge',key:'hinge'},{u:'pin',local:v3(0,.03,0),text:'clevis pin',key:'pin'},{u:'tail',local:v3(0,-.1,0),text:'rope 30 in.',key:'tail'});
+HOOPS.forEach((x,k)=>XLAB.push({u:'hoop'+k,local:v3(x,bodyAt(x).top,0),text:`PEX ${HOOP_IN[k]} in.`,key:'hoops'}));
+// the cut list (every piece, with its size)
+const nyl=LA.wash.length*2+2;
+const XT=[
+  {h:'Leg bars · pine 1×2, two of each',rows:BARS.map(b=>({k:b.id,n:b.name,q:2,d:`holes ${IN(b.inch)}`,d2:`cut ${frac(b.cut).replace(/^-/,'')} in.`,key:'bar-'+b.id}))},
+  {h:'Leg hardware',rows:PIVOTS.filter(c=>c!=='B').map(c=>({k:c,n:`Pivot ${c} bolt, 3/8 in.`,q:2,d:IN(boltFor(c).len),key:'bolt-'+c})).concat([{n:'Nylon washer, 3/8 in.',q:nyl,d:'1/16 thick',key:'ny'},{n:'Steel washer, 3/8 in.',q:22,d:'',key:'ow'},{n:'Lock nut, 3/8 in.',q:15,d:'',key:'nut'},{n:'Crank riser, 1×2 offcut',q:2,d:'1-1/2 × 1-1/2',key:'bar-m'}])},
+  {h:'Frame',rows:[{n:'Centre plate, 1/2 in. plywood',q:1,d:'15-1/4 × 13 in.',key:'plate'},{n:'Hub ring, 3 in. PVC',q:1,d:fr32(2*(LZ(1)-BAR_T/2)/.0254)+' in. long',key:'ring'},{n:'Hub bolts, 3/8 in.',q:2,d:'3 in.',key:'hub'},{n:'Pivot B bolt, 3/8 in.',q:1,d:'7 in.',key:'boltB'}]},
+  {h:'Hooves',rows:[{n:'Pad, pine 1×4',q:2,d:'4 in.',key:'hoof'},{n:'Rubber, floor protector pad',q:2,d:'4 × 3-1/2',key:'hoof'},{n:'Corner brace',q:4,d:'2 in.',key:'brace'}]},
+  {h:'Body',rows:[{n:'Spine, 1/2 in. EMT',q:1,d:'33 in.',key:'emt'},{n:'EMT 90° elbow, set-screw',q:1,d:'',key:'elbow'},{n:'One-hole strap',q:4,d:'1/2 in.',key:'strap'},{n:'Bungee',q:2,d:'24 in.',key:'bung'}].concat(HOOP_IN.map((l,k)=>({n:`Hoop ${k+1}, 1/2 in. PEX`,q:1,d:l+' in.',key:'hoops'}))).concat([{n:'Skin, canvas drop cloth',q:1,d:'trim to fit',key:'skin'},{n:'Tail, manila rope',q:1,d:'30 in.',key:'tail'}])},
+  {h:'Hitch',rows:[{n:'Hitch board, pine 1×6',q:1,d:'10 in.',key:'hboard'},{n:'Lazy susan, 6 in. square',q:1,d:'',key:'lazy'},{n:'Door hinge',q:1,d:'3 in.',key:'hinge'},{n:'Clevis pin and clip',q:1,d:'3/8 × 2 in.',key:'pin'},{n:'Framer’s belt with suspenders',q:1,d:'',key:'belt'},{n:'Seatpost board, pine 1×6 (riding)',q:1,d:'6 in.',key:'post'},{n:'Hose clamp (riding)',q:2,d:'2-1/2 in.',key:'post'}]}];
+const keyUnits=key=>{const all=Object.keys(U);const pat={hub:['hb0','hb1','hb0n','hb1n'],boltB:['boltB','nutB'],hoof:['A-hoofpad','B-hoofpad'],brace:all.filter(i=>/-brace-/.test(i)),strap:['strap0','strap1','strap2','strap3'],bung:['bungA','bungB'],hoops:all.filter(i=>i.startsWith('hoop')),
+  ny:all.filter(i=>/-ny-/.test(i)).concat(['nyBA','nyBB']),ow:all.filter(i=>/-ow-/.test(i)),nut:all.filter(i=>/-nut-/.test(i)).concat(['nutB','hb0n','hb1n']),post:[]}[key];if(pat)return pat;
+  if(key.startsWith('bar-'))return ['A-'+key,'B-'+key];if(key.startsWith('bolt-'))return ['A-'+key,'B-'+key];return [key];};
+function highlight(ids){const set=new Set(ids||[]);for(const u of ALLU){const on=set.has(u.id);u.obj.traverse(m=>{if(m.isMesh&&m.material&&m.material.emissive){m.material.emissive.set(on?0xe2591b:0x000000);m.material.emissiveIntensity=on?.55:1;}});}}
+{const el=$('xtbl');el.innerHTML=XT.map(g=>`<h3>${g.h}</h3><table>${g.rows.map(r=>`<tr data-key="${r.key}"><td class="q">${r.q}×</td><td>${r.k?`<b style="font-family:var(--f-mono);color:var(--accent)">${r.k}</b> `:''}${r.n}</td><td class="d">${r.d}${r.d2?`<br><small>${r.d2}</small>`:''}</td></tr>`).join('')}</table>`).join('');
+  el.addEventListener('click',e=>{const tr=e.target.closest('tr');if(!tr)return;const on=!tr.classList.contains('on');el.querySelectorAll('tr.on').forEach(t=>t.classList.remove('on'));if(on){tr.classList.add('on');EXP.hi=tr.dataset.key;}else EXP.hi=null;highlight(EXP.hi?keyUnits(EXP.hi):[]);});}
+
+/* mode switching */
+ST.mode='build';
+const MCAM={ride:{tx:-.45,ty:.62,tz:0,r:4.1,th:.7,ph:1.33},walk:{tx:-.45,ty:.72,tz:0,r:3.9,th:.66,ph:1.33}},XCAM={tx:-.1,ty:1.0,tz:0,r:4.6,th:.95,ph:1.15};
+function setMode(m){ST.mode=m;document.querySelectorAll('.modes button').forEach(b=>b.setAttribute('aria-selected',b.dataset.m===m));$('paneB').hidden=m!=='build';$('paneM').hidden=m!=='mech';$('paneX').hidden=m!=='exp';
+  if(m==='build'){worldG.visible=false;bodyG.rotation.z=0;bodyG.position.set(0,HT+HOOF,0);highlight([]);go(ST.i);return;}
+  hideAll();prop.children.forEach(c=>c.visible=false);for(const u of ALLU)u.obj.visible=true;LA.lg.visible=LB.lg.visible=true;LA.hoof.visible=LB.hoof.visible=true;person.visible=false;
+  worldG.visible=m==='mech';highlight(m==='exp'&&EXP.hi?keyUnits(EXP.hi):[]);
+  ST.camT={from:Object.assign({},ST.cam),to:Object.assign({},m==='mech'?MCAM[MECH.ride?'ride':'walk']:XCAM),t0:performance.now()};refreshMech();$('bn').textContent='';}
+document.querySelectorAll('.modes button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+document.querySelectorAll('#mmode button').forEach(b=>b.onclick=()=>{MECH.ride=b.dataset.v==='ride';document.querySelectorAll('#mmode button').forEach(q=>q.setAttribute('aria-pressed',q===b));ST.camT={from:Object.assign({},ST.cam),to:Object.assign({},MCAM[MECH.ride?'ride':'walk']),t0:performance.now()};refreshMech();});
+$('mskin').onchange=e=>{MECH.skin=e.target.checked;};$('mpow').onchange=e=>{MECH.power=e.target.checked;};$('mplay').onchange=e=>{MECH.play=e.target.checked;};
+$('mv').oninput=e=>{MECH.v=+e.target.value/10/3.6;refreshMech();};
+$('xe').oninput=e=>{EXP.e=+e.target.value/1000;};$('xskin').onchange=e=>{EXP.skin=e.target.checked;};$('xlab').onchange=e=>{EXP.labels=e.target.checked;};
+const WHEEL_C=TAU*BK.R,CRANK_PER_WHEEL=WHEEL_C/ADV;
+function refreshMech(){const kmh=MECH.v*3.6;$('mvv').textContent=kmh.toFixed(1)+' km/h';
+  $('mpath').innerHTML=(MECH.ride?[
+    '<b>You pedal.</b> The chain turns the rear wheel and the wheel pushes the bike forward.',
+    '<b>The seatpost pulls the tongue.</b> Lazy susan and hinge let the rear turn and nod; only a forward pull goes through.',
+    '<b>The ground holds the planted hoof.</b> As the body is pulled forward, the hoof stays put and pushes its leg back.',
+    `<b>That turns the crank:</b> one turn for every ${mm(ADV)} the bike travels, ${CRANK_PER_WHEEL.toFixed(2)} turns per turn of the rear wheel.`,
+    '<b>The hub swings the other leg forward</b>, half a turn behind, so one hoof is always down.']:[
+    '<b>You walk.</b> Your hips carry the hitch forward.',
+    '<b>The belt pulls the tongue.</b> Lazy susan and hinge let the rear turn and nod.',
+    '<b>The ground holds the planted hoof</b> and pushes its leg back as the body moves on.',
+    `<b>That turns the crank:</b> one turn per stride of yours, ${mm(ADV)}.`,
+    '<b>The hub swings the other leg forward</b>, so one hoof is always down.']).map(t=>`<li><span>${t}</span></li>`).join('');
+  const n=$('mnote');if(MECH.ride){const over=kmh>SKID.asphalt;n.className='note'+(over?' warn':'');n.innerHTML=over?`Above ${SKID.asphalt} km/h the planted hoof skids on asphalt (${SKID.grass} on grass): the legs cannot be swung forward fast enough by ground grip alone.`:`Nothing connects the rear wheel to the legs by chain or belt: the wheel moves the bike, and the bike pulling the rear is what drives the legs. Hooves stay planted up to about ${SKID.asphalt} km/h on asphalt, ${SKID.grass} on grass.`;}
+  else{n.className='note';n.textContent='The hind legs keep time with your stride because the ground turns them; you only pull.';}}
+// per-frame update for the mechanism and exploded views
+function frameMode(now,dt){const m=ST.mode;for(const u of ALLU)u.obj.position.copy(u.home);
+  let ap=[];if(m==='mech'){if(MECH.play)MECH.dist+=MECH.v*dt;const ph=((MECH.dist/ADV+PH_A)%1+1)%1;poseAll(ph);const p=poseW(ph,MECH.ride);bodyG.position.set(p.O.x,p.O.y,0);bodyG.rotation.z=p.pitch;
+    bike.visible=MECH.ride;for(const w of wheels)w.rotation.z=-MECH.dist/BK.R;const f=MECH.ride?riderP(MECH.dist):walkerP(ph);if(MECH.ride)bcrank.rotation.z=f.psi;posePersonW(f,MECH.ride);
+    grid.position.x=-((MECH.dist)%.2);U.skin.obj.visible=MECH.skin;for(const h of hoops)h.g.visible=MECH.skin;U.tail.obj.visible=MECH.skin;
+    for(const id of ['belt','fender','hboard'])U[id].obj.visible=!MECH.ride;ST.mph=ph;PWM.transparent=MECH.power;PWM.opacity=MECH.power?.28:1;PWM.depthWrite=!MECH.power;}
+  else{poseAll(PH_A);bodyG.rotation.z=0;bodyG.position.set(0,HT+HOOF+.04,0);grid.position.x=0;const e=ease(EXP.e);for(const u of ALLU)u.obj.position.add(expOff(u).multiplyScalar(e));U.skin.obj.visible=EXP.skin;}
+  if(ST.camT){const k=ease(cl01((now-ST.camT.t0)/700));for(const key of ['tx','ty','tz','r','th','ph'])ST.cam[key]=ST.camT.from[key]+(ST.camT.to[key]-ST.camT.from[key])*k;if(k>=1)ST.camT=null;}
+  updCam();scene.background=srgb(css('--paper'));ground.visible=grid.visible=true;R.render(scene,camera);drawModeOverlay(m);}
+function badge(n,P,col){og.fillStyle=col;og.beginPath();og.arc(P.x,P.y,10,0,TAU);og.fill();og.fillStyle='#fff';og.font=`700 11px ${css('--f-mono')}`;og.textAlign='center';og.textBaseline='middle';og.fillText(String(n),P.x,P.y+.5);og.textAlign='left';}
+function drawModeOverlay(m){const dpr=Math.min(2,devicePixelRatio||1);if(ov.width!==Math.round(OW*dpr)||ov.height!==Math.round(OH*dpr)){ov.width=Math.round(OW*dpr);ov.height=Math.round(OH*dpr);}og.setTransform(dpr,0,0,dpr,0,0);og.clearRect(0,0,OW,OH);
+  const ink=css('--ink'),hot=css('--hot'),acc=css('--accent'),mono=css('--f-mono'),body=css('--f-body');
+  og.fillStyle=ink;og.font=`500 ${OW>560?30:22}px ${css('--f-disp')}`;og.textBaseline='alphabetic';og.fillText(m==='mech'?'MECHANISM':'EXPLODED',18,OW>560?44:36);
+  og.font=`12px ${body}`;og.fillStyle=css('--ink-2');og.fillText(m==='mech'?(MECH.ride?'on your bike · skin off to see the legs':'walking · skin off to see the legs'):(OW<620&&!EXP.hi?'bar letters shown · tap a row below for any part':'every piece, with its size'),19,OW>560?64:54);
+  if(m==='mech'&&MECH.power){const ph=ST.mph,PA=legAt(ph),PB=legAt(ph+.5),z=HOOF_Z();const downA=onGround(ph),st=downA?PA:PB,sw=downA?PB:PA,zs=downA?z:-z,zw=-zs;
+    const W=(x,y,zz)=>proj(wpos(bodyG,v3(x,y,zz)));
+    const p1=MECH.ride?proj(v3(BK.RA.x,.02,0)):proj(v3(0,.93,0)),hz=proj(wpos(bodyG,v3(BODY_D,0,0))),hs=W(st.H.x,st.H.y-.03,zs),O=W(0,0,.05),hw=W(sw.H.x,sw.H.y,zw);
+    const fwd=(P,dx)=>{const Q=proj(MECH.ride?v3(BK.RA.x+dx,.02,0):v3(dx,.93,0));return Q;};
+    // 1: drive
+    if(MECH.ride){const a=proj(v3(BK.RA.x-.1,.01,0)),b=proj(v3(BK.RA.x+.25,.01,0));arrow(a,b,hot);badge(1,{x:a.x-14,y:a.y},hot);}else{const a=proj(v3(-.05,.93,0)),b=proj(v3(.3,.93,0));arrow(a,b,hot);badge(1,{x:b.x+14,y:b.y},hot);}
+    // 2: pull along the tongue
+    {const a=proj(wpos(bodyG,v3(BODY_D-.28,0,0))),b=proj(wpos(bodyG,v3(BODY_D-.04,0,0)));arrow(a,b,hot);badge(2,{x:a.x-4,y:a.y-16},hot);}
+    // 3: ground holds the hoof, pushes it back relative to the body
+    {const a=W(st.H.x+.12,st.H.y-.035,zs),b=W(st.H.x-.06,st.H.y-.035,zs);arrow(a,b,hot);badge(3,{x:a.x+14,y:a.y+10},hot);}
+    // 4: crank turning (clockwise seen from this side)
+    {og.strokeStyle=hot;og.lineWidth=2.4;const r=22,a0=-.4*Math.PI+((performance.now()/1000)*-1.5)%TAU*0;og.beginPath();og.arc(O.x,O.y,r,-Math.PI*.9,Math.PI*.35);og.stroke();const ea=Math.PI*.35,ex=O.x+r*Math.cos(ea),ey=O.y+r*Math.sin(ea);og.beginPath();og.moveTo(ex+6,ey-7);og.lineTo(ex-1,ey+4);og.lineTo(ex-9,ey-3);og.closePath();og.fillStyle=hot;og.fill();badge(4,{x:O.x-r-14,y:O.y-10},hot);}
+    // 5: the swing leg goes forward
+    {const a=W(sw.H.x-.05,sw.H.y+.05,zw),b=W(sw.H.x+.17,sw.H.y+.05,zw);arrow(a,b,acc);badge(5,{x:a.x-14,y:a.y},acc);}}
+  if(m==='mech'){const wt=MECH.dist/WHEEL_C,ct=MECH.dist/ADV;$('mnums').innerHTML=`<div><b>${(MECH.v*3.6).toFixed(1)}</b><small>km/h</small></div><div><b>${MECH.ride?wt.toFixed(2):(MECH.dist/ADV).toFixed(2)}</b><small>${MECH.ride?'rear wheel turns':'your strides'}</small></div><div><b>${ct.toFixed(2)}</b><small>crank turns</small></div>`;}
+  if(m==='exp'&&EXP.labels){const pts=[];for(const l of XLAB){const u=U[l.u];if(!u||!u.obj.visible)continue;if(l.key==='skin'&&!EXP.skin)continue;const narrow=OW<620;if(narrow&&EXP.hi&&l.key!==EXP.hi)continue;const P=proj(wpos(u.obj,l.local));if(narrow&&!EXP.hi){if(!l.key.startsWith('bar-'))continue;pts.push({P,l:Object.assign({},l,{text:l.key.slice(4)})});continue;}if(P.z>1||P.x<0||P.x>OW||P.y<0||P.y>OH)continue;pts.push({P,l});}
+    og.font=`600 11px ${mono}`;const placed=[];pts.sort((a,b)=>a.P.y-b.P.y);
+    for(const {P,l} of pts){const tw=og.measureText(l.text).width+8;let x=P.x+(P.x>OW*.55?-tw-18:18),y=P.y-18;for(let k=0;k<30;k++){const hit=placed.some(q=>x<q.x+q.w&&x+tw>q.x&&y<q.y+16&&y+16>q.y);if(!hit)break;y+=9;}placed.push({x,y:y,w:tw});
+      const on=EXP.hi===l.key;og.strokeStyle=on?hot:css('--ink-3');og.lineWidth=1;og.beginPath();og.moveTo(P.x,P.y);og.lineTo(x+(x<P.x?tw:0),y+8);og.stroke();og.fillStyle=on?hot:ink;og.beginPath();og.arc(P.x,P.y,2,0,TAU);og.fill();
+      og.fillStyle=css('--paper');og.globalAlpha=.9;og.fillRect(x,y,tw,16);og.globalAlpha=1;og.strokeStyle=on?hot:css('--rule');og.strokeRect(x+.5,y+.5,tw-1,15);og.fillStyle=on?hot:ink;og.textBaseline='middle';og.fillText(l.text,x+4,y+8.5);}}}
+
+/* ---------------- frame loop ---------------- */
+function frame(now){const dt=Math.min(.05,(now-ST.last)/1000);ST.last=now;const st=S[ST.i];
+  if(ST.mode&&ST.mode!=='build'){frameMode(now,dt);requestAnimationFrame(frame);return;}
+  if(ST.play){ST.t+=dt/4.2;if(ST.t>1)ST.t=0;$('ex').value=Math.round(cl01((ST.t-.12)/.6)*1000);}
+  // walking animations
+  const walking=st.anim===true||st.anim==='walk'||st.anim==='frame'||st.anim==='leg';if(walking)ST.ph=(ST.ph+dt/1.25)%1;else ST.ph=PH_A;
+  for(const u of ALLU)u.obj.position.copy(u.home);
+  if(st.bag===2){LA.lg.position.z=.2;LB.lg.position.z=-.2;}
+  poseAll(ST.ph);
+  if(walking&&st.anim!=='leg'){grid.position.x=-((ST.ph*ADV)%.2);}else grid.position.x=0;
+  // hoof sub-build: lift the hoof to a bench in front of the camera
+  if(st.cam==='hoofSub'){LA.hoof.position.set(0,-(HT+HOOF)+.06,0);LA.hoof.rotation.z=0;}
+  // approach offsets
+  const ap=approach(st,ST.t);for(const a of ap){a.u.obj.position.add(a.u.off.clone().multiplyScalar(a.k));}
+  if(st.kind==='mirror'){const k=ap.find(a=>a.u.id==='legB');}
+  if(st.kind==='done'||st.kind==='cover'){ST.cam.th+=dt*(st.kind==='done'?.12:.05);}
+  if(ST.camT){const k=ease(cl01((now-ST.camT.t0)/700));for(const key of ['tx','ty','tz','r','th','ph'])ST.cam[key]=ST.camT.from[key]+(ST.camT.to[key]-ST.camT.from[key])*k;if(k>=1)ST.camT=null;}
+  updCam();R.setClearColor(srgb(css('--paper')),1);scene.background=srgb(css('--paper'));
+  const bodyVis=bodyG.visible;ground.visible=grid.visible=st.kind!=='bagopen';if(st.kind==='bagopen'){bodyG.visible=false;}
+  R.render(scene,camera);bodyG.visible=bodyVis;
+  drawOverlay(st,ap);requestAnimationFrame(frame);}
+window.__setMode=setMode;window.__MECH=MECH;window.__EXP=EXP;window.__S=S;window.__ST=ST;window.__go=go;window.__U=U;
+worldG.visible=false;refreshMech();$('mvv').textContent=(MECH.v*3.6).toFixed(1)+' km/h';
+resize();go(ST.i);requestAnimationFrame(frame);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{thumbCache.clear();drawBox(S[ST.i]);});
+})();
+</script>
+</body></html>
