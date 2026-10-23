@@ -48,6 +48,28 @@ Every version made along the way is kept in [`versions/`](versions/), in order:
 | [Walker v2b](versions/18-walker-v2b.html) | Phone layout: step text and callouts kept off the model. |
 | [Walker v3](versions/19-walker-v3.html) | 1×4 hoof pad flush with the inner bar face; 15-1/4 × 13 in. plate. |
 | [Build book v1](versions/20-build-book-v1.html) | First LEGO-style build book: 5 bags, exploded steps, parts box, a check on every step. |
+| [Stride Plate](versions/21-stride-plate.html) | Rig line: redesign of the GeoGebra Jansen horse around six principles. |
+| [Centaur Rig v1](versions/22-centaur-rig-v1.html) | Rig line: every joint followed through time; joints as holes in flat plates. |
+| [Centaur Rig v2](versions/23-centaur-rig-v2.html) | Rig line: one pair of legs on a backpack or the bike rack, friction roller on the tyre. |
+| [Centaur Rig v3](versions/24-centaur-rig-v3.html) | Rig line: one-screen physics bench, feet in your foot plane, breakage and slop. |
+| [Centaur Rig v4](versions/25-centaur-rig-v4.html) | Rig line: layer stacks, friction, sound, variants A–D, tolerances. |
+| [Centaur Rig v5](versions/26-centaur-rig-v5.html) | Rig line: phone-first joint lab, nine joint types at every pin. |
+| [Build-shop prompt](versions/27-build-shop-prompt.html) | Rig line: the SCION prompt rewritten for this rig. |
+
+## Centaur Rig line
+
+A second line of the work: Jansen legs cut from 1 in EPS foam or 1/4 in plywood on the original Jansen lengths, in two builds. **Backpack**: legs hang from your hip belt and a ground wheel drives them. **Bike**: legs hang from the rear rack and a roller on the rear tyre drives them. Full history in [rig/LINEAGE.md](rig/LINEAGE.md).
+
+| Page | What it is |
+|---|---|
+| [rig/design-set.html](rig/design-set.html) | Build drawings for both builds: 16 exposures, Z map, drive, pin stacks, every part with dimensions, mounts, cut list, buy list, steps, checks. |
+| [rig/centaur-rig.html](rig/centaur-rig.html) | The leg engine: walk and bike modes, Muybridge plate, joints under load, real stock and joints, part drawings and stacks. |
+| [rig/centaur-rig-design-files.zip](rig/centaur-rig-design-files.zip) | Every part as 1:1 SVG and DXF, tiled Letter PDFs, and design-data.json. Also unpacked in [rig/files/](rig/files/). |
+| [rig/source/](rig/source/) | The scripts that rebuild the files from the engine. |
+
+Versions 21–27 in `versions/` are this line: Stride Plate, Centaur Rig v1–v5, and the build-shop prompt.
+
+Backpack: crank axle 899 mm, 1296 mm of ground per crank turn, 3.9 kg, about $234. Bike: crank axle 700 mm, 60 rpm at 16 km/h, 3.2 kg, about $190. Computed and checked by independent reviewers; not yet built.
 
 ## Files
 
@@ -57,6 +79,7 @@ build-book.html   current build book
 walker.html       current engineering page
 templates.html    current templates (and templates.pdf)
 versions/         every earlier version, numbered in order
+rig/              Centaur Rig line: engine, design set, files, source, LINEAGE.md
 thumbs/           screenshots used by the index
 favicon.svg
 ```

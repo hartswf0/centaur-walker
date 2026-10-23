@@ -1,0 +1,926 @@
+<title>Centaur Rig</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<style>
+/* Layout: one-screen lab bench. Stage (side view, walking) top-left; leg detail, time plots and plan view along the bottom; inspector on the right. No page scroll on a desktop screen. */
+:root{
+  --paper:#fff; --ink:#000;
+  --teal:#19e6c8; --amber:#ffd23f; --red:#ff2e2e; --blue:#3b82f6;
+  --mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box;border-radius:0}
+html,body{height:100%;background:var(--paper);color:var(--ink)}
+body{margin:0;font-family:var(--mono);font-size:12px;line-height:1.35;
+  padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px));padding-block:8px;
+  display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px;overflow:hidden}
+header{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;border-bottom:2px solid var(--ink);padding-bottom:6px}
+h1{font-size:16px;font-weight:700;letter-spacing:.08em;margin:0;text-transform:uppercase}
+.clock{font-variant-numeric:tabular-nums;margin-left:auto}
+.lab{display:grid;gap:8px;min-height:0;grid-template-columns:minmax(0,1fr) 350px;grid-template-rows:minmax(0,1fr) minmax(0,38%)}
+.pane{border:1px solid var(--ink);min-width:0;min-height:0;display:flex;flex-direction:column}
+.pane > .bar{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--ink);padding:3px 6px;min-height:26px}
+.bar h2{font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin:0;font-weight:700}
+.bar .note{font-size:10px;font-style:italic}
+.cv{position:relative;flex:1;min-height:0}
+.cv canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#stagePane{grid-column:1;grid-row:1}
+.bottom{grid-column:1;grid-row:2;display:grid;gap:8px;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) minmax(0,.8fr);min-height:0}
+#insp{grid-column:2;grid-row:1 / span 2;overflow-y:auto}
+button{font:inherit;font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:var(--paper);color:var(--ink);border:1px solid var(--ink);padding:3px 6px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+button:hover{background:var(--ink);color:var(--paper)}
+button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.seg{display:flex;flex-wrap:wrap;gap:3px}
+.icon-play{border-left:8px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent;width:0;height:0;display:inline-block}
+.icon-pause{width:8px;height:10px;display:inline-block;position:relative}
+.icon-pause::before,.icon-pause::after{content:"";position:absolute;top:0;width:3px;height:10px;background:currentColor}
+.icon-pause::before{left:0}.icon-pause::after{right:0}
+.sec{border-bottom:1px solid var(--ink)}
+.sec:last-child{border-bottom:0}
+.sec h3{font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin:0;padding:5px 8px 3px;font-weight:700;display:flex;justify-content:space-between;gap:8px}
+.sec h3 span{font-weight:400;letter-spacing:0;text-transform:none;font-style:italic}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:2px 8px;align-items:baseline}
+.row .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.choice{display:grid;grid-template-columns:4.6em minmax(0,1fr);gap:6px;padding:2px 8px;align-items:center}
+.num{cursor:ew-resize;user-select:none;border-bottom:1px dashed var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+.num:hover{background:var(--ink);color:var(--paper)}
+.led{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:6px;padding:3px 8px;align-items:baseline;border-top:1px solid var(--ink)}
+.led:first-of-type{border-top:0}
+.led .why{grid-column:2 / -1;font-size:11px}
+.dot{width:10px;height:10px;border:1px solid var(--ink);align-self:center}
+.ok{background:var(--teal)} .warn{background:var(--amber)} .bad{background:var(--red)}
+.fail{display:grid;grid-template-columns:3.6em minmax(0,1fr);gap:6px;padding:3px 8px;border-top:1px solid var(--ink);cursor:pointer}
+.fail:hover{outline:1px solid var(--blue);outline-offset:-1px}
+.fail.sel{box-shadow:inset 4px 0 0 var(--blue)}
+.fail .u{font-weight:700;font-variant-numeric:tabular-nums;text-align:center;padding:0 2px}
+.small{font-size:11px;padding:2px 8px 6px}
+@media (max-width:1000px), (max-height:620px){
+  body{overflow:auto;height:auto}
+  .lab{grid-template-columns:minmax(0,1fr);grid-template-rows:auto}
+  #stagePane{height:62vh;min-height:320px}
+  .bottom{grid-row:auto;grid-template-columns:minmax(0,1fr)}
+  .bottom .pane{height:340px}
+  #insp{grid-column:1;grid-row:auto;overflow:visible}
+}
+</style>
+
+<header>
+  <h1>Centaur Rig</h1>
+  <div class="seg">
+    <button id="play" aria-label="Pause"><span class="icon-pause"></span><span>Pause</span></button>
+    <button id="slow" aria-pressed="false">Slow</button>
+  </div>
+  <div class="seg" role="group" aria-label="Overlays">
+    <button data-ov="foam" aria-pressed="true">Foam plates</button>
+    <button data-ov="force" aria-pressed="true">Forces</button>
+    <button data-ov="slop" aria-pressed="true">Slop</button>
+    <button data-ov="stress" aria-pressed="true">Hole stress</button>
+  </div>
+  <div class="clock" id="clock"></div>
+</header>
+
+<div class="lab">
+  <section class="pane" id="stagePane">
+    <div class="bar"><h2>Side view: you walk, the hind pair carries the rump</h2>
+      <div class="seg"><button id="horseWalk">Horse walk timing</button><span class="note">drag to scrub</span></div></div>
+    <div class="cv"><canvas id="stage" aria-label="Side view of the centaur walking"></canvas></div>
+  </section>
+
+  <div class="bottom">
+    <section class="pane">
+      <div class="bar"><h2>Near hind leg</h2><div class="seg"><button id="undo">Undo</button><button id="reset">Holy numbers</button></div></div>
+      <div class="cv"><canvas id="leg" aria-label="Near hind leg with foam plates, pins, clearance and forces. Drag a bar to change its length; tap a pin to select it."></canvas></div>
+    </section>
+    <section class="pane">
+      <div class="bar"><h2>One stride</h2><span class="note" id="plotNote"></span></div>
+      <div class="cv"><canvas id="plots" aria-label="Foot load, crank torque, selected pin force and hole stress over one stride"></canvas></div>
+    </section>
+    <section class="pane">
+      <div class="bar"><h2>From above</h2><span class="note">footprints</span></div>
+      <div class="cv"><canvas id="plan" aria-label="Top view of human and hind footprints"></canvas></div>
+    </section>
+  </div>
+
+  <aside class="pane" id="insp">
+    <div class="sec">
+      <h3>Build <span>what it is made of</span></h3>
+      <div class="choice"><span>Plates</span><div class="seg" id="cMat"></div></div>
+      <div class="choice"><span>Holes</span><div class="seg" id="cJoint"></div></div>
+      <div class="choice"><span>Pins</span><div class="seg" id="cPin"></div></div>
+      <div id="nums"></div>
+    </div>
+    <div class="sec">
+      <h3>Age <span>run the joints for a while</span></h3>
+      <div id="ageNums"></div>
+    </div>
+    <div class="sec">
+      <h3>Does it read as legs <span>vs your legs</span></h3>
+      <div id="ledger"></div>
+    </div>
+    <div class="sec">
+      <h3>What gives out first <span>use ≥ 1 fails</span></h3>
+      <div id="fails"></div>
+    </div>
+  </aside>
+</div>
+
+<script>
+(() => {
+'use strict';
+const COL = {paper:'#fff', ink:'#000', teal:'#19e6c8', amber:'#ffd23f', red:'#ff2e2e', blue:'#3b82f6', tint:'rgba(59,130,246,.10)', ghost:'rgba(59,130,246,.35)', faint:'rgba(0,0,0,.16)', foam:'rgba(0,0,0,.05)'};
+const FONT = "'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace";
+const HOLY = {a:38, b:41.5, c:39.3, d:40.1, e:55.8, f:39.4, g:36.7, h:65.7, i:49, j:50, k:61.9, l:7.8, m:15};
+const KEYS = ['a','b','c','d','e','f','g','h','i','j','k','l','m'];
+const BARS = {a:['B','A'], l:['A','O'], m:['O','M'], j:['M','J1'], b:['B','J1'], e:['J1','J3'], d:['B','J3'],
+              c:['B','J2'], k:['M','J2'], f:['J3','J4'], g:['J2','J4'], h:['J4','F'], i:['J2','F']};
+const JOINT_DEF = {J1:['B','b','M','j',1], J2:['B','c','M','k',-1], J3:['B','d','J1','e',1], J4:['J3','f','J2','g',-1], F:['J4','h','J2','i',-1]};
+const ORDER = ['J1','J2','J3','J4','F'];
+const N = 360, TAU = Math.PI * 2, G0 = 9.81;
+const LINKS = {j:['M','J1'], k:['M','J2'], c:['B','J2'], f:['J3','J4']};
+
+// materials (SI). EPS: expanded polystyrene board, ~16 kg/m3.
+const MATS = {
+  eps:  {name:'EPS 25', t:25, rho:16, E:4e6, crush:70e3, tens:150e3, wearK:.02, label:'bare EPS foam board, 25 mm'},
+  skin: {name:'EPS + skin', t:27, rho:16, E:4e6, crush:70e3, tens:150e3, wearK:.006, skin:true, label:'EPS with fibreglass mesh and joint compound both faces'},
+  ply:  {name:'Ply 6', t:6, rho:600, E:6e9, crush:12e6, tens:25e6, wearK:.0004, label:'6 mm plywood'}
+};
+const JOINTS = {
+  raw:  {name:'Plain hole', label:'pin straight through the plate'},
+  puck: {name:'Wood puck', label:'hardwood puck glued into the foam; the pin bears on wood, the puck bears on foam'},
+  tang: {name:'Puck + tang', label:'puck on a ply strip glued 150 mm into the plate; load goes into the foam by glue shear'}
+};
+const PINS_T = {dowel:{name:'10 mm dowel', d:10}, bolt:{name:'1/4 in bolt', d:6.35}};
+
+// ---------- linkage ----------
+function cc(P, r0, Q, r1, s) {
+  const dx = Q.x - P.x, dy = Q.y - P.y, d = Math.hypot(dx, dy);
+  if (d < 1e-9 || d > r0 + r1 || d < Math.abs(r0 - r1)) return null;
+  const a = (r0*r0 - r1*r1 + d*d) / (2*d), h = Math.sqrt(Math.max(0, r0*r0 - a*a));
+  const ux = dx/d, uy = dy/d, mx = P.x + a*ux, my = P.y + a*uy;
+  return {x: mx - s*h*uy, y: my + s*h*ux};
+}
+function solve(G, th) {
+  const p = {O:{x:0,y:0}, B:{x:-G.a,y:-G.l}, A:{x:0,y:-G.l}, M:{x:G.m*Math.cos(th), y:G.m*Math.sin(th)}};
+  for (const J of ORDER) {
+    const [p0, r0, p1, r1, s] = JOINT_DEF[J];
+    const q = cc(p[p0], G[r0], p[p1], G[r1], s);
+    if (!q) { p.fail = J; return p; }
+    p[J] = q;
+  }
+  return p;
+}
+const kIdx = ang => ((Math.round(ang / TAU * N) % N) + N) % N;
+const uv = (a, b) => { const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1; return {x: dx / L, y: dy / L}; };
+const cr = (a, b) => a.x * b.y - a.y * b.x;
+const sub = (a, b) => ({x: a.x - b.x, y: a.y - b.y});
+const add = (a, b) => ({x: a.x + b.x, y: a.y + b.y});
+const mul = (a, s) => ({x: a.x * s, y: a.y * s});
+const len = a => Math.hypot(a.x, a.y);
+function analyze(G) {
+  const fx = new Float64Array(N), fy = new Float64Array(N), ok = new Uint8Array(N);
+  let minY = Infinity, maxY = -Infinity, minX = Infinity, maxX = -Infinity, topY = -Infinity, valid = 0;
+  for (let k = 0; k < N; k++) {
+    const p = solve(G, TAU * k / N); if (!p.F) continue;
+    ok[k] = 1; fx[k] = p.F.x; fy[k] = p.F.y; valid++;
+    minY = Math.min(minY, p.F.y); maxY = Math.max(maxY, p.F.y);
+    for (const n of ['B','J1','J2','J3','J4','F','M']) { minX = Math.min(minX, p[n].x); maxX = Math.max(maxX, p[n].x); topY = Math.max(topY, p[n].y); }
+  }
+  if (!valid) { minY = -90; maxY = -70; minX = -80; maxX = 15; topY = 30; }
+  const tol = Math.max(.6, .05 * (maxY - minY)), contact = new Uint8Array(N);
+  for (let k = 0; k < N; k++) contact[k] = ok[k] && fy[k] < minY + tol ? 1 : 0;
+  let sv = 0, nv = 0;
+  for (let k = 0; k < N; k++) { const n = (k + 1) % N; if (contact[k] && contact[n]) { sv += fx[n] - fx[k]; nv++; } }
+  return {fx, fy, ok, contact, minY, maxY, minX, maxX, topY, spin: sv <= 0 ? 1 : -1, advance: nv ? Math.abs(sv / nv) * N : 0,
+          duty: contact.reduce((s, c) => s + c, 0) / N, locked: (N - valid) / N};
+}
+// statics: a vertical ground load W (N) on the foot. Links j k c f are two-force members (tension +).
+function statics(P, W) {
+  if (!P.F || W <= 0) return null;
+  const uk = uv(P.J2, P.M), uc = uv(P.J2, P.B), uf = uv(P.J4, P.J3), R = {x: 0, y: W};
+  const den = cr(sub(P.J4, P.J2), uf); if (Math.abs(den) < 1e-9) return null;
+  const Ff = -cr(sub(P.F, P.J2), R) / den;
+  const rx = -(Ff * uf.x + R.x), ry = -(Ff * uf.y + R.y), det = uk.x * uc.y - uk.y * uc.x;
+  const Fk = (rx * uc.y - ry * uc.x) / det, Fc = (uk.x * ry - uk.y * rx) / det;
+  const uj = uv(P.J1, P.M), uf3 = uv(P.J3, P.J4);
+  const Fj = -Ff * cr(sub(P.J3, P.B), uf3) / cr(sub(P.J1, P.B), uj);
+  const Bup = mul(add(mul(uj, Fj), mul(uf3, Ff)), -1);
+  const Fs = add(mul(uv(P.M, P.J1), Fj), mul(uv(P.M, P.J2), Fk));
+  const tauU = -cr(P.M, Fs);
+  const J2v = add(mul(uk, Fk), mul(uc, Fc));
+  const frameB = add(Bup, mul(uv(P.J2, P.B), Fc));
+  return {Fj, Fk, Fc, Ff, tauU, Fs,
+    pinVec: {O: mul(Fs, -1), B: Bup, M: Fs, J1: mul(uj, Fj), J2: J2v, J3: mul(uf3, Ff), J4: mul(uf, Ff)},
+    plates: {O: {frame: len(Fs), crank: len(Fs)}, B: {frame: len(frameB), up: len(Bup), c: Math.abs(Fc)}, M: {crank: len(Fs), j: Math.abs(Fj), k: Math.abs(Fk)},
+      J1: {j: Math.abs(Fj), up: Math.abs(Fj)}, J2: {k: Math.abs(Fk), c: Math.abs(Fc), lo: len(J2v)}, J3: {up: Math.abs(Ff), f: Math.abs(Ff)}, J4: {f: Math.abs(Ff), lo: Math.abs(Ff)}}};
+}
+
+// ---------- human gait ----------
+const HIPK  = [[0,25],[.1,22],[.3,5],[.5,-12],[.6,-8],[.75,18],[.88,30]];
+const KNEEK = [[0,5],[.15,18],[.4,5],[.55,30],[.72,62],[.85,40],[.97,3]];
+function curve(keys, u) {
+  u = ((u % 1) + 1) % 1;
+  const n = keys.length; let i = n - 1;
+  for (let q = 0; q < n; q++) if (keys[q][0] <= u) i = q;
+  const k1 = keys[i], k2 = keys[(i + 1) % n], k0 = keys[(i - 1 + n) % n], k3 = keys[(i + 2) % n];
+  let u1 = k1[0], u2 = k2[0]; if (u2 <= u1) u2 += 1; let uu = u; if (uu < u1) uu += 1;
+  const t = (uu - u1) / (u2 - u1), p0 = k0[1], p1 = k1[1], p2 = k2[1], p3 = k3[1];
+  return 0.5 * ((2*p1) + (-p0 + p2)*t + (2*p0 - 5*p1 + 4*p2 - p3)*t*t + (-p0 + 3*p1 - 3*p2 + p3)*t*t*t);
+}
+function humanLegRel(H, u) {
+  const Lt = .245 * H, Ls = .246 * H;
+  const a = curve(HIPK, u) * Math.PI / 180, kf = curve(KNEEK, u) * Math.PI / 180;
+  const knee = {x: Lt * Math.sin(a), y: -Lt * Math.cos(a)};
+  return {a, knee, ank: {x: knee.x + Ls * Math.sin(a - kf), y: knee.y - Ls * Math.cos(a - kf)}};
+}
+function humanModel(H) {
+  const ankleH = .039 * H, hipY = new Float64Array(N + 1), hipX = new Float64Array(N + 1), L = [], R = [];
+  for (let k = 0; k <= N; k++) { L.push(humanLegRel(H, k / N)); R.push(humanLegRel(H, k / N + .5)); }
+  for (let k = 0; k <= N; k++) hipY[k] = ankleH + Math.max(-L[k].ank.y, -R[k].ank.y);
+  const stL = new Uint8Array(N), stR = new Uint8Array(N);
+  for (let k = 0; k < N; k++) {
+    const S2 = L[k].ank.y <= R[k].ank.y ? L : R; hipX[k + 1] = hipX[k] - (S2[k + 1].ank.x - S2[k].ank.x);
+    stL[k] = hipY[k] + L[k].ank.y - ankleH < 8 ? 1 : 0; stR[k] = hipY[k] + R[k].ank.y - ankleH < 8 ? 1 : 0;
+  }
+  let meanHip = 0; for (let k = 0; k < N; k++) meanHip += hipY[k] / N;
+  const duty = stL.reduce((s, v) => s + v, 0) / N;
+  return {H, hipY, hipX, advance: hipX[N], meanHip, L, R, stL, stR, duty, legLen: .491 * H + ankleH};
+}
+
+// ---------- state ----------
+const S = {
+  G: {...HOLY}, live: null, hist: [{...HOLY}],
+  t: .3, playing: true, slow: false,
+  height: 1750, cadence: 54, sigma: 9.75, Lb: 760, gap: 30, phi0: 0,
+  mat: 'eps', joint: 'puck', pin: 'dowel', w: 70, c0: .4, rump: 2.0, share: 60, strides: 0, mag: 8,
+  ov: {foam: true, force: true, slop: true, stress: true},
+  selPin: 'J2', hoverBar: null, drag: null
+};
+const cur = () => S.live || S.G;
+let A, HM, E;   // linkage analysis, human model, engine results
+
+// ---------- helpers ----------
+const lerp = (a, b, t) => a + (b - a) * t;
+const fmt = (v, d = 1) => (Math.abs(v) < 1e-9 ? 0 : v).toFixed(d);
+const wrapPi = a => Math.atan2(Math.sin(a), Math.cos(a));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function sizeCanvas(c) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1), w = c.clientWidth, h = c.clientHeight;
+  if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+  const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return {x, W: w, H: h};
+}
+function distPtSeg(p, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y, L = dx*dx + dy*dy || 1e-12;
+  const t = Math.max(0, Math.min(1, ((p.x - a.x)*dx + (p.y - a.y)*dy) / L));
+  return Math.hypot(p.x - a.x - t*dx, p.y - a.y - t*dy);
+}
+function segsCross(a, b, c, d) { const o = (p, q, r) => (q.x - p.x)*(r.y - p.y) - (q.y - p.y)*(r.x - p.x); return (o(a, b, c) * o(a, b, d) < 0) && (o(c, d, a) * o(c, d, b) < 0); }
+function distSegSeg(a, b, c, d) { if (segsCross(a, b, c, d)) return 0; return Math.min(distPtSeg(a, c, d), distPtSeg(b, c, d), distPtSeg(c, a, b), distPtSeg(d, a, b)); }
+function inTri(p, t) { const s = (a, b, c) => (a.x - c.x)*(b.y - c.y) - (b.x - c.x)*(a.y - c.y); const d1 = s(p, t[0], t[1]), d2 = s(p, t[1], t[2]), d3 = s(p, t[2], t[0]); return !(((d1 < 0) || (d2 < 0) || (d3 < 0)) && ((d1 > 0) || (d2 > 0) || (d3 > 0))); }
+function useClass(u) { return u >= 1 ? 'bad' : u >= .5 ? 'warn' : 'ok'; }
+function useCol(u) { return u >= 1 ? COL.red : u >= .5 ? COL.amber : COL.teal; }
+let rngSeed = 7; const rnd = () => { rngSeed = (rngSeed * 16807) % 2147483647; return rngSeed / 2147483647 * 2 - 1; };
+const MC = Array.from({length: 48}, () => ({j: rnd(), k: rnd(), c: rnd(), f: rnd(), m: rnd()}));
+
+// ---------- plates, pins, layers ----------
+const PARTS = [
+  {id:'frame', name:'Frame', segs:[['B','A'],['A','O']], holes:['B','O'], ply:true},
+  {id:'crank', name:'Crank arm', segs:[['O','M']], holes:['O','M'], ply:true},
+  {id:'j', name:'Link j', segs:[['M','J1']], holes:['M','J1']},
+  {id:'k', name:'Link k', segs:[['M','J2']], holes:['M','J2']},
+  {id:'c', name:'Link c', segs:[['B','J2']], holes:['B','J2']},
+  {id:'f', name:'Link f', segs:[['J3','J4']], holes:['J3','J4']},
+  {id:'up', name:'Top triangle', segs:[['B','J1'],['J1','J3'],['J3','B']], tri:['B','J1','J3'], holes:['B','J1','J3']},
+  {id:'lo', name:'Foot triangle', segs:[['J2','J4'],['J4','F'],['F','J2']], tri:['J2','J4','F'], holes:['J2','J4'], foot:'F'}
+];
+const PINS = [
+  {id:'O', parts:['frame','crank'], name:'crank axle', main:'crank'},
+  {id:'B', parts:['frame','up','c'], name:'frame pivot', main:'up'},
+  {id:'M', parts:['crank','j','k'], name:'crank pin', main:'crank'},
+  {id:'J1', parts:['j','up'], name:'top', main:'up'},
+  {id:'J2', parts:['k','c','lo'], name:'knee', main:'lo'},
+  {id:'J3', parts:['up','f'], name:'back', main:'up'},
+  {id:'J4', parts:['f','lo'], name:'hock', main:'lo'}
+];
+const PART_REF = {frame:null, crank:['O','M'], j:['M','J1'], k:['M','J2'], c:['B','J2'], f:['J3','J4'], up:['B','J1'], lo:['J2','J4']};
+function partAngle(p, id) { const r = PART_REF[id]; if (!r) return 0; return Math.atan2(p[r[1]].y - p[r[0]].y, p[r[1]].x - p[r[0]].x); }
+function layering(G) {
+  const parts = PARTS, n = parts.length, idx = {}; parts.forEach((p, i) => idx[p.id] = i);
+  const rU = S.w / 2 / S.sigma, holeU = PINS_T[S.pin].d / 2 / S.sigma, gapU = 2 / S.sigma;
+  const conf = parts.map(() => new Uint8Array(n));
+  const share = (a, b) => PINS.some(pn => pn.parts.includes(a) && pn.parts.includes(b));
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) if (share(parts[i].id, parts[j].id)) conf[i][j] = conf[j][i] = 2;
+  const pinHit = PINS.map(() => new Uint8Array(n));
+  for (let s = 0; s < 90; s++) {
+    const P = solve(G, TAU * s / 90); if (P.fail) continue;
+    const geo = parts.map(p => ({segs: p.segs.map(([a, b]) => [P[a], P[b]]), tri: p.tri ? p.tri.map(k => P[k]) : null}));
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      if (conf[i][j]) continue;
+      let hit = false;
+      for (const [a, b] of geo[i].segs) { for (const [c, d] of geo[j].segs) if (distSegSeg(a, b, c, d) < 2 * rU + gapU) { hit = true; break; } if (hit) break; }
+      if (!hit && geo[i].tri) for (const [c] of geo[j].segs) if (inTri(c, geo[i].tri)) { hit = true; break; }
+      if (!hit && geo[j].tri) for (const [c] of geo[i].segs) if (inTri(c, geo[j].tri)) { hit = true; break; }
+      if (hit) conf[i][j] = conf[j][i] = 1;
+    }
+    PINS.forEach((pn, pi) => {
+      const pt = P[pn.id];
+      for (let q = 0; q < n; q++) {
+        if (pn.parts.includes(parts[q].id) || pinHit[pi][q]) continue;
+        const g = geo[q]; let h = g.segs.some(([a, b]) => distPtSeg(pt, a, b) < rU + holeU + gapU / 2);
+        if (!h && g.tri) h = inTri(pt, g.tri);
+        if (h) pinHit[pi][q] = 1;
+      }
+    });
+  }
+  const order = ['frame','crank','j','k','c','up','lo','f'].map(id => idx[id]);
+  const pinParts = PINS.map(pn => pn.parts.map(id => idx[id]));
+  const lay = new Int8Array(n).fill(-1); let best = null, nodes = 0;
+  const span = pi => { let lo = Infinity, hi = -Infinity, all = true; for (const q of pinParts[pi]) { if (lay[q] < 0) { all = false; continue; } lo = Math.min(lo, lay[q]); hi = Math.max(hi, lay[q]); } if (PINS[pi].id === 'O' && isFinite(lo)) lo = 0; return {lo, hi, all}; };
+  const okNow = () => { for (let pi = 0; pi < PINS.length; pi++) { const sp = span(pi); if (!sp.all) continue; for (let q = 0; q < n; q++) if (pinHit[pi][q] && lay[q] >= 0 && lay[q] >= sp.lo && lay[q] <= sp.hi) return false; } return true; };
+  const partial = () => { let c = 0; for (let pi = 0; pi < PINS.length; pi++) { const sp = span(pi); if (isFinite(sp.lo)) c += sp.hi - sp.lo; } return c; };
+  function dfs(d, L) {
+    if (++nodes > 200000) return;
+    if (best && partial() >= best.cost) return;
+    if (d === n) { best = {cost: partial(), lay: Array.from(lay)}; return; }
+    const p = order[d], top = p === idx.frame ? 1 : L;
+    for (let l = 0; l < top; l++) {
+      let ok = true; for (let e = 0; e < d; e++) { const q = order[e]; if (conf[p][q] && lay[q] === l) { ok = false; break; } }
+      if (!ok) continue;
+      lay[p] = l; if (okNow()) dfs(d + 1, L); lay[p] = -1; if (nodes > 200000) return;
+    }
+  }
+  for (let L = 2; L <= 9 && !best; L++) { nodes = 0; dfs(0, L); }
+  const layers = best ? best.lay : parts.map((_, i) => i), layerOf = {};
+  parts.forEach((p, i) => layerOf[p.id] = layers[i]);
+  return {layerOf, nL: Math.max(...layers) + 1};
+}
+
+// ---------- the engine ----------
+function plateArea(G, part) { // mm^2 of one plate with rounded ends
+  const w = S.w, sg = S.sigma;
+  if (part.tri) {
+    const [a, b, c] = part.tri.map(k => null); // placeholder, computed below
+  }
+  const P = solve(G, .3); if (P.fail) return 0;
+  if (part.tri) {
+    const t = part.tri.map(k => P[k]), area = Math.abs(cr(sub(t[1], t[0]), sub(t[2], t[0]))) / 2 * sg * sg;
+    const per = (len(sub(t[1], t[0])) + len(sub(t[2], t[1])) + len(sub(t[0], t[2]))) * sg;
+    return area + per * w / 2 + Math.PI * w * w / 4;
+  }
+  let L = 0; for (const [a, b] of part.segs) L += len(sub(P[b], P[a])) * sg;
+  return L * w + Math.PI * w * w / 4;
+}
+function holeUse(F) { // utilization of one plate hole carrying F newtons
+  const M = MATS[S.mat], d = PINS_T[S.pin].d / 1000, t = M.t / 1000, w = S.w / 1000;
+  const foamCap = L => L * t * M.crush + (M.skin ? L * 2 * .001 * 15e6 : 0);
+  if (S.mat === 'ply') return {u: F / (d * t * M.crush), what: 'ply at the hole'};
+  if (S.joint === 'raw') return {u: F / foamCap(d), what: M.skin ? 'skin and foam at the hole' : 'foam at the hole'};
+  const wood = F / (d * t * 12e6);
+  if (S.joint === 'puck') {
+    const Dp = Math.min(.85 * w, .06), foam = F / foamCap(Dp);
+    return foam > wood ? {u: foam, what: `puck pressing into the foam (Ø${fmt(Dp * 1000, 0)} mm)`} : {u: wood, what: 'pin in the wood puck'};
+  }
+  const shear = F / (2 * .15 * .6 * w * 80e3 * (M.skin ? 3 : 1));
+  return shear > wood ? {u: shear, what: 'glue line between tang and foam'} : {u: wood, what: 'pin in the wood puck'};
+}
+function linkEI(Lmm) { // out-of-plane bending stiffness of a link plate, N m^2
+  const M = MATS[S.mat], w = S.w / 1000, t = M.t / 1000;
+  let EI = M.E * w * t ** 3 / 12;
+  if (M.skin) EI += 3e9 * 2 * w * .001 * (t / 2) ** 2;
+  return EI;
+}
+function linkEA() { const M = MATS[S.mat], w = S.w / 1000, t = M.t / 1000; return M.E * w * t + (M.skin ? 3e9 * 2 * w * .001 : 0); }
+
+function engine() {
+  const G = cur(), sg = S.sigma, M = MATS[S.mat];
+  A = analyze(G);
+  if (!HM || HM.H !== S.height) HM = humanModel(S.height);
+  const lay = layering(G);
+  // masses
+  let legKg = 0;
+  for (const p of PARTS) {
+    const a = plateArea(G, p) / 1e6;
+    if (p.ply) legKg += a * .006 * 600;
+    else legKg += a * M.t / 1000 * M.rho + (M.skin ? a * 1.2 : 0);
+  }
+  const pucks = S.joint === 'raw' || S.mat === 'ply' ? 0 : 12;
+  const Dp = Math.min(.85 * S.w, 60) / 1000;
+  legKg += pucks * Math.PI * (Dp / 2) ** 2 * M.t / 1000 * 700 + (S.joint === 'tang' ? 8 * .15 * .6 * S.w / 1000 * .006 * 600 : 0);
+  const totalKg = 2 * legKg + S.rump + .8;
+  const Wtot = totalKg * G0 * S.share / 100 * 1.5; // 1.5 for footfall impact
+  // forces around a turn of the near leg (index = raw crank angle). The far leg runs half a turn behind.
+  const F = new Array(N), poses = new Array(N);
+  for (let k = 0; k < N; k++) {
+    const P = solve(G, TAU * k / N); poses[k] = P;
+    const nc = A.contact[k] + A.contact[(k + N / 2) % N];
+    F[k] = A.contact[k] && nc ? statics(P, Wtot / nc) : null;
+  }
+  // time order of the near leg
+  const tIdx = new Int16Array(N);
+  for (let i = 0; i < N; i++) tIdx[i] = kIdx(A.spin * TAU * i / N + S.phi0);
+  // swing per pin
+  const swing = {};
+  for (const pn of PINS) {
+    let lo = Infinity, hi = -Infinity, prev = null, acc = 0;
+    for (let k = 0; k <= N; k++) {
+      const P = poses[k % N]; if (P.fail) continue;
+      let v = 0; const a0 = partAngle(P, pn.parts[0]);
+      for (const q of pn.parts.slice(1)) v = Math.max(v, 0);
+      const rel = partAngle(P, pn.parts[1]) - a0;
+      acc = prev === null ? rel : acc + wrapPi(rel - prev); prev = rel;
+      lo = Math.min(lo, acc); hi = Math.max(hi, acc);
+    }
+    swing[pn.id] = isFinite(hi) ? (hi - lo) * 180 / Math.PI : 0;
+  }
+  // per-pin load, hole use, knocks, wear
+  const pins = {};
+  for (const pn of PINS) {
+    let maxF = 0, worst = null, uMax = 0, what = '', knocks = 0, prevOn = false, prevAng = null, fmaxAll = 0;
+    for (let i = 0; i < N; i++) { const f = F[tIdx[i]]; if (f) fmaxAll = Math.max(fmaxAll, len(f.pinVec[pn.id])); }
+    const series = new Float64Array(N), useSeries = new Float64Array(N), knockAt = [];
+    for (let i = 0; i < N; i++) {
+      const k = tIdx[i], f = F[k];
+      let pinMax = 0;
+      if (f) for (const [pid, val] of Object.entries(f.plates[pn.id])) {
+        const hu = holeUse(val);
+        const plate = PARTS.find(p => p.id === pid);
+        const u2 = plate.ply ? val / (PINS_T[S.pin].d / 1000 * .006 * 12e6) : hu.u;
+        if (u2 > uMax) { uMax = u2; worst = pid; what = plate.ply ? 'ply at the hole' : hu.what; }
+        if (val > maxF) maxF = val;
+        pinMax = Math.max(pinMax, val);
+      }
+      series[i] = pinMax;
+      let uu = 0; if (f) for (const [pid, val] of Object.entries(f.plates[pn.id])) { const plate = PARTS.find(p => p.id === pid); uu = Math.max(uu, plate.ply ? val / (PINS_T[S.pin].d / 1000 * .006 * 12e6) : holeUse(val).u); }
+      useSeries[i] = uu;
+      const vec = f ? f.pinVec[pn.id] : {x: 0, y: 0}, m = len(vec), on = m > .15 * fmaxAll && fmaxAll > 0;
+      if (on) {
+        const ang = Math.atan2(vec.y, vec.x) - partAngle(poses[k], pn.main);
+        if (!prevOn) { knocks++; knockAt.push(i); }
+        else if (prevAng !== null && Math.abs(wrapPi(ang - prevAng)) > 2.1) { knocks++; knockAt.push(i); }
+        prevAng = ang;
+      } else prevAng = null;
+      prevOn = on;
+    }
+    const bearsFoam = S.mat !== 'ply' && (S.joint === 'raw' || /foam|glue/.test(what));
+    const K = S.mat === 'ply' || !bearsFoam ? .0004 : M.wearK;
+    const wearPer = K * Math.min(uMax, 3) ** 2 * Math.max(.2, swing[pn.id] / 90) * (uMax >= 1 ? 5 : 1);
+    const c = Math.min(8, S.c0 + wearPer * S.strides);
+    const life = wearPer > 0 ? Math.max(0, (2 - S.c0) / wearPer) : Infinity;
+    pins[pn.id] = {maxF, worst, uMax, what, knocks, wearPer, c, life, swing: swing[pn.id], series, useSeries, knockAt};
+  }
+  // links: tension, compression, buckling
+  const links = {};
+  for (const [id, [a, b]] of Object.entries(LINKS)) {
+    let tMax = 0, cMax = 0; const Lm = G[id] * sg / 1000;
+    for (let k = 0; k < N; k++) { const f = F[k]; if (!f) continue; const v = f['F' + id]; if (v > tMax) tMax = v; if (-v > cMax) cMax = -v; }
+    const Pcr = Math.PI ** 2 * linkEI() / (Lm * Lm);
+    const tens = tMax / (S.w / 1000 * M.t / 1000 * M.tens + (M.skin ? 2 * S.w / 1000 * .001 * 100e6 : 0));
+    links[id] = {tMax, cMax, Pcr, buck: cMax / Pcr, tens, Lmm: Lm * 1000};
+  }
+  // play at each link from hole clearance at both ends (two holes per pin pair), plus elastic stretch
+  const play = {j: 2 * (pins.M.c + pins.J1.c), k: 2 * (pins.M.c + pins.J2.c), c: 2 * (pins.B.c + pins.J2.c), f: 2 * (pins.J3.c + pins.J4.c), m: 2 * pins.O.c};
+  const EA = linkEA();
+  const loaded = [];
+  for (let k = 0; k < N; k += 3) {
+    const f = F[k], Gp = {...G};
+    if (f) for (const id of Object.keys(LINKS)) { const v = f['F' + id]; Gp[id] += (Math.sign(v) * play[id] / 2 + v * G[id] * sg / EA) / sg; }
+    const P = solve(Gp, TAU * k / N); loaded.push(P.F ? {x: P.F.x, y: P.F.y, k} : null);
+  }
+  // slop cloud spread at mid-stance
+  let mid = 0; { let best = -1; for (let k = 0; k < N; k++) if (A.contact[k]) { let run = 0; while (A.contact[(k + run) % N] && run < N) run++; if (run > best) { best = run; mid = (k + Math.floor(run / 2)) % N; } } }
+  let spread = 0; { const P0 = poses[mid]; if (P0.F) { for (const r of MC) { const Gp = {...G}; for (const id of ['j','k','c','f','m']) Gp[id] += r[id] * play[id] / 2 / sg; const P = solve(Gp, TAU * mid / N); if (P.F) spread = Math.max(spread, len(sub(P.F, P0.F)) * sg); } } }
+  let sag = 0; for (const p of loaded) if (p && A.contact[p.k]) sag = Math.max(sag, Math.hypot(p.x - A.fx[p.k], p.y - A.fy[p.k]) * sg);
+  // crank torque, both legs
+  const torque = new Float64Array(N);
+  for (let i = 0; i < N; i++) {
+    const k = tIdx[i], k2 = (k + N / 2) % N;
+    torque[i] = ((F[k] ? F[k].tauU : 0) + (F[k2] ? F[k2].tauU : 0)) * sg / 1000 * A.spin;
+  }
+  // stance slip in the world: foot x = body travel + local foot x
+  let slipMax = 0;
+  { let run = null;
+    for (let i = 0; i <= N; i++) {
+      const ii = i % N, k = tIdx[ii];
+      const u = i / N, body = HM.hipX[Math.min(N, Math.round(u * N))];
+      if (A.contact[k] && A.ok[k]) { const wx = body + A.fx[k] * sg; run = run ? {lo: Math.min(run.lo, wx), hi: Math.max(run.hi, wx)} : {lo: wx, hi: wx}; }
+      else if (run) { slipMax = Math.max(slipMax, run.hi - run.lo); run = null; }
+    }
+    if (run) slipMax = Math.max(slipMax, run.hi - run.lo); }
+  // support: fraction of the stride with a hind foot down
+  let supported = 0; for (let k = 0; k < N; k++) if (A.contact[k] || A.contact[(k + N / 2) % N]) supported++;
+  // lateral: foot plate centre vs your foot
+  const footZ = S.gap / 2 + (lay.layerOf.lo + .5) * M.t + (S.mat === 'ply' ? 0 : 0);
+  const humanZ = .035 * S.height;
+  // phase: hind-left strike relative to your left heel strike
+  let onset = null; for (let i = 0; i < N; i++) { const k = tIdx[i], kp = tIdx[(i - 1 + N) % N]; if (A.contact[k] && !A.contact[kp]) { onset = i / N; break; } }
+  const Hc = -A.minY * sg;
+  E = {G, F, poses, tIdx, pins, links, play, loaded, spread, sag, torque, slipMax, supported: supported / N, lay, footZ, humanZ, onset,
+       legKg, totalKg, Wtot, Hc, mid,
+       slope: Math.atan2(HM.meanHip - Hc, S.Lb) * 180 / Math.PI,
+       strideRatio: A.advance * sg / HM.advance};
+  renderInspector();
+}
+
+// ---------- drawing primitives ----------
+function line(x, X, Y, pts, w, col) { x.strokeStyle = col; x.lineWidth = w; x.lineCap = 'round'; x.lineJoin = 'round'; x.beginPath(); pts.forEach((p, i) => i ? x.lineTo(X(p.x), Y(p.y)) : x.moveTo(X(p.x), Y(p.y))); x.stroke(); }
+function circle(x, X, Y, c, r, s, col, w, fill) { x.beginPath(); x.arc(X(c.x), Y(c.y), Math.max(1, r * s), 0, TAU); if (fill) { x.fillStyle = fill; x.fill(); } if (col) { x.strokeStyle = col; x.lineWidth = w; x.stroke(); } }
+function arrow(x, x0, y0, x1, y1, col, w) {
+  const a = Math.atan2(y1 - y0, x1 - x0), L = Math.hypot(x1 - x0, y1 - y0); if (L < 3) return;
+  x.strokeStyle = col; x.fillStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y1); x.stroke();
+  x.beginPath(); x.moveTo(x1, y1); x.lineTo(x1 - 7 * Math.cos(a - .4), y1 - 7 * Math.sin(a - .4)); x.lineTo(x1 - 7 * Math.cos(a + .4), y1 - 7 * Math.sin(a + .4)); x.closePath(); x.fill();
+}
+function skeleton(x, P, X, Y, col, w) {
+  x.save(); x.strokeStyle = col; x.lineWidth = w; x.lineCap = 'round';
+  for (const k of KEYS) { const [a, b] = BARS[k]; if (!P[a] || !P[b]) continue; x.setLineDash(k === 'a' || k === 'l' ? [4, 3] : []); x.beginPath(); x.moveTo(X(P[a].x), Y(P[a].y)); x.lineTo(X(P[b].x), Y(P[b].y)); x.stroke(); }
+  x.restore();
+}
+function plates(x, P, X, Y, wpx, opts) { // foam plates at true width, drawn inner layer first
+  const order = PARTS.slice().sort((a, b) => E.lay.layerOf[a.id] - E.lay.layerOf[b.id]);
+  for (const part of order) {
+    const segs = part.segs.filter(([a, b]) => P[a] && P[b]); if (!segs.length) continue;
+    const w = part.ply ? Math.max(2, wpx * .7) : wpx;
+    const triPath = () => { x.beginPath(); part.tri.forEach((k, i) => i ? x.lineTo(X(P[k].x), Y(P[k].y)) : x.moveTo(X(P[k].x), Y(P[k].y))); x.closePath(); };
+    const hasTri = part.tri && part.tri.every(k => P[k]);
+    x.lineCap = 'round'; x.lineJoin = 'round';
+    x.strokeStyle = COL.ink; x.lineWidth = w + 2; x.beginPath(); for (const [a, b] of segs) { x.moveTo(X(P[a].x), Y(P[a].y)); x.lineTo(X(P[b].x), Y(P[b].y)); } x.stroke();
+    if (hasTri) { x.fillStyle = COL.ink; triPath(); x.fill(); }
+    const fill = part.ply ? '#f3ead8' : COL.paper;
+    x.strokeStyle = fill; x.lineWidth = w; x.beginPath(); for (const [a, b] of segs) { x.moveTo(X(P[a].x), Y(P[a].y)); x.lineTo(X(P[b].x), Y(P[b].y)); } x.stroke();
+    if (hasTri) { x.fillStyle = fill; triPath(); x.fill(); }
+    if (opts && opts.labels) {
+      const hs = part.holes.map(h => P[h]).filter(Boolean), cx = hs.reduce((a, p) => a + p.x, 0) / hs.length, cy = hs.reduce((a, p) => a + p.y, 0) / hs.length;
+      x.fillStyle = COL.ink; x.font = `10px ${FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
+      if (!part.ply) x.fillText(`${part.id} L${E.lay.layerOf[part.id] + 1}`, X(cx), Y(cy));
+    }
+  }
+}
+
+// ---------- stage ----------
+const stage = document.getElementById('stage');
+function hipAt(u) { const n = Math.floor(u), f = u - n, kf = f * N, k = Math.floor(kf), t = kf - k; return {x: n * HM.advance + lerp(HM.hipX[k], HM.hipX[k + 1], t), y: lerp(HM.hipY[k], HM.hipY[Math.min(N, k + 1)], t)}; }
+const legPhi = (u, side) => A.spin * TAU * u + S.phi0 + side * Math.PI;
+const uNow = () => S.t * S.cadence / 60;
+function drawStage() {
+  const {x, W, H} = sizeCanvas(stage), u = uNow(), hip = hipAt(u), sg = S.sigma, G = cur(), Hh = S.height;
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  const axX = hip.x - S.Lb, Hc = E.Hc;
+  const left = axX + A.minX * sg - 120, right = hip.x + .42 * Hh;
+  const s = Math.min((W - 20) / (right - left), (H - 40) / (Hh * 1.06));
+  const camX = (left + right) / 2, X = v => W / 2 + (v - camX) * s, Y = v => H - 22 - v * s;
+  // ground
+  const kk = Math.floor((((u % 1) + 1) % 1) * N) % N;
+  x.strokeStyle = COL.ink; x.lineWidth = 1.5; x.beginPath(); x.moveTo(0, Y(0)); x.lineTo(W, Y(0)); x.stroke();
+  x.lineWidth = 1; for (let t = Math.floor((camX - W / 2 / s) / 100) * 100; t <= camX + W / 2 / s; t += 100) { x.beginPath(); x.moveTo(X(t), Y(0)); x.lineTo(X(t), Y(0) + (Math.round(t) % 500 === 0 ? 7 : 3)); x.stroke(); }
+  const P = [0, 1].map(side => solve(G, legPhi(u, side)));
+  const LX = v => X(axX + v * sg), LY = v => Y(Hc + v * sg);
+  const human = [humanLegRel(Hh, u), humanLegRel(Hh, u + .5)];
+  const drawHumanLeg = (L, col, w) => {
+    const kn = {x: hip.x + L.knee.x, y: hip.y + L.knee.y}, an = {x: hip.x + L.ank.x, y: hip.y + L.ank.y};
+    line(x, X, Y, [hip, kn, an], w, col);
+    line(x, X, Y, [{x: an.x - .045 * Hh, y: Math.max(0, an.y - .039 * Hh)}, an, {x: an.x + .11 * Hh, y: Math.max(0, an.y - .039 * Hh + 4)}], w * .6, col);
+  };
+  // far side
+  skeleton(x, P[1], LX, LY, COL.blue, Math.max(1, s * 5));
+  drawHumanLeg(human[1], COL.blue, Math.max(2, s * 16));
+  // rump: a foam block from your back to behind the crank
+  const belt = {x: hip.x - .07 * Hh, y: hip.y};
+  const rump = [{x: hip.x - .1 * Hh, y: hip.y + .02 * Hh}, {x: hip.x - .1 * Hh, y: hip.y + .17 * Hh}, {x: axX - 60, y: Hc + .15 * Hh}, {x: axX + A.minX * sg * .5, y: Hc + .08 * Hh}, {x: axX + A.minX * sg * .5, y: Hc - .02 * Hh}, {x: axX + 80, y: Hc - .04 * Hh}];
+  x.fillStyle = COL.foam; x.strokeStyle = COL.ink; x.lineWidth = 1; x.setLineDash([5, 3]);
+  x.beginPath(); rump.forEach((p, i) => i ? x.lineTo(X(p.x), Y(p.y)) : x.moveTo(X(p.x), Y(p.y))); x.closePath(); x.fill(); x.stroke(); x.setLineDash([]);
+  line(x, X, Y, [belt, {x: axX, y: Hc}], Math.max(2, s * 12), COL.ink);
+  circle(x, X, Y, belt, 18, s, COL.ink, 1.5, COL.paper);
+  // torso, head, arm
+  const sh = {x: hip.x + .03 * Hh, y: hip.y + .288 * Hh};
+  line(x, X, Y, [hip, sh], Math.max(3, s * 34), COL.ink);
+  circle(x, X, Y, {x: sh.x + .02 * Hh, y: sh.y + .1 * Hh}, .062 * Hh, s, COL.ink, 1.5, COL.paper);
+  const sw = -human[0].a * .7; line(x, X, Y, [sh, {x: sh.x + Math.sin(sw) * .36 * Hh, y: sh.y - Math.cos(sw) * .36 * Hh}], Math.max(2, s * 13), COL.ink);
+  // near hind leg
+  if (S.ov.foam) plates(x, P[0], LX, LY, Math.max(3, S.w * s), null);
+  skeleton(x, P[0], LX, LY, S.ov.foam ? COL.ink : COL.ink, Math.max(1.2, s * (S.ov.foam ? 3 : 7)));
+  circle(x, X, Y, {x: axX, y: Hc}, 20, s, COL.ink, 1.5, COL.paper);
+  drawHumanLeg(human[0], COL.ink, Math.max(2, s * 20));
+  // contacts, loads, slip
+  const F0 = E.F[kIdx(legPhi(u, 0))], F1 = E.F[kIdx(legPhi(u, 1))];
+  [[P[0], F0, COL.ink], [P[1], F1, COL.blue]].forEach(([p, f, col]) => {
+    if (!p.F) return; const fx = LX(p.F.x);
+    if (f) {
+      x.fillStyle = COL.teal; x.fillRect(fx - 10, Y(0) - 2, 20, 5);
+      if (S.ov.force) { const W2 = E.Wtot / ((A.contact[kIdx(legPhi(u, 0))]) + (A.contact[kIdx(legPhi(u, 1))]) || 1); arrow(x, fx, Y(0) + 26, fx, Y(0) + 26 - Math.min(60, W2 * 1.2), COL.red, 2); x.fillStyle = COL.red; x.font = `10px ${FONT}`; x.textAlign = 'left'; x.fillText(`${fmt(W2, 0)} N`, fx + 6, Y(0) + 14); }
+    }
+  });
+  if (!(A.contact[kIdx(legPhi(u, 0))] || A.contact[kIdx(legPhi(u, 1))])) { x.fillStyle = COL.amber; x.fillRect(X(axX + A.minX * sg), Y(0) + 4, (A.maxX - A.minX) * sg * s, 6); x.fillStyle = COL.ink; x.font = `10px ${FONT}`; x.textAlign = 'left'; x.fillText('no hind foot down: the rump hangs on your belt', X(axX + A.minX * sg), Y(0) + 18); }
+  x.font = `10px ${FONT}`; x.fillStyle = COL.ink; x.textAlign = 'left'; x.textBaseline = 'middle';
+  x.fillText(`hind axle ${fmt(Hc / 10, 0)} cm · your hip ${fmt(HM.meanHip / 10, 0)} cm · rig ${fmt(E.totalKg, 1)} kg`, 8, 12);
+}
+stage.addEventListener('pointerdown', e => { stage.setPointerCapture(e.pointerId); S.scrub = {x: e.clientX, t: S.t}; setPlaying(false); });
+stage.addEventListener('pointermove', e => { if (S.scrub) S.t = S.scrub.t - (e.clientX - S.scrub.x) / stage.clientWidth * 1.6; });
+stage.addEventListener('pointerup', () => { S.scrub = null; });
+
+// ---------- leg detail ----------
+const legC = document.getElementById('leg');
+let LV = null;
+function drawLegDetail() {
+  const {x, W, H} = sizeCanvas(legC), G = cur(), sg = S.sigma, u = uNow();
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  const span = (A.maxX - A.minX) + S.w / sg + 8, hgt = (A.topY - A.minY) + S.w / sg + 8;
+  const s = Math.min(W / span, (H - 14) / hgt);
+  const cx = (A.maxX + A.minX) / 2, cy = (A.topY + A.minY) / 2;
+  const X = v => W / 2 + (v - cx) * s, Y = v => (H - 10) / 2 - (v - cy) * s;
+  const pxmm = s / sg; LV = {X, Y, s, pxmm};
+  const phi = legPhi(u, 0), k = kIdx(phi), P = solve(G, phi), f = E.F[k];
+  x.font = `10px ${FONT}`; x.textBaseline = 'middle';
+  // ground line
+  x.strokeStyle = COL.ink; x.lineWidth = 1; x.beginPath(); x.moveTo(0, Y(A.minY) + S.w * pxmm / 2); x.lineTo(W, Y(A.minY) + S.w * pxmm / 2); x.stroke();
+  // nominal and loaded foot paths
+  x.strokeStyle = COL.ink; x.lineWidth = 1; x.setLineDash([2, 3]); x.beginPath();
+  let on = false; for (let i = 0; i <= N; i++) { const q = i % N; if (!A.ok[q]) { on = false; continue; } on ? x.lineTo(X(A.fx[q]), Y(A.fy[q])) : x.moveTo(X(A.fx[q]), Y(A.fy[q])); on = true; } x.stroke(); x.setLineDash([]);
+  if (S.ov.slop) {
+    x.strokeStyle = COL.red; x.lineWidth = 1.5; x.setLineDash([5, 3]); x.beginPath(); on = false;
+    for (const p of E.loaded.concat([E.loaded[0]])) { if (!p) { on = false; continue; } const py = Y(A.fy[p.k] + (p.y - A.fy[p.k]) * S.mag), px = X(A.fx[p.k] + (p.x - A.fx[p.k]) * S.mag); on ? x.lineTo(px, py) : x.moveTo(px, py); on = true; }
+    x.stroke(); x.setLineDash([]);
+  }
+  // plates and skeleton
+  if (S.ov.foam) plates(x, P, X, Y, Math.max(4, S.w * pxmm), {labels: true});
+  skeleton(x, P, X, Y, S.ov.foam ? 'rgba(0,0,0,.55)' : COL.ink, S.ov.foam ? 1 : 2);
+  if (S.hoverBar) { const [a, b] = BARS[S.hoverBar]; if (P[a] && P[b]) line(x, X, Y, [P[a], P[b]], 4, COL.blue); }
+  // slop cloud at the foot
+  if (S.ov.slop && P.F) {
+    x.fillStyle = COL.red;
+    for (const r of MC) { const Gp = {...G}; for (const id of ['j','k','c','f','m']) Gp[id] += r[id] * E.play[id] / 2 / sg * S.mag; const Q = solve(Gp, phi); if (Q.F) x.fillRect(X(Q.F.x) - 1.5, Y(Q.F.y) - 1.5, 3, 3); }
+  }
+  // pins: hole, pin offset by load, stress ring, force arrow
+  let fMax = 1; if (f) for (const pn of PINS) fMax = Math.max(fMax, len(f.pinVec[pn.id]));
+  for (const pn of PINS) {
+    const p = P[pn.id]; if (!p) continue;
+    const st = E.pins[pn.id], pinR = Math.max(2.5, PINS_T[S.pin].d / 2 * pxmm), holeR = pinR + st.c * pxmm * S.mag;
+    const vec = f ? f.pinVec[pn.id] : null, m = vec ? len(vec) : 0;
+    const off = m > 1e-6 ? {x: vec.x / m, y: vec.y / m} : {x: 0, y: -1};
+    const cur2 = f ? (st.useSeries[0] !== undefined ? E.pins[pn.id] : null) : null;
+    const useNow = (() => { if (!f) return 0; let uu = 0; for (const [pid, val] of Object.entries(f.plates[pn.id])) { const pl = PARTS.find(q => q.id === pid); uu = Math.max(uu, pl.ply ? val / (PINS_T[S.pin].d / 1000 * .006 * 12e6) : holeUse(val).u); } return uu; })();
+    x.beginPath(); x.arc(X(p.x), Y(p.y), holeR, 0, TAU); x.fillStyle = COL.paper; x.fill();
+    x.lineWidth = S.ov.stress ? 3 : 1; x.strokeStyle = S.ov.stress ? useCol(Math.max(useNow, st.uMax * .001)) : COL.ink; if (S.ov.stress && !f) x.strokeStyle = COL.ink; x.stroke();
+    const ox = X(p.x) + off.x * (holeR - pinR), oy = Y(p.y) - off.y * (holeR - pinR);
+    x.beginPath(); x.arc(ox, oy, pinR, 0, TAU); x.fillStyle = COL.ink; x.fill();
+    if (S.ov.force && m > fMax * .05) arrow(x, X(p.x), Y(p.y), X(p.x) + vec.x / fMax * 46, Y(p.y) - vec.y / fMax * 46, COL.red, 1.5);
+    const sel = S.selPin === pn.id;
+    x.fillStyle = sel ? COL.blue : COL.ink; x.font = `${sel ? 700 : 500} 10px ${FONT}`; x.textAlign = 'left';
+    x.fillText(pn.id, X(p.x) + holeR + 3, Y(p.y) - holeR - 3);
+    if (sel) { x.strokeStyle = COL.blue; x.lineWidth = 1.5; x.beginPath(); x.arc(X(p.x), Y(p.y), holeR + 5, 0, TAU); x.stroke(); }
+  }
+  x.font = `10px ${FONT}`; x.fillStyle = COL.ink; x.textAlign = 'left';
+  x.fillText(`clearance and sag drawn ${S.mag}× · ${E.lay.nL} layers · ${fmt(E.legKg, 2)} kg per leg`, 6, H - 7);
+  if (P.fail) { x.fillStyle = COL.red; x.fillText(`jammed at ${P.fail}`, 6, 10); }
+}
+function legHit(px, py) {
+  if (!LV) return null;
+  const P = solve(cur(), legPhi(uNow(), 0));
+  for (const pn of PINS) { const p = P[pn.id]; if (p && Math.hypot(px - LV.X(p.x), py - LV.Y(p.y)) < 11) return {type: 'pin', id: pn.id}; }
+  let best = null;
+  for (const k of KEYS) { const [a, b] = BARS[k]; if (!P[a] || !P[b]) continue; const pa = {x: LV.X(P[a].x), y: LV.Y(P[a].y)}, pb = {x: LV.X(P[b].x), y: LV.Y(P[b].y)}, d = distPtSeg({x: px, y: py}, pa, pb); if (d < 8 && (!best || d < best.d)) best = {type: 'bar', k, d, pa, pb}; }
+  return best;
+}
+legC.addEventListener('pointerdown', e => {
+  const r = legC.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top, h = legHit(px, py);
+  if (!h) return;
+  if (h.type === 'pin') { S.selPin = h.id; renderInspector(); return; }
+  legC.setPointerCapture(e.pointerId);
+  const dx = h.pb.x - h.pa.x, dy = h.pb.y - h.pa.y, L = Math.hypot(dx, dy) || 1, nearB = Math.hypot(px - h.pb.x, py - h.pb.y) < Math.hypot(px - h.pa.x, py - h.pa.y);
+  S.drag = {k: h.k, ux: dx / L, uy: dy / L, sign: nearB ? 1 : -1, L0: S.G[h.k], x0: px, y0: py, s: LV.s};
+});
+legC.addEventListener('pointermove', e => {
+  const r = legC.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top, d = S.drag;
+  if (d) { const v = Math.round(clamp(d.L0 + d.sign * ((px - d.x0) * d.ux + (py - d.y0) * d.uy) / d.s, 1, 140) * 10) / 10; S.live = {...S.G, [d.k]: v}; engine(); return; }
+  const h = legHit(px, py); legC.style.cursor = h ? (h.type === 'bar' ? 'ew-resize' : 'pointer') : 'default';
+  S.hoverBar = h && h.type === 'bar' ? h.k : null;
+});
+legC.addEventListener('pointerup', () => { const d = S.drag; S.drag = null; if (!d) return; if (S.live && S.live[d.k] !== d.L0) commit(S.live); else { S.live = null; engine(); } });
+legC.addEventListener('pointerleave', () => { if (!S.drag) S.hoverBar = null; });
+function commit(G) { S.G = {...G}; S.live = null; S.hist.push({...G}); if (S.hist.length > 60) S.hist.shift(); engine(); }
+document.getElementById('undo').onclick = () => { if (S.hist.length > 1) { S.hist.pop(); S.G = {...S.hist[S.hist.length - 1]}; engine(); } };
+document.getElementById('reset').onclick = () => commit(HOLY);
+
+// ---------- plots ----------
+const plotC = document.getElementById('plots');
+function drawPlots() {
+  const {x, W, H} = sizeCanvas(plotC);
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  x.font = `10px ${FONT}`; x.textBaseline = 'middle';
+  const lab = 58, pw = W - lab - 8, Xp = i => lab + i / N * pw, rows = 4, rh = (H - 16) / rows;
+  const pin = E.pins[S.selPin];
+  const near = new Float64Array(N), tq = E.torque;
+  for (let i = 0; i < N; i++) { const f = E.F[E.tIdx[i]]; near[i] = f ? E.Wtot / (A.contact[E.tIdx[i]] + A.contact[(E.tIdx[i] + N / 2) % N]) : 0; }
+  const series = [
+    {name: 'foot load', unit: 'N', d: near, col: COL.ink},
+    {name: 'crank', unit: 'N·m', d: tq, col: COL.ink, signed: true},
+    {name: `${S.selPin} load`, unit: 'N', d: pin.series, col: COL.ink, knocks: pin.knockAt},
+    {name: `${S.selPin} hole`, unit: '× limit', d: pin.useSeries, col: COL.ink, limit: 1}
+  ];
+  series.forEach((sr, r) => {
+    const y0 = 2 + r * rh, y1 = y0 + rh - 4;
+    let lo = sr.signed ? Infinity : 0, hi = sr.limit ? Math.max(1.2, ...sr.d) : -Infinity;
+    for (const v of sr.d) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+    if (hi - lo < 1e-6) hi = lo + 1;
+    const Yv = v => y1 - (v - lo) / (hi - lo) * (y1 - y0 - 4);
+    x.strokeStyle = COL.ink; x.lineWidth = .5; x.beginPath(); x.moveTo(lab, y1 + 2); x.lineTo(W - 8, y1 + 2); x.stroke();
+    if (sr.signed) { x.setLineDash([2, 3]); x.beginPath(); x.moveTo(lab, Yv(0)); x.lineTo(W - 8, Yv(0)); x.stroke(); x.setLineDash([]); }
+    if (sr.limit) {
+      x.fillStyle = 'rgba(255,46,46,.10)'; x.fillRect(lab, y0, pw, Yv(1) - y0);
+      x.strokeStyle = COL.red; x.beginPath(); x.moveTo(lab, Yv(1)); x.lineTo(W - 8, Yv(1)); x.stroke();
+    }
+    x.strokeStyle = sr.col; x.lineWidth = 1.5; x.beginPath();
+    for (let i = 0; i < N; i++) i ? x.lineTo(Xp(i), Yv(sr.d[i])) : x.moveTo(Xp(i), Yv(sr.d[i]));
+    x.stroke();
+    if (sr.knocks) { x.fillStyle = COL.red; for (const i of sr.knocks) { x.fillRect(Xp(i) - 1, y0, 3, y1 - y0); } }
+    x.fillStyle = COL.ink; x.textAlign = 'left'; x.fillText(sr.name, 4, y0 + 6);
+    let pk = -Infinity; for (const v of sr.d) pk = Math.max(pk, sr.signed ? Math.abs(v) : v);
+    x.fillText(`peak ${fmt(pk, sr.limit ? 2 : sr.signed ? 1 : 0)}`, 4, y0 + 18); x.fillText(sr.unit, 4, y0 + 30);
+  });
+  // stance shading of near leg on top
+  x.fillStyle = 'rgba(25,230,200,.12)';
+  for (let i = 0; i < N; i++) if (A.contact[E.tIdx[i]]) x.fillRect(Xp(i), 0, pw / N + .5, H - 14);
+  const u = ((uNow() % 1) + 1) % 1;
+  x.fillStyle = COL.blue; x.fillRect(Xp(u * N) - 1, 0, 2, H - 14);
+  x.fillStyle = COL.ink; x.textAlign = 'center';
+  for (let q = 0; q <= 4; q++) x.fillText(`${q * 25}%`, Xp(q / 4 * N), H - 6);
+  document.getElementById('plotNote').textContent = `${S.selPin}: ${pin.knocks} knock${pin.knocks === 1 ? '' : 's'} per stride`;
+}
+
+// ---------- plan ----------
+const planC = document.getElementById('plan');
+function drawPlan() {
+  const {x, W, H} = sizeCanvas(planC), u = uNow(), sg = S.sigma, Hh = S.height;
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  x.font = `10px ${FONT}`; x.textBaseline = 'middle';
+  const hip = hipAt(u), span = HM.advance * 1.15 + S.Lb + 500;
+  const s = (W - 16) / span, sz = Math.min((H - 70) / (2 * Math.max(E.footZ, E.humanZ, S.gap / 2 + E.lay.nL * MATS[S.mat].t) + 120), 3);
+  const X = v => W - 8 - (hip.x + .3 * Hh - v) * s, Y = z => H / 2 + 10 - z * sz;
+  // centreline and tracks
+  x.strokeStyle = COL.faint; x.lineWidth = 1; x.setLineDash([3, 3]);
+  for (const z of [E.humanZ, -E.humanZ]) { x.strokeStyle = COL.ink; x.beginPath(); x.moveTo(0, Y(z)); x.lineTo(W, Y(z)); x.stroke(); }
+  for (const z of [E.footZ, -E.footZ]) { x.strokeStyle = COL.blue; x.beginPath(); x.moveTo(0, Y(z)); x.lineTo(W, Y(z)); x.stroke(); }
+  x.setLineDash([]);
+  const fl = .152 * Hh, fw = .05 * Hh;
+  // human footprints: left heel strike at u = n, right at n + .5
+  for (let n = Math.floor(u) - 2; n <= Math.floor(u); n++) for (const side of [0, 1]) {
+    const us = n + side * .5; if (us > u) continue;
+    const h = hipAt(us), L = humanLegRel(Hh, us + side * .5 - side * .5 + (side ? .5 : 0) - (side ? .5 : 0));
+    const leg = humanLegRel(Hh, side ? us + .5 : us), ax = h.x + leg.ank.x;
+    const z = side ? -E.humanZ : E.humanZ;
+    x.strokeStyle = side ? COL.blue : COL.ink; x.lineWidth = 1.5; x.strokeRect(X(ax - fl * .25), Y(z) - fw / 2 * sz, fl * s, fw * sz);
+  }
+  // hind footprints from contact onsets
+  const foot = 60;
+  for (let n = Math.floor(u) - 2; n <= Math.floor(u); n++) for (const side of [0, 1]) {
+    for (let i = 0; i < N; i++) {
+      const k = kIdx(legPhi(i / N, side)), kp = kIdx(legPhi((i - 1) / N, side));
+      if (!(A.contact[k] && !A.contact[kp])) continue;
+      const us = n + i / N; if (us > u) continue;
+      const h = hipAt(us), fx2 = h.x - S.Lb + A.fx[k] * sg, z = side ? -E.footZ : E.footZ;
+      x.fillStyle = side ? COL.blue : COL.ink; x.fillRect(X(fx2) - foot * s / 2, Y(z) - Math.min(MATS[S.mat].t, 40) * sz / 2, foot * s, Math.min(MATS[S.mat].t, 40) * sz);
+    }
+  }
+  // current bodies
+  const stack = E.lay.nL * MATS[S.mat].t;
+  for (const z of [1, -1]) { x.fillStyle = COL.foam; x.strokeStyle = COL.ink; x.fillRect(X(hip.x - S.Lb + A.minX * sg), Y(z > 0 ? S.gap / 2 + stack : -S.gap / 2), (A.maxX - A.minX) * sg * s, stack * sz); x.strokeRect(X(hip.x - S.Lb + A.minX * sg), Y(z > 0 ? S.gap / 2 + stack : -S.gap / 2), (A.maxX - A.minX) * sg * s, stack * sz); }
+  x.fillStyle = COL.ink; x.textAlign = 'left';
+  x.fillText(`your feet ±${fmt(E.humanZ, 0)} mm`, 6, 10);
+  x.fillStyle = COL.blue; x.fillText(`hind feet ±${fmt(E.footZ, 0)} mm (${E.lay.nL} × ${MATS[S.mat].t} mm stack)`, 6, 22);
+  x.fillStyle = COL.ink; x.textAlign = 'right'; x.fillText(`walking →   across drawn ${fmt(sz / s, 0)}× wider`, W - 6, H - 8);
+}
+
+// ---------- inspector ----------
+function makeNum(el, get, set, step, min, max, dec, onLive, onCommit) {
+  el.classList.add('num'); el.tabIndex = 0; el.setAttribute('role', 'slider');
+  const show = () => { el.textContent = fmt(get(), dec); };
+  let d = null;
+  el.addEventListener('pointerdown', e => { el.setPointerCapture(e.pointerId); d = {x: e.clientX, v: get()}; e.preventDefault(); });
+  el.addEventListener('pointermove', e => { if (!d) return; set(clamp(+(d.v + (e.clientX - d.x) * step).toFixed(dec), min, max)); show(); onLive(); });
+  el.addEventListener('pointerup', () => { if (d) onCommit(); d = null; });
+  el.addEventListener('keydown', e => { let dv = 0; const m = e.shiftKey ? 10 : 1; if (e.key === 'ArrowUp' || e.key === 'ArrowRight') dv = step * 10 * m; if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') dv = -step * 10 * m; if (!dv) return; e.preventDefault(); set(clamp(+(get() + dv).toFixed(dec), min, max)); show(); onCommit(); });
+  show();
+}
+function segButtons(id, table, key) {
+  const box = document.getElementById(id); box.innerHTML = '';
+  for (const [k, v] of Object.entries(table)) {
+    const b = document.createElement('button'); b.textContent = v.name; b.setAttribute('aria-pressed', String(S[key] === k)); b.title = v.label || '';
+    b.onclick = () => { S[key] = k; segButtons(id, table, key); engine(); };
+    box.appendChild(b);
+  }
+}
+const NUMS = [
+  ['Scale', 'sigma', .01, 4, 16, 2, 'mm per Jansen unit'],
+  ['Plate width', 'w', .2, 20, 160, 0, 'mm'],
+  ['Starting clearance', 'c0', .005, 0, 3, 2, 'mm per hole'],
+  ['Rump mass', 'rump', .02, 0, 15, 1, 'kg'],
+  ['Feet carry', 'share', .2, 10, 100, 0, '% of the rig'],
+  ['Drawbar', 'Lb', 2, 450, 1600, 0, 'mm hip to axle'],
+  ['Gap between legs', 'gap', .5, 0, 300, 0, 'mm'],
+  ['Your height', 'height', 2, 1300, 2050, 0, 'mm']
+];
+function buildNums() {
+  const box = document.getElementById('nums'); box.innerHTML = '';
+  for (const [label, key, step, min, max, dec, unit] of NUMS) {
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = `<span>${label}</span><span class="v"><span data-n></span> <span style="font-weight:400">${unit}</span></span>`;
+    box.appendChild(row);
+    makeNum(row.querySelector('[data-n]'), () => S[key], v => { S[key] = v; }, step, min, max, dec, () => engine(), () => engine());
+  }
+  const b = document.createElement('div'); b.className = 'small';
+  b.innerHTML = '<button id="fitBoth">Fit scale to your stride</button>';
+  box.appendChild(b);
+  document.getElementById('fitBoth').onclick = () => { S.sigma = +(HM.advance / A.advance).toFixed(2); buildNums(); engine(); };
+  const age = document.getElementById('ageNums'); age.innerHTML = '';
+  for (const [label, key, step, min, max, dec, unit] of [['Strides walked', 'strides', 20, 0, 50000, 0, ''], ['Draw slop at', 'mag', .05, 1, 40, 0, '×']]) {
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = `<span>${label}</span><span class="v"><span data-n></span> <span style="font-weight:400">${unit}</span></span>`;
+    age.appendChild(row);
+    makeNum(row.querySelector('[data-n]'), () => S[key], v => { S[key] = v; }, step, min, max, dec, () => engine(), () => engine());
+  }
+  const ab = document.createElement('div'); ab.className = 'small';
+  ab.innerHTML = '<div class="seg"><button data-age="0">New</button><button data-age="1000">1 km</button><button data-age="5000">5 km</button><button data-age="20000">20 km</button></div>';
+  age.appendChild(ab);
+  ab.querySelectorAll('[data-age]').forEach(b => b.onclick = () => { S.strides = Math.round(+b.dataset.age / (HM.advance / 1000) * (+b.dataset.age ? 1 / 1000 * 1000 : 0)); S.strides = +b.dataset.age ? Math.round(+b.dataset.age * 1000 / HM.advance) : 0; buildNums(); engine(); });
+}
+function renderInspector() {
+  if (!E) return;
+  const led = [];
+  const add2 = (st, title, val, why) => led.push(`<div class="led" title="${why.replace(/"/g, '')}"><span class="dot ${st}"></span><span>${title}</span><span class="v" style="font-weight:700">${val}</span>${st === 'ok' ? '' : `<span class="why">${why}</span>`}</div>`);
+  const sup = E.supported;
+  add2(sup > .97 ? 'ok' : sup > .85 ? 'warn' : 'bad', 'Feet carry the rump', `${fmt(sup * 100, 0)}%`,
+    sup < .999 ? `For ${fmt((1 - sup) * 100, 0)}% of each stride no hind foot is down and the rump hangs on your belt. Legs that never bear weight read as dangling props.` : 'A hind foot is always down. Weight going into the ground is what makes a leg read as a leg.');
+  const slipPct = E.slipMax;
+  add2(slipPct < 15 ? 'ok' : slipPct < 50 ? 'warn' : 'bad', 'Feet stay planted', `${fmt(slipPct, 0)} mm`,
+    slipPct < 15 ? 'A planted foot does not move against the ground. This one holds still within 15 mm.' : `Each hind foot slides ${fmt(slipPct, 0)} mm while it is down. A foot that skates reads as dragged.`);
+  add2(Math.abs(E.slope) < 3 ? 'ok' : Math.abs(E.slope) < 8 ? 'warn' : 'bad', 'Same height as your hips', `${fmt(E.slope, 1)}°`,
+    `Hind axle ${fmt(E.Hc / 10, 0)} cm, your hip ${fmt(HM.meanHip / 10, 0)} cm. A level back joins the two bodies into one animal.`);
+  const dz = E.footZ - E.humanZ;
+  add2(Math.abs(dz) < 25 ? 'ok' : Math.abs(dz) < 60 ? 'warn' : 'bad', 'Same plane as your legs', `${dz >= 0 ? '+' : ''}${fmt(dz, 0)} mm`,
+    `Hind feet land ${fmt(E.footZ, 0)} mm from the centreline, yours ${fmt(E.humanZ, 0)} mm. From the side the four legs only read as one body when they stand in the same two lines. Each extra ${MATS[S.mat].t} mm layer pushes them out.`);
+  const sr = E.strideRatio;
+  add2(Math.abs(sr - 1) < .03 ? 'ok' : Math.abs(sr - 1) < .1 ? 'warn' : 'bad', 'Same stride as yours', `${fmt(sr * 100, 0)}%`,
+    'One hind stride per human stride, the same length on the ground. If they differ, the hind feet scuff or drag.');
+  const ph = E.onset === null ? null : ((E.onset - .75 + 1.5) % 1) - .5;
+  add2(ph === null ? 'bad' : Math.abs(ph) < .06 ? 'ok' : Math.abs(ph) < .15 ? 'warn' : 'bad', 'Horse walk timing', ph === null ? '–' : `${ph >= 0 ? '+' : ''}${fmt(ph * 100, 0)}%`,
+    'In a horse walk the hind foot lands a quarter stride before the fore foot on the same side. Press Horse walk timing to set it.');
+  add2(A.duty > .55 ? 'ok' : A.duty > .45 ? 'warn' : 'bad', 'Ground time like a walk', `${fmt(A.duty * 100, 0)}%`,
+    `Each hind foot is down ${fmt(A.duty * 100, 0)}% of the stride; yours ${fmt(HM.duty * 100, 0)}%, a walking horse about 60%. Under 50% a foot spends more time in the air than on the ground, which reads as a trot.`);
+  document.getElementById('ledger').innerHTML = led.join('');
+
+  // failure ranking
+  const items = [];
+  for (const pn of PINS) {
+    const st = E.pins[pn.id];
+    items.push({u: st.uMax, pin: pn.id, t: `<b>${pn.id} ${pn.name}</b>: ${st.what}, ${fmt(st.maxF, 0)} N on the ${PARTS.find(p => p.id === st.worst) ? PARTS.find(p => p.id === st.worst).name.toLowerCase() : '–'}. ${st.uMax >= 1 ? 'Crushes in the first steps.' : isFinite(st.life) && st.life < 1e6 ? `Gains 2 mm of slop in about ${fmt(st.life / 1000 * HM.advance / 1000, 1)} km.` : 'Holds.'} ${st.knocks} knock${st.knocks === 1 ? '' : 's'} per stride, swings ${fmt(st.swing, 0)}°.`});
+  }
+  for (const [id, L] of Object.entries(E.links)) {
+    if (L.cMax > 0) items.push({u: L.buck, pin: null, t: `<b>Link ${id}</b> buckles sideways at ${fmt(L.Pcr, 0)} N; it carries ${fmt(L.cMax, 0)} N in compression over ${fmt(L.Lmm, 0)} mm.${L.buck >= 1 ? ' Add a ply spar or a skin.' : ''}`});
+    if (L.tMax > 0) items.push({u: L.tens, pin: null, t: `<b>Link ${id}</b> in tension: ${fmt(L.tMax, 0)} N through a ${S.w} × ${MATS[S.mat].t} mm section.`});
+  }
+  items.push({u: E.spread / 15, pin: null, t: `<b>Foot wanders</b> up to ${fmt(E.spread, 1)} mm from hole clearance alone, and the loaded foot sags ${fmt(E.sag, 1)} mm (clearance plus foam stretch).`});
+  items.push({u: (1 - E.supported) * 4, pin: null, t: `<b>Rump unsupported</b> ${fmt((1 - E.supported) * 100, 0)}% of each stride; your belt takes ${fmt(E.totalKg * G0, 0)} N then.`});
+  items.sort((a, b) => b.u - a.u);
+  document.getElementById('fails').innerHTML = items.slice(0, 7).map(it =>
+    `<div class="fail${it.pin === S.selPin ? ' sel' : ''}" ${it.pin ? `data-pin="${it.pin}"` : ''}><span class="u ${useClass(it.u)}">${fmt(it.u, 2)}</span><span>${it.t}</span></div>`).join('');
+  document.querySelectorAll('#fails [data-pin]').forEach(el => el.onclick = () => { S.selPin = el.dataset.pin; renderInspector(); });
+}
+
+// ---------- header ----------
+const playBtn = document.getElementById('play');
+function setPlaying(on) { S.playing = on; playBtn.innerHTML = on ? '<span class="icon-pause"></span><span>Pause</span>' : '<span class="icon-play"></span><span>Play</span>'; playBtn.setAttribute('aria-label', on ? 'Pause' : 'Play'); }
+playBtn.onclick = () => setPlaying(!S.playing);
+const slowBtn = document.getElementById('slow');
+slowBtn.onclick = () => { S.slow = !S.slow; slowBtn.setAttribute('aria-pressed', String(S.slow)); };
+document.querySelectorAll('[data-ov]').forEach(b => b.onclick = () => { const k = b.dataset.ov; S.ov[k] = !S.ov[k]; b.setAttribute('aria-pressed', String(S.ov[k])); });
+document.getElementById('horseWalk').onclick = () => {
+  let best = null;
+  for (let q = 0; q < 72; q++) {
+    S.phi0 = TAU * q / 72;
+    let onset = null; for (let i = 0; i < N; i++) { const k = kIdx(legPhi(i / N, 0)), kp = kIdx(legPhi((i - 1) / N, 0)); if (A.contact[k] && !A.contact[kp]) { onset = i / N; break; } }
+    if (onset === null) continue; const e = Math.abs(((onset - .75 + 1.5) % 1) - .5);
+    if (!best || e < best.e) best = {e, p: S.phi0};
+  }
+  if (best) S.phi0 = best.p; engine();
+};
+
+let last = performance.now();
+const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (S.playing) S.t += dt * (S.slow ? .25 : 1);
+  drawStage(); drawLegDetail(); drawPlots(); drawPlan();
+  const u = uNow();
+  document.getElementById('clock').textContent = `stride ${Math.floor(u)} · ${fmt((((u % 1) + 1) % 1) * 100, 0).padStart(2, '0')}% · ${fmt(S.cadence, 0)} strides/min`;
+  requestAnimationFrame(frame);
+}
+segButtons('cMat', MATS, 'mat'); segButtons('cJoint', JOINTS, 'joint'); segButtons('cPin', PINS_T, 'pin');
+HM = humanModel(S.height); A = analyze(S.G);
+buildNums();
+engine();
+document.getElementById('horseWalk').click();
+setPlaying(!reduce);
+requestAnimationFrame(frame);
+})();
+</script>

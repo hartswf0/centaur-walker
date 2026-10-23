@@ -1,0 +1,756 @@
+<title>Centaur Rig</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<style>
+/* Layout: phone first. Top half is always the sim: the leg (or rig, or planes) on the left, the selected joint up close on the right, a stride strip below. Bottom half is tabs and controls, scrolling inside itself. On a wide screen the controls move to a right column. */
+:root{
+  --paper:#fff; --ink:#000;
+  --teal:#19e6c8; --amber:#ffd23f; --red:#ff2e2e; --blue:#3b82f6;
+  --mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box;border-radius:0}
+html,body{height:100%;background:var(--paper);color:var(--ink)}
+body{margin:0;font-family:var(--mono);font-size:12px;line-height:1.35;overflow:hidden;
+  padding-left:max(6px,env(safe-area-inset-left,0px));padding-right:max(6px,env(safe-area-inset-right,0px));padding-block:4px;
+  display:grid;grid-template-rows:minmax(0,54fr) minmax(0,46fr);gap:4px}
+@media (min-width:900px){ body{grid-template-rows:minmax(0,1fr);grid-template-columns:minmax(0,1fr) 400px} }
+.top{display:grid;grid-template-rows:auto minmax(0,1fr) auto;border:1px solid var(--ink);min-height:0;min-width:0}
+.hd{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;padding:3px 5px;border-bottom:1px solid var(--ink)}
+.hd h1{font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin:0;font-weight:700}
+.views{display:grid;grid-template-columns:minmax(0,58fr) minmax(0,42fr);min-height:0}
+.cv{position:relative;min-height:0;min-width:0}
+.cv + .cv{border-left:1px solid var(--ink)}
+.cv canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#strip{height:40px;position:relative;border-top:1px solid var(--ink)}
+#strip canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.panel{border:1px solid var(--ink);display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;min-width:0}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--ink);overflow-x:auto}
+.tabs button{border:0;border-right:1px solid var(--ink);flex:1 0 auto;padding:8px 8px}
+.body{overflow-y:auto;min-height:0;padding:0 0 10px}
+button{font:inherit;font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--paper);color:var(--ink);border:1px solid var(--ink);padding:4px 7px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;min-height:28px}
+button:hover{background:var(--ink);color:var(--paper)}
+button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.seg{display:flex;flex-wrap:wrap;gap:3px}
+.icon-play{border-left:8px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent;width:0;height:0;display:inline-block}
+.icon-pause{width:8px;height:10px;display:inline-block;position:relative}
+.icon-pause::before,.icon-pause::after{content:"";position:absolute;top:0;width:3px;height:10px;background:currentColor}
+.icon-pause::before{left:0}.icon-pause::after{right:0}
+.icon-spk{width:10px;height:10px;display:inline-block;position:relative}
+.icon-spk::before{content:"";position:absolute;left:0;top:3px;width:4px;height:4px;background:currentColor}
+.icon-spk::after{content:"";position:absolute;left:3px;top:0;border-right:5px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent;height:0}
+h3{font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin:0;padding:8px 8px 4px;font-weight:700;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+h3 span{font-weight:400;letter-spacing:0;text-transform:none;font-style:italic}
+.pins{display:flex;gap:3px;padding:6px 8px 2px;flex-wrap:wrap}
+.pins button{min-width:44px;justify-content:center;position:relative}
+.pins button i{position:absolute;left:0;right:0;bottom:0;height:4px}
+.lead{padding:2px 8px 6px;font-size:12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:5px;padding:0 8px}
+.card{border:1px solid var(--ink);padding:6px;cursor:pointer;display:grid;gap:3px;background:var(--paper);font:inherit;text-align:left;text-transform:none;letter-spacing:0;font-size:11px;align-items:start;min-height:0}
+.card b{font-size:12px}
+.card .src{font-style:italic;font-size:10px}
+.card .nums{display:grid;grid-template-columns:auto 1fr;gap:0 6px;font-variant-numeric:tabular-nums}
+.card .nums span:nth-child(2n){text-align:right;font-weight:700}
+.card .tag{justify-self:start;padding:0 4px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.card[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:-3px;background:#f2f6ff;color:var(--ink)}
+.card[aria-pressed="true"]:hover{background:#f2f6ff;color:var(--ink)}
+.card:hover{background:var(--paper);color:var(--ink)}
+.card:hover{outline:2px solid var(--blue);outline-offset:-2px}
+.ok{background:var(--teal)} .warn{background:var(--amber)} .bad{background:var(--red)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:4px 8px;align-items:baseline;border-top:1px solid #000}
+.row .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.num{cursor:ew-resize;user-select:none;border-bottom:1px dashed var(--ink);font-weight:700;font-variant-numeric:tabular-nums;padding:2px 2px;touch-action:none}
+.num:hover{background:var(--ink);color:var(--paper)}
+.note{padding:4px 8px;font-size:11px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{padding:3px 6px;text-align:right;font-size:11px;border-top:1px solid #000}
+th{font-size:10px;font-weight:700}
+td:first-child,th:first-child{text-align:left}
+td.on,th.on{background:rgba(59,130,246,.14)}
+.led{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:6px;padding:4px 8px;align-items:center;border-top:1px solid #000}
+.dot{width:10px;height:10px;border:1px solid var(--ink)}
+.vars{display:flex;gap:3px;flex-wrap:wrap;padding:6px 8px}
+ol.steps{margin:0;padding:0 8px 0 28px}
+ol.steps li{margin:4px 0}
+</style>
+
+<section class="top" aria-label="Simulation">
+  <div class="hd">
+    <h1>Centaur Rig</h1>
+    <div class="seg">
+      <button id="play" aria-label="Pause"><span class="icon-pause"></span></button>
+      <button id="slow" aria-pressed="false">Slow</button>
+      <button id="sound" aria-pressed="false" aria-label="Sound"><span class="icon-spk"></span></button>
+    </div>
+    <div class="seg" role="group" aria-label="View">
+      <button data-view="leg" aria-pressed="true">Leg</button>
+      <button data-view="rig" aria-pressed="false">Rig</button>
+      <button data-view="planes" aria-pressed="false">Planes</button>
+    </div>
+  </div>
+  <div class="views">
+    <div class="cv"><canvas id="sim" aria-label="Simulation. Tap a pin to choose its joint. Drag a bar to change its length."></canvas></div>
+    <div class="cv"><canvas id="joint" aria-label="The selected joint up close, under load"></canvas></div>
+  </div>
+  <div id="strip"><canvas id="stripC" aria-label="One stride: feet down, knocks, friction"></canvas></div>
+</section>
+
+<section class="panel" aria-label="Controls">
+  <div class="tabs" role="tablist">
+    <button data-tab="joints" aria-pressed="true">Joints</button>
+    <button data-tab="links" aria-pressed="false">Links</button>
+    <button data-tab="fit" aria-pressed="false">Fit</button>
+    <button data-tab="rig" aria-pressed="false">Rig</button>
+    <button data-tab="build" aria-pressed="false">Build</button>
+  </div>
+  <div class="body" id="body"></div>
+</section>
+
+<script>
+(() => {
+'use strict';
+const COL = {paper:'#fff', ink:'#000', teal:'#19e6c8', amber:'#ffd23f', red:'#ff2e2e', blue:'#3b82f6', tint:'rgba(59,130,246,.10)', ghost:'rgba(59,130,246,.30)', faint:'rgba(0,0,0,.16)', foam:'rgba(0,0,0,.05)', wood:'#efe2c6', pvc:'#f4f4f4'};
+const FONT = "'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace";
+const HOLY = {a:38, b:41.5, c:39.3, d:40.1, e:55.8, f:39.4, g:36.7, h:65.7, i:49, j:50, k:61.9, l:7.8, m:15};
+const KEYS = ['a','b','c','d','e','f','g','h','i','j','k','l','m'];
+const BARS = {a:['B','A'], l:['A','O'], m:['O','M'], j:['M','J1'], b:['B','J1'], e:['J1','J3'], d:['B','J3'], c:['B','J2'], k:['M','J2'], f:['J3','J4'], g:['J2','J4'], h:['J4','F'], i:['J2','F']};
+const JOINT_DEF = {J1:['B','b','M','j',1], J2:['B','c','M','k',-1], J3:['B','d','J1','e',1], J4:['J3','f','J2','g',-1], F:['J4','h','J2','i',-1]};
+const ORDER = ['J1','J2','J3','J4','F'];
+const N = 360, TAU = Math.PI * 2, G0 = 9.81;
+const LINKS = {j:['M','J1'], k:['M','J2'], c:['B','J2'], f:['J3','J4']};
+
+// ---------- joints you can actually get. Values are typical estimates; measure your own. ----------
+const JT = {
+  brad:    {name:'Brad in card', src:'brass paper fasteners', d:3, c:.3, ctol:.2, bear:3, cap:15, mu:.4, maxSwing:999, maxPlates:4, wearK:.01, cost:.05,
+            how:'Punch the hole with an awl, push the brad through every layer, fold the legs flat.', breaks:'Card tears from the hole outward; the brad legs open.'},
+  rivet:   {name:'Trellis rivet', src:'expandable plastic trellis', d:5, c:.25, ctol:.15, bear:10, cap:60, mu:.25, maxSwing:999, maxPlates:2, wearK:.002, cost:.1, premade:true,
+            how:'Cut the trellis so a joint you need is already riveted. For new joints drill 5 mm and use a nylon push rivet.', breaks:'Holds two strips only. Under sideways load the rivet head pops through the plastic.'},
+  scissor: {name:'Scissor pivot', src:'giant plastic scissors', d:5, c:.1, ctol:.05, bear:12, cap:150, mu:.2, maxSwing:999, maxPlates:2, wearK:.0005, cost:4, premade:true,
+            how:'Use the scissor pivot as it is: the two blades are a ready joint with a boss. Cut the blades to length around it.', breaks:'Only two plates; the blade plastic cracks around the cut ends.'},
+  puck:    {name:'Wood puck + dowel', src:'foam board, hardwood dowel', d:10, c:.4, ctol:.3, bear:25, cap:100, mu:.35, maxSwing:999, maxPlates:5, wearK:.006, cost:.5, drilled:true,
+            how:'Bore the foam with a hole saw, glue a hardwood puck flush (foam-safe glue), drill the puck for the dowel.', breaks:'The puck presses into the foam and the hole goes oval.'},
+  pvc:     {name:'PVC pipe in tee', src:'1/2 in pipe, tees, couplers', d:21.3, c:.5, ctol:.3, bear:35, cap:300, mu:.3, maxSwing:999, maxPlates:5, wearK:.001, cost:1.5, tube:true,
+            how:'The axle is a short length of pipe; each link ends in a tee or coupler that turns on it. Sand the pipe so the tee turns freely.', breaks:'Tees split at the socket if forced; loose fits rattle.'},
+  bush:    {name:'Bolt + nylon bush', src:'ply or steel plate, M8 bolt', d:8, c:.12, ctol:.05, bear:12, cap:400, mu:.15, maxSwing:999, maxPlates:5, wearK:.0002, cost:1, drilled:true,
+            how:'Drill for the bushing, press it in, run an M8 bolt with washers and a nylock nut set snug.', breaks:'Thin plates rock on the bolt; the bush walks out if not flanged.'},
+  clevis:  {name:'Clevis + sleeve', src:'fork plates, shoulder bolt, sleeve', d:8, c:.05, ctol:.03, bear:40, cap:800, mu:.12, maxSwing:300, maxPlates:5, wearK:.0001, cost:3, doubleShear:true, extraPlates:1, drilled:true,
+            how:'Sandwich the moving plate between two fork plates; a shoulder bolt through a sleeve carries it on both sides.', breaks:'Adds a plate per joint; the fork limits how far it can swing.'},
+  strap:   {name:'Webbing hinge', src:'nylon strap laminated in foam', d:0, c:0, ctol:0, bear:60, cap:250, mu:0, maxSwing:100, maxPlates:2, wearK:0, cost:.3, flex:true,
+            how:'Split both foam ends, glue a strap 150 mm into each, bevel the faces so they can fold.', breaks:'Cannot turn more than about 100°; twists sideways.'}
+};
+const STOCK = {
+  eps:     {name:'EPS foam 25', src:'your foam board', t:25, w:70, E:4e6, rho:16, plate:true},
+  card:    {name:'Corrugated card', src:'boxes, double wall', t:7, w:40, E:.3e9, rho:150, plate:true},
+  trellis: {name:'Trellis strip', src:'expandable trellis', t:5, w:22, E:1.3e9, rho:900, maxLen:480},
+  pvc:     {name:'1/2 in PVC pipe', src:'hardware store', tube:true, od:21.3, id:15.8, t:21.3, w:21.3, E:3e9, rho:1400},
+  ply:     {name:'Ply 6', src:'your plywood panel', t:5.5, w:40, E:6e9, rho:600, plate:true},
+  steel:   {name:'Steel flat 3 × 25', src:'flat bar', t:3, w:25, E:200e9, rho:7850}
+};
+const MAKE = {hand:{name:'Hand drilled', tol:.25, pos:1.5}, jig:{name:'Printed jig', tol:.12, pos:.5}, cnc:{name:'CNC / laser', tol:.05, pos:.15}};
+const PIN_NAMES = {O:'crank axle', B:'frame pivot', M:'crank pin', J1:'top', J2:'knee', J3:'back', J4:'hock'};
+const allJ = t => ({O:t, B:t, M:t, J1:t, J2:t, J3:t, J4:t});
+const base = () => ({stock:'eps', joints: allJ('puck'), make:'hand', sigma:9.75, rump:2, share:60, Lb:760, gap:30, legs:1, strides:0, mag:8, tol:'nom', phi0:null, G:{...HOLY}});
+const VARS = [
+  {name:'A', title:'Foam + pucks', B: base()},
+  {name:'B', title:'Trellis + rivets', B: Object.assign(base(), {stock:'trellis', sigma:7, joints: Object.assign(allJ('rivet'), {O:'bush', M:'scissor', B:'bush', J2:'bush'})})},
+  {name:'C', title:'PVC walker', B: Object.assign(base(), {stock:'pvc', joints: allJ('pvc')})},
+  {name:'D', title:'Ply + bushes', B: Object.assign(base(), {stock:'ply', make:'jig', joints: Object.assign(allJ('bush'), {J2:'clevis', J4:'clevis'})})}
+];
+let active = 0;
+const B = () => VARS[active].B;
+const S = {t: .3, playing: true, slow: false, view: 'leg', tab: 'joints', cadence: 54, height: 1750, live: null, hist: [], sel: 'J2', drag: null, hoverBar: null};
+const cur = () => S.live || B().G;
+
+// ---------- linkage ----------
+function cc(P, r0, Q, r1, s) { const dx = Q.x - P.x, dy = Q.y - P.y, d = Math.hypot(dx, dy); if (d < 1e-9 || d > r0 + r1 || d < Math.abs(r0 - r1)) return null; const a = (r0*r0 - r1*r1 + d*d) / (2*d), h = Math.sqrt(Math.max(0, r0*r0 - a*a)), ux = dx/d, uy = dy/d; return {x: P.x + a*ux - s*h*uy, y: P.y + a*uy + s*h*ux}; }
+function solve(G, th) { const p = {O:{x:0,y:0}, B:{x:-G.a,y:-G.l}, A:{x:0,y:-G.l}, M:{x:G.m*Math.cos(th), y:G.m*Math.sin(th)}}; for (const J of ORDER) { const [p0, r0, p1, r1, s] = JOINT_DEF[J]; const q = cc(p[p0], G[r0], p[p1], G[r1], s); if (!q) { p.fail = J; return p; } p[J] = q; } return p; }
+const kIdx = ang => ((Math.round(ang / TAU * N) % N) + N) % N;
+const uv = (a, b) => { const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1; return {x: dx / L, y: dy / L}; };
+const cr = (a, b) => a.x * b.y - a.y * b.x, sub = (a, b) => ({x: a.x - b.x, y: a.y - b.y}), add = (a, b) => ({x: a.x + b.x, y: a.y + b.y}), mul = (a, s) => ({x: a.x * s, y: a.y * s}), len = a => Math.hypot(a.x, a.y);
+function analyze(G) {
+  const fx = new Float64Array(N), fy = new Float64Array(N), ok = new Uint8Array(N);
+  let minY = Infinity, maxY = -Infinity, minX = Infinity, maxX = -Infinity, topY = -Infinity, valid = 0;
+  for (let k = 0; k < N; k++) { const p = solve(G, TAU * k / N); if (!p.F) continue; ok[k] = 1; fx[k] = p.F.x; fy[k] = p.F.y; valid++; minY = Math.min(minY, p.F.y); maxY = Math.max(maxY, p.F.y); for (const n of ['B','J1','J2','J3','J4','F','M']) { minX = Math.min(minX, p[n].x); maxX = Math.max(maxX, p[n].x); topY = Math.max(topY, p[n].y); } }
+  if (!valid) { minY = -90; maxY = -70; minX = -80; maxX = 15; topY = 30; }
+  const tol = Math.max(.6, .05 * (maxY - minY)), contact = new Uint8Array(N);
+  for (let k = 0; k < N; k++) contact[k] = ok[k] && fy[k] < minY + tol ? 1 : 0;
+  let sv = 0, nv = 0; for (let k = 0; k < N; k++) { const n = (k + 1) % N; if (contact[k] && contact[n]) { sv += fx[n] - fx[k]; nv++; } }
+  return {fx, fy, ok, contact, minY, maxY, minX, maxX, topY, spin: sv <= 0 ? 1 : -1, advance: nv ? Math.abs(sv / nv) * N : 0, duty: contact.reduce((s, c) => s + c, 0) / N, locked: (N - valid) / N};
+}
+function statics(P, W) {
+  if (!P.F || W <= 0) return null;
+  const uk = uv(P.J2, P.M), uc = uv(P.J2, P.B), uf = uv(P.J4, P.J3), R = {x: 0, y: W};
+  const den = cr(sub(P.J4, P.J2), uf); if (Math.abs(den) < 1e-9) return null;
+  const Ff = -cr(sub(P.F, P.J2), R) / den, rx = -(Ff * uf.x + R.x), ry = -(Ff * uf.y + R.y), det = uk.x * uc.y - uk.y * uc.x;
+  const Fk = (rx * uc.y - ry * uc.x) / det, Fc = (uk.x * ry - uk.y * rx) / det, uj = uv(P.J1, P.M), uf3 = uv(P.J3, P.J4);
+  const Fj = -Ff * cr(sub(P.J3, P.B), uf3) / cr(sub(P.J1, P.B), uj);
+  const Bup = mul(add(mul(uj, Fj), mul(uf3, Ff)), -1), Fs = add(mul(uv(P.M, P.J1), Fj), mul(uv(P.M, P.J2), Fk)), J2v = add(mul(uk, Fk), mul(uc, Fc)), frameB = add(Bup, mul(uv(P.J2, P.B), Fc));
+  return {Fj, Fk, Fc, Ff, tauU: -cr(P.M, Fs), pinVec: {O: mul(Fs, -1), B: Bup, M: Fs, J1: mul(uj, Fj), J2: J2v, J3: mul(uf3, Ff), J4: mul(uf, Ff)},
+    plates: {O: {frame: len(Fs), crank: len(Fs)}, B: {frame: len(frameB), up: len(Bup), c: Math.abs(Fc)}, M: {crank: len(Fs), j: Math.abs(Fj), k: Math.abs(Fk)}, J1: {j: Math.abs(Fj), up: Math.abs(Fj)}, J2: {k: Math.abs(Fk), c: Math.abs(Fc), lo: len(J2v)}, J3: {up: Math.abs(Ff), f: Math.abs(Ff)}, J4: {f: Math.abs(Ff), lo: Math.abs(Ff)}}};
+}
+// human gait
+const HIPK = [[0,25],[.1,22],[.3,5],[.5,-12],[.6,-8],[.75,18],[.88,30]], KNEEK = [[0,5],[.15,18],[.4,5],[.55,30],[.72,62],[.85,40],[.97,3]];
+function curve(keys, u) { u = ((u % 1) + 1) % 1; const n = keys.length; let i = n - 1; for (let q = 0; q < n; q++) if (keys[q][0] <= u) i = q; const k1 = keys[i], k2 = keys[(i + 1) % n], k0 = keys[(i - 1 + n) % n], k3 = keys[(i + 2) % n]; let u1 = k1[0], u2 = k2[0]; if (u2 <= u1) u2 += 1; let uu = u; if (uu < u1) uu += 1; const t = (uu - u1) / (u2 - u1), p0 = k0[1], p1 = k1[1], p2 = k2[1], p3 = k3[1]; return 0.5 * ((2*p1) + (-p0 + p2)*t + (2*p0 - 5*p1 + 4*p2 - p3)*t*t + (-p0 + 3*p1 - 3*p2 + p3)*t*t*t); }
+function humanLegRel(H, u) { const Lt = .245 * H, Ls = .246 * H, a = curve(HIPK, u) * Math.PI / 180, kf = curve(KNEEK, u) * Math.PI / 180, knee = {x: Lt * Math.sin(a), y: -Lt * Math.cos(a)}; return {a, knee, ank: {x: knee.x + Ls * Math.sin(a - kf), y: knee.y - Ls * Math.cos(a - kf)}}; }
+function humanModel(H) { const ankleH = .039 * H, hipY = new Float64Array(N + 1), hipX = new Float64Array(N + 1), L = [], R = []; for (let k = 0; k <= N; k++) { L.push(humanLegRel(H, k / N)); R.push(humanLegRel(H, k / N + .5)); } for (let k = 0; k <= N; k++) hipY[k] = ankleH + Math.max(-L[k].ank.y, -R[k].ank.y); for (let k = 0; k < N; k++) { const S2 = L[k].ank.y <= R[k].ank.y ? L : R; hipX[k + 1] = hipX[k] - (S2[k + 1].ank.x - S2[k].ank.x); } let m = 0; for (let k = 0; k < N; k++) m += hipY[k] / N; return {H, hipY, hipX, advance: hipX[N], meanHip: m}; }
+const HM = humanModel(S.height);
+
+// ---------- helpers ----------
+const lerp = (a, b, t) => a + (b - a) * t, fmt = (v, d = 1) => (Math.abs(v) < 1e-9 ? 0 : v).toFixed(d), wrapPi = a => Math.atan2(Math.sin(a), Math.cos(a)), clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function sizeCanvas(c) { const dpr = Math.min(2, window.devicePixelRatio || 1), w = c.clientWidth, h = c.clientHeight; if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); } const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); return {x, W: w, H: h}; }
+function distPtSeg(p, a, b) { const dx = b.x - a.x, dy = b.y - a.y, L = dx*dx + dy*dy || 1e-12, t = clamp(((p.x - a.x)*dx + (p.y - a.y)*dy) / L, 0, 1); return Math.hypot(p.x - a.x - t*dx, p.y - a.y - t*dy); }
+function segsCross(a, b, c, d) { const o = (p, q, r) => (q.x - p.x)*(r.y - p.y) - (q.y - p.y)*(r.x - p.x); return (o(a, b, c) * o(a, b, d) < 0) && (o(c, d, a) * o(c, d, b) < 0); }
+function distSegSeg(a, b, c, d) { if (segsCross(a, b, c, d)) return 0; return Math.min(distPtSeg(a, c, d), distPtSeg(b, c, d), distPtSeg(c, a, b), distPtSeg(d, a, b)); }
+function inTri(p, t) { const s = (a, b, c) => (a.x - c.x)*(b.y - c.y) - (b.x - c.x)*(a.y - c.y); const d1 = s(p, t[0], t[1]), d2 = s(p, t[1], t[2]), d3 = s(p, t[2], t[0]); return !(((d1 < 0) || (d2 < 0) || (d3 < 0)) && ((d1 > 0) || (d2 > 0) || (d3 > 0))); }
+const useClass = u => u >= 1 ? 'bad' : u >= .5 ? 'warn' : 'ok', useCol = u => u >= 1 ? COL.red : u >= .5 ? COL.amber : COL.teal;
+function p95(arr) { const a = Array.from(arr).sort((x, y) => x - y); return Math.max(1e-6, a[Math.floor(a.length * .95)] || 0); }
+let seed = 11; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647 * 2 - 1; };
+const MC = Array.from({length: 40}, () => ({j: rnd(), k: rnd(), c: rnd(), f: rnd(), m: rnd(), pj: rnd(), pk: rnd(), pc: rnd(), pf: rnd()}));
+
+// ---------- parts, pins, layers ----------
+const PARTS = [
+  {id:'frame', name:'Frame', segs:[['B','A'],['A','O']], holes:['B','O'], fixed:true},
+  {id:'crank', name:'Crank', segs:[['O','M']], holes:['O','M']},
+  {id:'j', name:'Link j', segs:[['M','J1']], holes:['M','J1'], link:true},
+  {id:'k', name:'Link k', segs:[['M','J2']], holes:['M','J2'], link:true},
+  {id:'c', name:'Link c', segs:[['B','J2']], holes:['B','J2'], link:true},
+  {id:'f', name:'Link f', segs:[['J3','J4']], holes:['J3','J4'], link:true},
+  {id:'up', name:'Top triangle', segs:[['B','J1'],['J1','J3'],['J3','B']], tri:['B','J1','J3'], holes:['B','J1','J3']},
+  {id:'lo', name:'Foot triangle', segs:[['J2','J4'],['J4','F'],['F','J2']], tri:['J2','J4','F'], holes:['J2','J4'], foot:'F'}
+];
+const PINS = [
+  {id:'O', parts:['frame','crank'], main:'crank'}, {id:'B', parts:['frame','up','c'], main:'up'}, {id:'M', parts:['crank','j','k'], main:'crank'},
+  {id:'J1', parts:['j','up'], main:'up'}, {id:'J2', parts:['k','c','lo'], main:'lo'}, {id:'J3', parts:['up','f'], main:'up'}, {id:'J4', parts:['f','lo'], main:'lo'}
+];
+const PART_REF = {frame:null, crank:['O','M'], j:['M','J1'], k:['M','J2'], c:['B','J2'], f:['J3','J4'], up:['B','J1'], lo:['J2','J4']};
+function partAngle(p, id) { const r = PART_REF[id]; if (!r) return 0; return Math.atan2(p[r[1]].y - p[r[0]].y, p[r[1]].x - p[r[0]].x); }
+function layering(b, G) {
+  const st = STOCK[b.stock], parts = PARTS, n = parts.length, idx = {}; parts.forEach((p, i) => idx[p.id] = i);
+  let dMax = 0; for (const pn of PINS) dMax = Math.max(dMax, JT[b.joints[pn.id]].d);
+  const rU = st.w / 2 / b.sigma, holeU = dMax / 2 / b.sigma, gapU = 2 / b.sigma;
+  const conf = parts.map(() => new Uint8Array(n)), share = (a, c) => PINS.some(pn => pn.parts.includes(a) && pn.parts.includes(c));
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) if (share(parts[i].id, parts[j].id)) conf[i][j] = conf[j][i] = 2;
+  const pinHit = PINS.map(() => new Uint8Array(n));
+  for (let s = 0; s < 60; s++) {
+    const P = solve(G, TAU * s / 60); if (P.fail) continue;
+    const geo = parts.map(p => ({segs: p.segs.map(([a, c]) => [P[a], P[c]]), tri: p.tri && st.plate ? p.tri.map(k => P[k]) : null}));
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) { if (conf[i][j]) continue; let hit = false; for (const [a, c] of geo[i].segs) { for (const [d, e] of geo[j].segs) if (distSegSeg(a, c, d, e) < 2 * rU + gapU) { hit = true; break; } if (hit) break; } if (!hit && geo[i].tri) for (const [d] of geo[j].segs) if (inTri(d, geo[i].tri)) { hit = true; break; } if (!hit && geo[j].tri) for (const [d] of geo[i].segs) if (inTri(d, geo[j].tri)) { hit = true; break; } if (hit) conf[i][j] = conf[j][i] = 1; }
+    PINS.forEach((pn, pi) => { const pt = P[pn.id]; for (let q = 0; q < n; q++) { if (pn.parts.includes(parts[q].id) || pinHit[pi][q]) continue; const g = geo[q]; let h = g.segs.some(([a, c]) => distPtSeg(pt, a, c) < rU + holeU + gapU / 2); if (!h && g.tri) h = inTri(pt, g.tri); if (h) pinHit[pi][q] = 1; } });
+  }
+  const order = ['frame','crank','j','k','c','up','lo','f'].map(id => idx[id]), pinParts = PINS.map(pn => pn.parts.map(id => idx[id]));
+  const lay = new Int8Array(n).fill(-1); let best = null, nodes = 0;
+  const span = pi => { let lo = Infinity, hi = -Infinity, all = true; for (const q of pinParts[pi]) { if (lay[q] < 0) { all = false; continue; } lo = Math.min(lo, lay[q]); hi = Math.max(hi, lay[q]); } if (PINS[pi].id === 'O' && isFinite(lo)) lo = 0; return {lo, hi, all}; };
+  const okNow = () => { for (let pi = 0; pi < PINS.length; pi++) { const sp = span(pi); if (!sp.all) continue; for (let q = 0; q < n; q++) if (pinHit[pi][q] && lay[q] >= 0 && lay[q] >= sp.lo && lay[q] <= sp.hi) return false; } return true; };
+  const partial = () => { let c = 0; for (let pi = 0; pi < PINS.length; pi++) { const sp = span(pi); if (isFinite(sp.lo)) c += sp.hi - sp.lo; } return c; };
+  function dfs(d, L) { if (++nodes > 120000) return; if (best && partial() >= best.cost) return; if (d === n) { best = {cost: partial(), lay: Array.from(lay)}; return; } const p = order[d], top = p === idx.frame ? 1 : L; for (let l = 0; l < top; l++) { let ok = true; for (let e = 0; e < d; e++) { const q = order[e]; if (conf[p][q] && lay[q] === l) { ok = false; break; } } if (!ok) continue; lay[p] = l; if (okNow()) dfs(d + 1, L); lay[p] = -1; if (nodes > 120000) return; } }
+  for (let L = 2; L <= 9 && !best; L++) { nodes = 0; dfs(0, L); }
+  const layers = best ? best.lay : parts.map((_, i) => i), layerOf = {}; parts.forEach((p, i) => layerOf[p.id] = layers[i]);
+  return {layerOf, nL: Math.max(...layers) + 1};
+}
+
+// ---------- engine ----------
+function jointAt(b, pinId, jtKey, ctx) {
+  // what joint type jtKey would do at this pin, given the loads in ctx
+  const J = JT[jtKey], st = STOCK[b.stock], P = ctx.pins0[pinId], mk = MAKE[b.make];
+  const parts = PINS.find(p => p.id === pinId).parts.length;
+  const layers = P.layers + (J.extraPlates ? 2 * J.extraPlates : 0);
+  const cBase = J.c + (b.tol === 'worst' ? J.ctol : 0) + (J.drilled ? mk.tol / 2 : 0);
+  const use0 = P.peak / J.cap;
+  const tooMany = parts > J.maxPlates, tooFar = P.swing > J.maxSwing;
+  const wearPer = J.wearK * Math.min(use0, 3) ** 2 * Math.max(.2, P.swing / 90);
+  const c = Math.min(6, cBase + wearPer * b.strides);
+  const bear = J.tube ? J.bear : Math.max(J.bear, Math.min(J.bear * 2, st.t));
+  const tilt = J.flex ? 1.5 * Math.PI / 180 : Math.atan(2 * c / (bear * (J.doubleShear ? 2 : 1)));
+  const omega = TAU * S.cadence / 60;
+  const fricW = J.flex ? .02 * P.swing / 90 : J.mu * P.meanLoad * J.d / 2000 * P.meanRel * omega;
+  const stackMM = layers * (J.tube ? 28 : st.t) + (J.flex ? 0 : 2 * 1.5);
+  const use = Math.max(use0, tooMany ? 1.5 : 0, tooFar ? 1 + (P.swing - J.maxSwing) / 100 : 0);
+  let why = []; if (tooMany) why.push(`joins ${J.maxPlates} plates, this pin has ${parts}`); if (tooFar) why.push(`swings ${fmt(P.swing, 0)}°, it allows ${J.maxSwing}°`); if (use0 >= 1) why.push(`${fmt(P.peak, 0)} N, holds ${J.cap}`);
+  return {use, use0, c, tilt, fricW, stackMM, wearPer, life: wearPer ? Math.max(0, (2 - cBase) / wearPer) : Infinity, why, layers};
+}
+function engine(b) {
+  const G = b === B() ? cur() : b.G, sg = b.sigma, st = STOCK[b.stock];
+  const A = analyze(G), lay = layering(b, G), nLegs = b.legs * 2, offs = nLegs === 2 ? [0, N / 2] : [0, N / 2, N / 4, 3 * N / 4];
+  // mass
+  const P03 = solve(G, .3); let legKg = 0, longest = 0;
+  for (const p of PARTS) { if (P03.fail) break; let L = 0; for (const [a, c] of p.segs) { const l = len(sub(P03[c], P03[a])) * sg; L += l; longest = Math.max(longest, l); } const area = st.tube ? Math.PI * ((st.od / 2000) ** 2 - (st.id / 2000) ** 2) * L / 1000 : (L * st.w + (p.tri && st.plate ? Math.abs(cr(sub(P03[p.tri[1]], P03[p.tri[0]]), sub(P03[p.tri[2]], P03[p.tri[0]]))) / 2 * sg * sg : 0)) / 1e6 * st.t / 1000; legKg += area * st.rho; }
+  legKg += 0.06 * 7;
+  const totalKg = nLegs * legKg + b.rump + .8, Wtot = totalKg * G0 * b.share / 100 * 1.5;
+  const F = new Array(N), poses = new Array(N);
+  for (let k = 0; k < N; k++) { const P = solve(G, TAU * k / N); poses[k] = P; let nc = 0; for (const o of offs) nc += A.contact[(k + o) % N]; F[k] = A.contact[k] && nc ? statics(P, Wtot / nc) : null; }
+  let phi0 = b.phi0;
+  if (phi0 === null || phi0 === undefined) { let bp = null; for (let q = 0; q < 72; q++) { const p0 = TAU * q / 72; let on = null; for (let i = 0; i < N; i++) { const k = kIdx(A.spin * TAU * i / N + p0), kp = kIdx(A.spin * TAU * (i - 1) / N + p0); if (A.contact[k] && !A.contact[kp]) { on = i / N; break; } } if (on === null) continue; const e = Math.abs(((on - .75 + 1.5) % 1) - .5); if (!bp || e < bp.e) bp = {e, p: p0}; } phi0 = bp ? bp.p : 0; if (b === B()) b.phi0 = phi0; }
+  const tIdx = new Int16Array(N); for (let i = 0; i < N; i++) tIdx[i] = kIdx(A.spin * TAU * i / N + phi0);
+  // per pin: loads, swing, knocks, raw numbers independent of joint type
+  const pins0 = {};
+  for (const pn of PINS) {
+    const rel = new Float64Array(N); let prev = null, acc = 0, lo = Infinity, hi = -Infinity;
+    for (let k = 0; k < N; k++) { const P = poses[k]; if (P.fail) { rel[k] = acc; continue; } const r = partAngle(P, pn.parts[1]) - partAngle(P, pn.parts[0]); acc = prev === null ? r : acc + wrapPi(r - prev); prev = r; rel[k] = acc; lo = Math.min(lo, acc); hi = Math.max(hi, acc); }
+    let peak = 0, sum = 0, relSum = 0, fAll = 0; const series = new Float64Array(N), knockAt = [];
+    for (let i = 0; i < N; i++) { const f = F[tIdx[i]]; if (f) fAll = Math.max(fAll, len(f.pinVec[pn.id])); }
+    let prevOn = false, prevAng = null;
+    for (let i = 0; i < N; i++) {
+      const k = tIdx[i], f = F[k]; let pm = 0; if (f) for (const v of Object.values(f.plates[pn.id])) pm = Math.max(pm, v);
+      series[i] = pm; peak = Math.max(peak, pm); sum += pm;
+      relSum += Math.min(4, Math.abs(rel[(k + 1) % N] - rel[k]) / (TAU / N));
+      const vec = f ? f.pinVec[pn.id] : {x: 0, y: 0}, m = len(vec), on = m > .15 * fAll && fAll > 0;
+      if (on) { const ang = Math.atan2(vec.y, vec.x) - partAngle(poses[k], pn.main); if (!prevOn) knockAt.push(i); else if (prevAng !== null && Math.abs(wrapPi(ang - prevAng)) > 2.1) knockAt.push(i); prevAng = ang; } else prevAng = null;
+      prevOn = on;
+    }
+    let lo2 = Infinity, hi2 = -Infinity; for (const p of pn.parts) { lo2 = Math.min(lo2, lay.layerOf[p]); hi2 = Math.max(hi2, lay.layerOf[p]); } if (pn.id === 'O') lo2 = 0;
+    pins0[pn.id] = {rel, swing: isFinite(hi) ? (hi - lo) * 180 / Math.PI : 0, peak, meanLoad: sum / N, meanRel: relSum / N, series, knockAt, layers: hi2 - lo2 + 1, lo: lo2, hi: hi2};
+  }
+  const ctx = {pins0};
+  const pins = {}; for (const pn of PINS) pins[pn.id] = Object.assign({}, pins0[pn.id], jointAt(b, pn.id, b.joints[pn.id], ctx));
+  // links: buckling in the weak direction
+  const links = {};
+  for (const id of Object.keys(LINKS)) {
+    let cMax = 0, tMax = 0; for (let k = 0; k < N; k++) { const f = F[k]; if (!f) continue; const v = f['F' + id]; cMax = Math.max(cMax, -v); tMax = Math.max(tMax, v); }
+    const Lm = G[id] * sg / 1000, w = st.w / 1000, t = st.t / 1000;
+    const EI = st.tube ? st.E * Math.PI * ((st.od / 1000) ** 4 - (st.id / 1000) ** 4) / 64 : st.E * w * t ** 3 / 12;
+    const Pcr = Math.PI ** 2 * EI / (Lm * Lm);
+    links[id] = {cMax, tMax, Pcr, buck: cMax / Pcr, Lmm: Lm * 1000, tooLong: st.maxLen && Lm * 1000 > st.maxLen};
+  }
+  // slop at the foot
+  const pc = id => pins[id].c, mk = MAKE[b.make];
+  const play = {j: 2 * (pc('M') + pc('J1')), k: 2 * (pc('M') + pc('J2')), c: 2 * (pc('B') + pc('J2')), f: 2 * (pc('J3') + pc('J4')), m: 2 * pc('O')};
+  let mid = 0; { let br = -1; for (let k = 0; k < N; k++) if (A.contact[k]) { let run = 0; while (A.contact[(k + run) % N] && run < N) run++; if (run > br) { br = run; mid = (k + Math.floor(run / 2)) % N; } } }
+  let spread = 0; { const P0 = poses[mid]; if (P0.F) for (const r of MC) { const Gp = {...G}; for (const id of ['j','k','c','f','m']) Gp[id] += (r[id] * play[id] / 2 + (id !== 'm' ? r['p' + id] * mk.pos : 0)) / sg; const P = solve(Gp, TAU * mid / N); if (P.F) spread = Math.max(spread, len(sub(P.F, P0.F)) * sg); } }
+  let wobble = 0; { const P0 = poses[mid]; let ss = 0; if (P0.F) for (const pn of PINS) if (pn.id !== 'O') ss += (Math.tan(pins[pn.id].tilt) * len(sub(P0.F, P0[pn.id])) * sg * .5) ** 2; wobble = Math.sqrt(ss); }
+  const fric = new Float64Array(N), omega = TAU * S.cadence / 60;
+  for (let i = 0; i < N; i++) { let p = 0; for (const pn of PINS) { const J = JT[b.joints[pn.id]], P = pins[pn.id], k = tIdx[i]; p += J.flex ? 0 : J.mu * P.series[i] * J.d / 2000 * Math.min(4, Math.abs(P.rel[(k + 1) % N] - P.rel[k]) / (TAU / N)) * omega; } fric[i] = p * nLegs; }
+  const fricW = fric.reduce((s, v) => s + v, 0) / N;
+  let supported = 0; for (let k = 0; k < N; k++) { let any = 0; for (const o of offs) any |= A.contact[(k + o) % N]; supported += any; }
+  let slip = 0; { let run = null; for (let i = 0; i <= N; i++) { const k = tIdx[i % N], body = HM.hipX[Math.min(N, i)]; if (A.contact[k] && A.ok[k]) { const wx = body + A.fx[k] * sg; run = run ? {lo: Math.min(run.lo, wx), hi: Math.max(run.hi, wx)} : {lo: wx, hi: wx}; } else if (run) { slip = Math.max(slip, run.hi - run.lo); run = null; } } }
+  // width: thickest stack through any pin
+  let stackMax = 0; for (const pn of PINS) stackMax = Math.max(stackMax, pins[pn.id].stackMM);
+  const footZ = b.gap / 2 + (lay.layerOf.lo + .5) * (st.tube ? 28 : st.t) + (b.legs === 2 ? stackMax : 0), humanZ = .035 * S.height;
+  const Hc = -A.minY * sg, slope = Math.atan2(HM.meanHip - Hc, b.Lb) * 180 / Math.PI, strideRatio = A.advance * sg / HM.advance;
+  let onset = null; for (let i = 0; i < N; i++) { const k = tIdx[i], kp = tIdx[(i - 1 + N) % N]; if (A.contact[k] && !A.contact[kp]) { onset = i / N; break; } }
+  const ph = onset === null ? null : ((onset - .75 + 1.5) % 1) - .5;
+  const ledger = [
+    ['Feet carry the rump', `${fmt(supported / N * 100, 0)}%`, supported / N > .97 ? 'ok' : supported / N > .85 ? 'warn' : 'bad'],
+    ['Feet stay planted', `${fmt(slip, 0)} mm`, slip < 15 ? 'ok' : slip < 50 ? 'warn' : 'bad'],
+    ['Level with your hips', `${fmt(slope, 1)}°`, Math.abs(slope) < 3 ? 'ok' : Math.abs(slope) < 8 ? 'warn' : 'bad'],
+    ['In line with your feet', `${footZ - humanZ >= 0 ? '+' : ''}${fmt(footZ - humanZ, 0)} mm`, Math.abs(footZ - humanZ) < 25 ? 'ok' : Math.abs(footZ - humanZ) < 60 ? 'warn' : 'bad'],
+    ['Same stride as yours', `${fmt(strideRatio * 100, 0)}%`, Math.abs(strideRatio - 1) < .03 ? 'ok' : Math.abs(strideRatio - 1) < .1 ? 'warn' : 'bad'],
+    ['Horse walk timing', ph === null ? '–' : `${ph >= 0 ? '+' : ''}${fmt(ph * 100, 0)}%`, ph !== null && Math.abs(ph) < .06 ? 'ok' : 'warn'],
+    ['Ground time like a walk', `${fmt(A.duty * 100, 0)}%`, A.duty > .55 ? 'ok' : A.duty > .45 ? 'warn' : 'bad']
+  ];
+  let worstJoint = 0; for (const pn of PINS) worstJoint = Math.max(worstJoint, pins[pn.id].use);
+  let worstLink = 0; for (const L of Object.values(links)) worstLink = Math.max(worstLink, L.buck, L.tooLong ? 1.5 : 0);
+  let cost = 0; for (const pn of PINS) cost += JT[b.joints[pn.id]].cost * nLegs;
+  return {b, G, A, lay, F, poses, tIdx, phi0, pins, ctx, links, play, spread, wobble, wander: Math.hypot(spread, wobble), fric, fricW, supported: supported / N, slip, footZ, humanZ, Hc, slope, strideRatio, ledger,
+    legKg, totalKg, Wtot, nLegs, offs, worstJoint, worstLink, worst: Math.max(worstJoint, worstLink), cost, longest, legible: ledger.filter(l => l[2] === 'ok').length, stackMax};
+}
+let E = null, CMP = [], cmpT = null;
+function run() { E = engine(B()); renderPanel(); clearTimeout(cmpT); cmpT = setTimeout(() => { CMP = VARS.map((v, i) => i === active ? E : engine(v.B)); if (S.tab === 'rig') renderPanel(); }, 300); }
+
+// ---------- drawing ----------
+const legPhi = (u, o) => E.A.spin * TAU * u + E.phi0 + o / N * TAU, uNow = () => S.t * S.cadence / 60;
+const iNow = () => Math.floor((((uNow() % 1) + 1) % 1) * N) % N;
+function hipAt(u) { const n = Math.floor(u), f = u - n, kf = f * N, k = Math.floor(kf), t = kf - k; return {x: n * HM.advance + lerp(HM.hipX[k], HM.hipX[k + 1], t), y: lerp(HM.hipY[k], HM.hipY[Math.min(N, k + 1)], t)}; }
+function line(x, X, Y, pts, w, col) { x.strokeStyle = col; x.lineWidth = w; x.lineCap = 'round'; x.lineJoin = 'round'; x.beginPath(); pts.forEach((p, i) => i ? x.lineTo(X(p.x), Y(p.y)) : x.moveTo(X(p.x), Y(p.y))); x.stroke(); }
+function arrow(x, x0, y0, x1, y1, col, w) { const a = Math.atan2(y1 - y0, x1 - x0); if (Math.hypot(x1 - x0, y1 - y0) < 3) return; x.strokeStyle = col; x.fillStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y1); x.stroke(); x.beginPath(); x.moveTo(x1, y1); x.lineTo(x1 - 7 * Math.cos(a - .4), y1 - 7 * Math.sin(a - .4)); x.lineTo(x1 - 7 * Math.cos(a + .4), y1 - 7 * Math.sin(a + .4)); x.closePath(); x.fill(); }
+function drawStock(x, P, X, Y, pxmm, b, faint) {
+  const st = STOCK[b.stock], order = PARTS.slice().sort((p, q) => E.lay.layerOf[p.id] - E.lay.layerOf[q.id]);
+  for (const part of order) {
+    const segs = part.segs.filter(([a, c]) => P[a] && P[c]); if (!segs.length) continue;
+    const w = Math.max(st.tube ? 3 : 2, st.w * pxmm), fill = st.tube ? COL.pvc : st.E > 1e9 && !st.tube ? COL.wood : COL.paper;
+    const hasTri = st.plate && part.tri && part.tri.every(k => P[k]);
+    const path = () => { x.beginPath(); for (const [a, c] of segs) { x.moveTo(X(P[a].x), Y(P[a].y)); x.lineTo(X(P[c].x), Y(P[c].y)); } };
+    const tri = () => { x.beginPath(); part.tri.forEach((k, i) => i ? x.lineTo(X(P[k].x), Y(P[k].y)) : x.moveTo(X(P[k].x), Y(P[k].y))); x.closePath(); };
+    x.globalAlpha = faint ? .35 : 1; x.lineCap = st.tube ? 'butt' : 'round'; x.lineJoin = 'round';
+    x.strokeStyle = COL.ink; x.lineWidth = w + 2; path(); x.stroke(); if (hasTri) { x.fillStyle = COL.ink; tri(); x.fill(); }
+    x.strokeStyle = b.stock === 'steel' ? '#d9d9d9' : fill; x.lineWidth = w; path(); x.stroke(); if (hasTri) { x.fillStyle = fill; tri(); x.fill(); }
+    if (st.tube && w > 6) { x.strokeStyle = 'rgba(0,0,0,.25)'; x.lineWidth = 1; path(); x.stroke(); }
+    x.globalAlpha = 1;
+  }
+}
+function skeleton(x, P, X, Y, col, w) { x.save(); x.strokeStyle = col; x.lineWidth = w; x.lineCap = 'round'; for (const k of KEYS) { const [a, c] = BARS[k]; if (!P[a] || !P[c]) continue; x.setLineDash(k === 'a' || k === 'l' ? [4, 3] : []); x.beginPath(); x.moveTo(X(P[a].x), Y(P[a].y)); x.lineTo(X(P[c].x), Y(P[c].y)); x.stroke(); } x.restore(); }
+
+const simC = document.getElementById('sim');
+let LV = null;
+function drawSim() {
+  const {x, W, H} = sizeCanvas(simC); x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  x.font = `10px ${FONT}`; x.textBaseline = 'middle';
+  if (S.view === 'leg') drawLegView(x, W, H); else if (S.view === 'rig') drawRigView(x, W, H); else drawPlanes(x, W, H);
+}
+function drawLegView(x, W, H) {
+  const b = B(), G = cur(), sg = b.sigma, A = E.A, st = STOCK[b.stock], u = uNow();
+  const pad = st.w / sg + 6, span = A.maxX - A.minX + pad, hgt = A.topY - A.minY + pad;
+  const s = Math.min((W - 8) / span, (H - 22) / hgt), cx = (A.maxX + A.minX) / 2, cy = (A.topY + A.minY) / 2;
+  const X = v => W / 2 + (v - cx) * s, Y = v => (H - 12) / 2 - (v - cy) * s, pxmm = s / sg; LV = {X, Y, s};
+  const phi = legPhi(u, 0), k = kIdx(phi), P = solve(G, phi), f = E.F[k];
+  // ground and foot path
+  x.strokeStyle = COL.ink; x.lineWidth = 1; x.beginPath(); x.moveTo(0, Y(A.minY) + st.w * pxmm / 2 + 1); x.lineTo(W, Y(A.minY) + st.w * pxmm / 2 + 1); x.stroke();
+  x.setLineDash([2, 3]); x.beginPath(); let on = false; for (let i = 0; i <= N; i++) { const q = i % N; if (!A.ok[q]) { on = false; continue; } on ? x.lineTo(X(A.fx[q]), Y(A.fy[q])) : x.moveTo(X(A.fx[q]), Y(A.fy[q])); on = true; } x.stroke(); x.setLineDash([]);
+  drawStock(x, P, X, Y, pxmm, b, false);
+  skeleton(x, P, X, Y, 'rgba(0,0,0,.45)', 1);
+  if (S.hoverBar) { const [a, c] = BARS[S.hoverBar]; if (P[a] && P[c]) line(x, X, Y, [P[a], P[c]], 3, COL.blue); }
+  // slop cloud
+  if (P.F) { x.fillStyle = COL.red; for (const r of MC) { const Gp = {...G}; for (const id of ['j','k','c','f','m']) Gp[id] += (r[id] * E.play[id] / 2 + (id !== 'm' ? r['p' + id] * MAKE[b.make].pos : 0)) / sg * b.mag; const Q = solve(Gp, phi); if (Q.F) x.fillRect(X(Q.F.x) - 1.2, Y(Q.F.y) - 1.2, 2.4, 2.4); } }
+  // joints
+  const ii = E.tIdx.indexOf(k);
+  for (const pn of PINS) {
+    const p = P[pn.id]; if (!p) continue;
+    const pin = E.pins[pn.id], J = JT[b.joints[pn.id]], sel = S.sel === pn.id;
+    const r = Math.max(5, Math.min(14, (J.tube ? 28 : J.d * 2.2) * pxmm));
+    const loadNow = ii >= 0 ? pin.series[ii] / Math.max(1, pin.peak) : 0;
+    x.beginPath(); x.arc(X(p.x), Y(p.y), r + 3, 0, TAU); x.fillStyle = useCol(pin.use); x.fill();
+    x.beginPath(); x.arc(X(p.x), Y(p.y), r, 0, TAU); x.fillStyle = COL.paper; x.fill(); x.strokeStyle = COL.ink; x.lineWidth = 1.5; x.stroke();
+    if (J.flex) { x.strokeStyle = COL.ink; x.lineWidth = 2; x.beginPath(); x.moveTo(X(p.x) - r * .6, Y(p.y)); x.lineTo(X(p.x) + r * .6, Y(p.y)); x.stroke(); }
+    else { x.beginPath(); x.arc(X(p.x), Y(p.y), r * .45, 0, TAU); x.fillStyle = COL.ink; x.fill(); }
+    if (loadNow > .05) { x.strokeStyle = COL.red; x.lineWidth = 2; x.beginPath(); x.arc(X(p.x), Y(p.y), r + 5, -Math.PI / 2, -Math.PI / 2 + TAU * loadNow); x.stroke(); }
+    if ((flash[pn.id] || 0) > 0) { x.strokeStyle = COL.blue; x.lineWidth = 2; x.beginPath(); x.arc(X(p.x), Y(p.y), r + 8 + (1 - flash[pn.id]) * 10, 0, TAU); x.stroke(); }
+    if (sel) { x.strokeStyle = COL.blue; x.lineWidth = 3; x.beginPath(); x.arc(X(p.x), Y(p.y), r + 9, 0, TAU); x.stroke(); }
+    x.fillStyle = sel ? COL.blue : COL.ink; x.font = `${sel ? 700 : 500} 10px ${FONT}`; x.textAlign = 'left'; x.fillText(pn.id, X(p.x) + r + 5, Y(p.y) - r - 2);
+  }
+  if (P.F && f) { x.fillStyle = COL.teal; x.fillRect(X(P.F.x) - 8, Y(A.minY) + st.w * pxmm / 2 - 1, 16, 4); }
+  x.font = `10px ${FONT}`; x.fillStyle = COL.ink; x.textAlign = 'left';
+  x.fillText(`tap a joint · drag a bar`, 4, 9);
+  x.textAlign = 'right'; x.fillText(`foot ±${fmt(E.wander, 0)} mm (dots ${b.mag}×)`, W - 4, H - 6);
+  if (P.fail) { x.fillStyle = COL.red; x.textAlign = 'left'; x.fillText(`jammed at ${P.fail}`, 4, 22); }
+}
+function drawRigView(x, W, H) {
+  const b = B(), G = cur(), sg = b.sigma, A = E.A, u = uNow(), hip = hipAt(u), Hh = S.height, st = STOCK[b.stock];
+  const axX = hip.x - b.Lb, Hc = E.Hc, left = axX + A.minX * sg - 60, right = hip.x + .35 * Hh;
+  const s = Math.min((W - 8) / (right - left), (H - 18) / (Hh * 1.04)), camX = (left + right) / 2, X = v => W / 2 + (v - camX) * s, Y = v => H - 10 - v * s;
+  x.strokeStyle = COL.ink; x.lineWidth = 1.5; x.beginPath(); x.moveTo(0, Y(0)); x.lineTo(W, Y(0)); x.stroke();
+  for (let t = Math.floor((camX - W / 2 / s) / 100) * 100; t <= camX + W / 2 / s; t += 100) { x.lineWidth = 1; x.beginPath(); x.moveTo(X(t), Y(0)); x.lineTo(X(t), Y(0) + 3); x.stroke(); }
+  const LX = v => X(axX + v * sg), LY = v => Y(Hc + v * sg);
+  const Ps = E.offs.map(o => solve(G, legPhi(u, o)));
+  const hl = [humanLegRel(Hh, u), humanLegRel(Hh, u + .5)];
+  const human = (L, col, w) => { const kn = {x: hip.x + L.knee.x, y: hip.y + L.knee.y}, an = {x: hip.x + L.ank.x, y: hip.y + L.ank.y}; line(x, X, Y, [hip, kn, an, {x: an.x + .1 * Hh, y: Math.max(0, an.y - .035 * Hh)}], w, col); };
+  E.offs.forEach((o, i) => { if (i % 2) skeleton(x, Ps[i], LX, LY, COL.blue, 1.2); });
+  human(hl[1], COL.blue, Math.max(2, s * 14));
+  const rump = [{x: hip.x - .1 * Hh, y: hip.y + .02 * Hh}, {x: hip.x - .1 * Hh, y: hip.y + .17 * Hh}, {x: axX - 60, y: Hc + .15 * Hh}, {x: axX + A.minX * sg * .5, y: Hc + .08 * Hh}, {x: axX + A.minX * sg * .5, y: Hc - .02 * Hh}, {x: axX + 80, y: Hc - .04 * Hh}];
+  x.fillStyle = COL.foam; x.strokeStyle = COL.ink; x.lineWidth = 1; x.setLineDash([4, 3]); x.beginPath(); rump.forEach((p, i) => i ? x.lineTo(X(p.x), Y(p.y)) : x.moveTo(X(p.x), Y(p.y))); x.closePath(); x.fill(); x.stroke(); x.setLineDash([]);
+  line(x, X, Y, [{x: hip.x - .07 * Hh, y: hip.y}, {x: axX, y: Hc}], Math.max(2, s * 12), COL.ink);
+  const sh = {x: hip.x + .03 * Hh, y: hip.y + .288 * Hh};
+  line(x, X, Y, [hip, sh], Math.max(3, s * 32), COL.ink);
+  x.beginPath(); x.arc(X(sh.x + .02 * Hh), Y(sh.y + .1 * Hh), .062 * Hh * s, 0, TAU); x.fillStyle = COL.paper; x.fill(); x.strokeStyle = COL.ink; x.stroke();
+  E.offs.forEach((o, i) => { if (i % 2 === 0) { drawStock(x, Ps[i], LX, LY, s, b, i > 0); skeleton(x, Ps[i], LX, LY, COL.ink, 1); } });
+  human(hl[0], COL.ink, Math.max(2, s * 18));
+  E.offs.forEach((o, i) => { const p = Ps[i]; if (p.F && E.A.contact[kIdx(legPhi(u, o))]) { x.fillStyle = COL.teal; x.fillRect(LX(p.F.x) - 7, Y(0) - 2, 14, 4); } });
+  x.fillStyle = COL.ink; x.textAlign = 'left'; x.fillText(`${fmt(E.totalKg, 1)} kg · axle ${fmt(Hc / 10, 0)} cm · hip ${fmt(HM.meanHip / 10, 0)} cm`, 4, 9);
+}
+function drawPlanes(x, W, H) {
+  // front view, depth stretched so each layer separates
+  const b = B(), G = cur(), sg = b.sigma, A = E.A, u = uNow(), st = STOCK[b.stock], P = solve(G, legPhi(u, 0));
+  const layerT = st.tube ? 28 : st.t, stretch = 3, side = E.footZ + E.lay.nL * layerT * 1.2 + 60;
+  const sx = Math.min((W - 10) / (2 * side * stretch), 1e9), sy = (H - 26) / ((A.topY - A.minY) * sg + 60);
+  const s2 = Math.min(sx, sy * 3);
+  const Z = z => W / 2 + z * stretch * s2, Y = v => 14 + (A.topY * sg + 20 - v) * sy;
+  x.strokeStyle = COL.ink; x.lineWidth = 1; x.beginPath(); x.moveTo(0, Y(A.minY * sg - 4)); x.lineTo(W, Y(A.minY * sg - 4)); x.stroke();
+  for (const sgn of [1, -1]) {
+    x.setLineDash([3, 3]); x.strokeStyle = COL.ink; x.beginPath(); x.moveTo(Z(sgn * E.humanZ), Y(A.topY * sg)); x.lineTo(Z(sgn * E.humanZ), Y(A.minY * sg - 4)); x.stroke(); x.setLineDash([]);
+    for (const part of PARTS) {
+      const L = E.lay.layerOf[part.id], z0 = b.gap / 2 + L * layerT, z1 = z0 + layerT;
+      let ylo = Infinity, yhi = -Infinity; for (const [a, c] of part.segs) for (const n of [a, c]) if (P[n]) { ylo = Math.min(ylo, P[n].y * sg); yhi = Math.max(yhi, P[n].y * sg); }
+      if (!isFinite(ylo)) continue;
+      const xa = Z(sgn * z0), xb = Z(sgn * z1), xl = Math.min(xa, xb), wd = Math.abs(xb - xa);
+      x.fillStyle = st.tube ? COL.pvc : st.E > 1e9 ? COL.wood : COL.paper; x.fillRect(xl, Y(yhi), wd, Y(ylo) - Y(yhi)); x.strokeStyle = sgn > 0 ? COL.ink : COL.blue; x.strokeRect(xl, Y(yhi), wd, Y(ylo) - Y(yhi));
+    }
+    for (const pn of PINS) {
+      const p = P[pn.id]; if (!p) continue; const pin = E.pins[pn.id];
+      const z0 = b.gap / 2 + pin.lo * layerT - 3, z1 = b.gap / 2 + (pin.hi + 1) * layerT + 3;
+      x.strokeStyle = pn.id === S.sel ? COL.blue : useCol(pin.use); x.lineWidth = pn.id === S.sel ? 4 : 3;
+      x.beginPath(); x.moveTo(Z(sgn * z0), Y(p.y * sg)); x.lineTo(Z(sgn * z1), Y(p.y * sg)); x.stroke();
+      if (sgn > 0) { x.fillStyle = COL.ink; x.textAlign = 'left'; x.fillText(pn.id, Z(z1) + 3, Y(p.y * sg)); }
+    }
+    if (P.F) { x.fillStyle = COL.teal; x.fillRect(Z(sgn * E.footZ) - 5, Y(A.minY * sg - 4) - 3, 10, 5); }
+  }
+  x.fillStyle = COL.ink; x.textAlign = 'left'; x.fillText(`from the front · depth ×${stretch}`, 4, 8);
+  x.textAlign = 'right'; x.fillText(`dashed: your legs · ${E.lay.nL} layers`, W - 4, H - 5);
+}
+
+// ---------- joint close-up ----------
+const jointC = document.getElementById('joint');
+function drawJoint() {
+  const {x, W, H} = sizeCanvas(jointC), b = B(), pid = S.sel, pin = E.pins[pid], J = JT[b.joints[pid]], st = STOCK[b.stock];
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, H); x.font = `10px ${FONT}`; x.textBaseline = 'middle';
+  const u = uNow(), k = kIdx(legPhi(u, 0)), ii = E.tIdx.indexOf(k), f = E.F[k], P = E.poses[k];
+  // title
+  x.fillStyle = COL.ink; x.textAlign = 'left'; x.font = `700 11px ${FONT}`; x.fillText(`${pid} ${PIN_NAMES[pid]}`, 5, 9);
+  x.font = `10px ${FONT}`; x.fillText(J.name, 5, 22);
+  // face view: hole, pin offset by load, slop drawn large
+  const fy = Math.min(H * .34, 40 + Math.min(W * .3, H * .2) + 20), R = Math.min(W * .3, H * .2, 90);
+  const vec = f ? f.pinVec[pid] : null, m = vec ? len(vec) : 0, dir = m > 1e-6 ? {x: vec.x / m, y: vec.y / m} : {x: 0, y: -1};
+  const rel = pin.rel[k] - pin.rel[0];
+  // swing gauge
+  let lo = Infinity, hi = -Infinity; for (const v of pin.rel) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+  x.strokeStyle = COL.faint; x.lineWidth = 8; x.beginPath(); x.arc(W / 2, fy, R + 12, -Math.PI / 2 - (hi - pin.rel[0]), -Math.PI / 2 - (lo - pin.rel[0]), false); x.stroke();
+  if (J.maxSwing < 999) { const ms = J.maxSwing * Math.PI / 180; x.strokeStyle = COL.amber; x.lineWidth = 2; x.beginPath(); x.arc(W / 2, fy, R + 18, -Math.PI / 2 - ms / 2, -Math.PI / 2 + ms / 2); x.stroke(); }
+  const a = -Math.PI / 2 - rel;
+  x.strokeStyle = COL.ink; x.lineWidth = 2; x.beginPath(); x.moveTo(W / 2 + Math.cos(a) * (R + 4), fy + Math.sin(a) * (R + 4)); x.lineTo(W / 2 + Math.cos(a) * (R + 20), fy + Math.sin(a) * (R + 20)); x.stroke();
+  // plate around the hole
+  const plateCol = J.tube ? COL.pvc : st.E > 1e9 ? COL.wood : COL.paper;
+  x.fillStyle = plateCol; x.beginPath(); x.arc(W / 2, fy, R, 0, TAU); x.fill(); x.strokeStyle = COL.ink; x.lineWidth = 1.5; x.stroke();
+  if (J.name.includes('puck')) { x.fillStyle = COL.wood; x.beginPath(); x.arc(W / 2, fy, R * .7, 0, TAU); x.fill(); x.stroke(); }
+  if (J.flex) {
+    x.fillStyle = COL.ink; x.fillRect(W / 2 - R, fy - 3, 2 * R, 6);
+    x.save(); x.translate(W / 2, fy); x.rotate(-rel); x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(0, -3, R, 6); x.restore();
+  } else {
+    const pinR = R * .32, holeR = pinR + Math.min(R * .45, pin.c * 6 * b.mag / 2 + 1);
+    x.beginPath(); x.arc(W / 2, fy, holeR, 0, TAU); x.fillStyle = COL.paper; x.fill(); x.lineWidth = 3; x.strokeStyle = useCol(pin.use); x.stroke();
+    const off = holeR - pinR;
+    x.beginPath(); x.arc(W / 2 + dir.x * off, fy - dir.y * off, pinR, 0, TAU); x.fillStyle = '#555'; x.fill();
+    if (m > 1) arrow(x, W / 2, fy, W / 2 + dir.x * R * 1.4, fy - dir.y * R * 1.4, COL.red, 2);
+  }
+  if ((flash[pid] || 0) > 0) { x.strokeStyle = COL.blue; x.lineWidth = 3; x.beginPath(); x.arc(W / 2, fy, R + 4 + (1 - flash[pid]) * 14, 0, TAU); x.stroke(); }
+  x.fillStyle = COL.ink; x.textAlign = 'center'; x.fillText(`load ${fmt(m, 0)} N`, W / 2, fy + R + 26);
+  // section view: the stack through this joint
+  const sy0 = fy + R + 40, sh = Math.min(110, H - sy0 - 52), layers = pin.layers + (J.extraPlates ? 2 : 0);
+  const tMM = J.tube ? 28 : st.t, tot = pin.stackMM + 8, sxs = Math.min((W - 20) / Math.max(tot, 20), 6), x0 = W / 2 - tot * sxs / 2;
+  if (sh > 30) {
+    let xx = x0 + 4 * sxs;
+    if (J.flex) {
+      for (let L = 0; L < 2; L++) { x.fillStyle = COL.paper; x.strokeStyle = COL.ink; x.fillRect(xx, sy0, tMM * sxs, sh); x.strokeRect(xx, sy0, tMM * sxs, sh); x.fillStyle = COL.ink; x.fillRect(xx + tMM * sxs / 2 - 1, sy0 + sh * .2, 2, sh * .6); xx += tMM * sxs; }
+    } else {
+      x.fillStyle = COL.ink; x.fillRect(x0, sy0 + sh / 2 - sh * .3, 4 * sxs, sh * .6);
+      for (let L = 0; L < layers; L++) {
+        const isFork = J.extraPlates && (L === 0 || L === layers - 1);
+        const occupied = isFork || L - (J.extraPlates ? 1 : 0) + pin.lo <= pin.hi;
+        x.fillStyle = J.tube ? COL.pvc : isFork ? COL.wood : plateCol; x.strokeStyle = COL.ink; x.lineWidth = 1;
+        if (J.tube) { x.fillRect(xx, sy0, tMM * sxs, sh * .25); x.strokeRect(xx, sy0, tMM * sxs, sh * .25); x.fillRect(xx, sy0 + sh * .75, tMM * sxs, sh * .25); x.strokeRect(xx, sy0 + sh * .75, tMM * sxs, sh * .25); }
+        else { x.fillRect(xx, sy0, tMM * sxs, sh * .38); x.strokeRect(xx, sy0, tMM * sxs, sh * .38); x.fillRect(xx, sy0 + sh * .62, tMM * sxs, sh * .38); x.strokeRect(xx, sy0 + sh * .62, tMM * sxs, sh * .38); }
+        xx += tMM * sxs + 1.5 * sxs;
+      }
+      const pinH = J.tube ? sh * .5 : Math.max(4, sh * .2);
+      x.fillStyle = '#555'; x.fillRect(x0 + 4 * sxs, sy0 + sh / 2 - pinH / 2, xx - x0 - 4 * sxs, pinH);
+      x.fillStyle = COL.ink; x.fillRect(xx, sy0 + sh / 2 - sh * .3, 4 * sxs, sh * .6);
+    }
+  }
+  x.fillStyle = COL.ink; x.textAlign = 'left';
+  const lines = [`${layers} layers · ${fmt(pin.stackMM, 0)} mm thick`, `slop ${fmt(pin.c, 2)} mm · tilts ${fmt(pin.tilt * 180 / Math.PI, 1)}°`, `swings ${fmt(pin.swing, 0)}° · ${fmt(pin.fricW, 2)} W`, `use ${fmt(pin.use, 2)}× ${pin.why.length ? '· ' + pin.why[0] : ''}`];
+  lines.forEach((t, i) => { x.fillStyle = i === 3 ? (pin.use >= 1 ? COL.red : COL.ink) : COL.ink; x.fillText(t, 5, H - 44 + i * 12); });
+}
+
+// ---------- stride strip ----------
+const stripC = document.getElementById('stripC');
+function drawStrip() {
+  const {x, W, H} = sizeCanvas(stripC); x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  const lab = 54, pw = W - lab - 6, X = i => lab + i / N * pw, A = E.A;
+  x.font = `10px ${FONT}`; x.textBaseline = 'middle'; x.fillStyle = COL.ink; x.textAlign = 'left';
+  x.fillText('feet', 4, 7); x.fillText('knocks', 4, 20); x.fillText('rub', 4, 33);
+  E.offs.forEach((o, li) => { for (let i = 0; i < N; i++) if (A.contact[(E.tIdx[i] + o) % N]) { x.fillStyle = li % 2 ? COL.blue : COL.ink; x.fillRect(X(i), 2 + li * (10 / E.offs.length), pw / N + .5, 10 / E.offs.length - .5); } });
+  for (const pn of PINS) for (const i of E.pins[pn.id].knockAt) { x.fillStyle = pn.id === S.sel ? COL.blue : COL.ink; x.fillRect(X(i) - 1, 15, 2, 10); }
+  const fm = p95(E.fric); x.fillStyle = 'rgba(255,46,46,.4)'; x.beginPath(); x.moveTo(X(0), H - 2); for (let i = 0; i < N; i++) x.lineTo(X(i), H - 2 - Math.min(1, E.fric[i] / fm) * 10); x.lineTo(X(N), H - 2); x.closePath(); x.fill();
+  x.fillStyle = COL.blue; x.fillRect(X(iNow()) - 1, 0, 2, H);
+}
+
+// ---------- interaction on the sim ----------
+function simHit(px, py) {
+  if (S.view !== 'leg' || !LV) return null;
+  const P = solve(cur(), legPhi(uNow(), 0));
+  for (const pn of PINS) { const p = P[pn.id]; if (p && Math.hypot(px - LV.X(p.x), py - LV.Y(p.y)) < 18) return {type: 'pin', id: pn.id}; }
+  let best = null; for (const k of KEYS) { const [a, c] = BARS[k]; if (!P[a] || !P[c]) continue; const pa = {x: LV.X(P[a].x), y: LV.Y(P[a].y)}, pb = {x: LV.X(P[c].x), y: LV.Y(P[c].y)}, d = distPtSeg({x: px, y: py}, pa, pb); if (d < 10 && (!best || d < best.d)) best = {type: 'bar', k, d, pa, pb}; }
+  return best;
+}
+simC.addEventListener('pointerdown', e => {
+  const r = simC.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top, h = simHit(px, py);
+  if (h && h.type === 'pin') { S.sel = h.id; S.tab = 'joints'; markTabs(); renderPanel(); return; }
+  simC.setPointerCapture(e.pointerId);
+  if (h && h.type === 'bar') { const dx = h.pb.x - h.pa.x, dy = h.pb.y - h.pa.y, L = Math.hypot(dx, dy) || 1, nearB = Math.hypot(px - h.pb.x, py - h.pb.y) < Math.hypot(px - h.pa.x, py - h.pa.y); S.drag = {k: h.k, ux: dx / L, uy: dy / L, sign: nearB ? 1 : -1, L0: B().G[h.k], x0: px, y0: py, s: LV.s}; S.hoverBar = h.k; return; }
+  S.scrub = {x: px, t: S.t}; setPlaying(false);
+});
+simC.addEventListener('pointermove', e => {
+  const r = simC.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+  if (S.drag) { const d = S.drag, v = Math.round(clamp(d.L0 + d.sign * ((px - d.x0) * d.ux + (py - d.y0) * d.uy) / d.s, 1, 140) * 10) / 10; S.live = {...B().G, [d.k]: v}; E = engine(B()); return; }
+  if (S.scrub) { S.t = S.scrub.t - (px - S.scrub.x) / simC.clientWidth * 1.4; return; }
+  const h = simHit(px, py); simC.style.cursor = h ? (h.type === 'bar' ? 'ew-resize' : 'pointer') : 'grab';
+});
+simC.addEventListener('pointerup', () => {
+  if (S.drag) { const d = S.drag; S.drag = null; S.hoverBar = null; if (S.live && S.live[d.k] !== d.L0) { S.hist.push({...B().G}); B().G = {...S.live}; } S.live = null; run(); }
+  S.scrub = null;
+});
+
+// ---------- panel ----------
+const body = document.getElementById('body');
+function makeNum(el, get, set, step, min, max, dec, after) {
+  el.classList.add('num'); el.tabIndex = 0; el.setAttribute('role', 'slider');
+  const show = () => { el.textContent = fmt(get(), dec); }; let d = null;
+  el.addEventListener('pointerdown', e => { el.setPointerCapture(e.pointerId); d = {x: e.clientX, v: get()}; e.preventDefault(); });
+  el.addEventListener('pointermove', e => { if (!d) return; set(clamp(+(d.v + (e.clientX - d.x) * step).toFixed(dec), min, max)); show(); E = engine(B()); });
+  el.addEventListener('pointerup', () => { if (d) after(); d = null; });
+  el.addEventListener('keydown', e => { let dv = 0; const m = e.shiftKey ? 10 : 1; if (e.key === 'ArrowUp' || e.key === 'ArrowRight') dv = step * 10 * m; if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') dv = -step * 10 * m; if (!dv) return; e.preventDefault(); set(clamp(+(get() + dv).toFixed(dec), min, max)); show(); after(); });
+  show();
+}
+function numRow(label, key, step, min, max, dec, unit, note) {
+  const d = document.createElement('div'); d.className = 'row';
+  d.innerHTML = `<span>${label}${note ? `<br><span style="font-size:10px">${note}</span>` : ''}</span><span class="v"><span data-n></span> <span style="font-weight:400">${unit}</span></span>`;
+  makeNum(d.querySelector('[data-n]'), () => B()[key], v => { B()[key] = v; }, step, min, max, dec, () => run());
+  return d;
+}
+function pinChips() {
+  const box = document.createElement('div'); box.className = 'pins';
+  for (const pn of PINS) { const b2 = document.createElement('button'); b2.innerHTML = `${pn.id}<i class="${useClass(E.pins[pn.id].use)}"></i>`; b2.setAttribute('aria-pressed', String(S.sel === pn.id)); b2.title = PIN_NAMES[pn.id]; b2.onclick = () => { S.sel = pn.id; renderPanel(); }; box.appendChild(b2); }
+  return box;
+}
+function varsRow() {
+  const box = document.createElement('div'); box.className = 'vars';
+  VARS.forEach((v, i) => { const btn = document.createElement('button'); btn.setAttribute('aria-pressed', String(i === active)); btn.textContent = `${v.name} ${v.title}`; btn.style.textTransform = 'none'; btn.onclick = () => { active = i; S.hist = []; run(); }; box.appendChild(btn); });
+  const dup = document.createElement('button'); dup.textContent = 'Copy to next'; dup.onclick = () => { const n = (active + 1) % VARS.length; VARS[n].B = JSON.parse(JSON.stringify(B())); VARS[n].title = VARS[active].title + ' copy'; active = n; run(); }; box.appendChild(dup);
+  return box;
+}
+function renderPanel() {
+  if (!E) return;
+  body.innerHTML = '';
+  const b = B();
+  body.appendChild(varsRow());
+  if (S.tab === 'joints') {
+    body.appendChild(pinChips());
+    const pin = E.pins[S.sel], p0 = E.ctx.pins0[S.sel];
+    const lead = document.createElement('div'); lead.className = 'lead';
+    lead.innerHTML = `<b>${S.sel} ${PIN_NAMES[S.sel]}</b>: joins ${PINS.find(p => p.id === S.sel).parts.length} plates across ${p0.layers} layers, peak ${fmt(p0.peak, 0)} N, swings ${fmt(p0.swing, 0)}°${p0.swing > 300 ? ' (full turns)' : ''}, ${p0.knockAt.length} knock${p0.knockAt.length === 1 ? '' : 's'} a stride.`;
+    body.appendChild(lead);
+    const cards = document.createElement('div'); cards.className = 'cards';
+    const opts = Object.keys(JT).map(key => ({key, r: jointAt(b, S.sel, key, E.ctx)})).sort((p, q) => (p.r.use >= 1) - (q.r.use >= 1) || JT[p.key].cost - JT[q.key].cost);
+    for (const {key, r} of opts) {
+      const J = JT[key], c = document.createElement('button'); c.className = 'card'; c.setAttribute('aria-pressed', String(b.joints[S.sel] === key));
+      const tag = r.use >= 1 ? ['bad', r.why[0] || 'fails'] : r.use >= .5 ? ['warn', 'works, near limit'] : ['ok', 'holds'];
+      c.innerHTML = `<b>${J.name}</b><span class="src">from ${J.src}</span><span class="tag ${tag[0]}">${tag[1]}</span>
+        <span class="nums"><span>use</span><span>${fmt(r.use, 2)}×</span><span>slop</span><span>${fmt(r.c, 2)} mm</span><span>tilt</span><span>${fmt(r.tilt * 180 / Math.PI, 1)}°</span><span>rub</span><span>${fmt(r.fricW, 2)} W</span><span>stack</span><span>${fmt(r.stackMM, 0)} mm</span><span>+2 mm slop</span><span>${isFinite(r.life) && r.life < 1e7 ? fmt(r.life * HM.advance / 1e6, 1) + ' km' : 'never'}</span></span>`;
+      c.onclick = () => { b.joints[S.sel] = key; run(); };
+      cards.appendChild(c);
+    }
+    body.appendChild(cards);
+    const J = JT[b.joints[S.sel]];
+    const how = document.createElement('div'); how.className = 'note'; how.innerHTML = `<b>How:</b> ${J.how}<br><b>Breaks:</b> ${J.breaks}`; body.appendChild(how);
+    const tools = document.createElement('div'); tools.className = 'vars';
+    tools.innerHTML = '<button id="allSame">Use this joint everywhere</button><button id="cheap">Cheapest that holds, every pin</button>';
+    body.appendChild(tools);
+    document.getElementById('allSame').onclick = () => { const k = b.joints[S.sel]; for (const pn of PINS) b.joints[pn.id] = k; run(); };
+    document.getElementById('cheap').onclick = () => { for (const pn of PINS) { let best = null; for (const key of Object.keys(JT)) { const r = jointAt(b, pn.id, key, E.ctx); if (r.use < .8 && (!best || JT[key].cost < JT[best].cost)) best = key; } if (best) b.joints[pn.id] = best; } run(); };
+  }
+  if (S.tab === 'links') {
+    const h = document.createElement('h3'); h.innerHTML = 'Link stock <span>what the bars are made of</span>'; body.appendChild(h);
+    const cards = document.createElement('div'); cards.className = 'cards';
+    for (const [key, st] of Object.entries(STOCK)) {
+      const tb = Object.assign({}, b, {stock: key}), e2 = key === b.stock ? E : engine(tb);
+      let buck = 0; for (const L of Object.values(e2.links)) buck = Math.max(buck, L.buck);
+      const tooLong = Object.values(e2.links).some(L => L.tooLong);
+      const c = document.createElement('button'); c.className = 'card'; c.setAttribute('aria-pressed', String(b.stock === key));
+      const tag = buck >= 1 || tooLong ? ['bad', tooLong ? `strips max ${st.maxLen} mm` : 'buckles'] : buck >= .5 ? ['warn', 'near buckling'] : ['ok', 'stiff enough'];
+      c.innerHTML = `<b>${st.name}</b><span class="src">${st.src}</span><span class="tag ${tag[0]}">${tag[1]}</span><span class="nums"><span>buckle use</span><span>${fmt(buck, 2)}×</span><span>leg</span><span>${fmt(e2.legKg, 2)} kg</span><span>layers</span><span>${e2.lay.nL} × ${fmt(st.tube ? 28 : st.t, 0)} mm</span></span>`;
+      c.onclick = () => { b.stock = key; run(); };
+      cards.appendChild(c);
+    }
+    body.appendChild(cards);
+    body.appendChild(numRow('Scale', 'sigma', .01, 3, 16, 2, 'mm per unit', `Longest bar ${fmt(E.longest, 0)} mm.`));
+    const fit = document.createElement('div'); fit.className = 'vars'; fit.innerHTML = '<button id="fitStride">Fit scale to your stride</button>'; body.appendChild(fit);
+    document.getElementById('fitStride').onclick = () => { b.sigma = +(HM.advance / E.A.advance).toFixed(2); run(); };
+    const lk = document.createElement('table');
+    lk.innerHTML = '<tr><th>Link</th><th>Length</th><th>Squeeze</th><th>Buckles at</th></tr>' + Object.entries(E.links).map(([id, L]) => `<tr><td>${id}</td><td>${fmt(L.Lmm, 0)} mm</td><td>${fmt(L.cMax, 0)} N</td><td><span class="${useClass(L.buck)}" style="padding:0 3px">${fmt(L.Pcr, 0)} N</span></td></tr>`).join('');
+    body.appendChild(lk);
+  }
+  if (S.tab === 'fit') {
+    const h = document.createElement('h3'); h.innerHTML = 'How it is made <span>sets hole tolerance</span>'; body.appendChild(h);
+    const seg = document.createElement('div'); seg.className = 'vars';
+    for (const [k, m] of Object.entries(MAKE)) { const btn = document.createElement('button'); btn.textContent = m.name; btn.setAttribute('aria-pressed', String(b.make === k)); btn.onclick = () => { b.make = k; run(); }; seg.appendChild(btn); }
+    const tol = document.createElement('button'); tol.textContent = b.tol === 'worst' ? 'Worst case on' : 'Worst case off'; tol.setAttribute('aria-pressed', String(b.tol === 'worst')); tol.onclick = () => { b.tol = b.tol === 'worst' ? 'nom' : 'worst'; run(); }; seg.appendChild(tol);
+    body.appendChild(seg);
+    const h2 = document.createElement('h3'); h2.innerHTML = 'Every joint <span>tap a row to select</span>'; body.appendChild(h2);
+    const t = document.createElement('table');
+    t.innerHTML = '<tr><th>Pin</th><th>Joint</th><th>Layers</th><th>Stack</th><th>Slop</th><th>Tilt</th><th>Use</th></tr>' + PINS.map(pn => { const p = E.pins[pn.id]; return `<tr data-p="${pn.id}" style="cursor:pointer" class="${pn.id === S.sel ? '' : ''}"><td class="${pn.id === S.sel ? 'on' : ''}">${pn.id}</td><td>${JT[b.joints[pn.id]].name}</td><td>${p.layers}</td><td>${fmt(p.stackMM, 0)}</td><td>${fmt(p.c, 2)}</td><td>${fmt(p.tilt * 180 / Math.PI, 1)}°</td><td><span class="${useClass(p.use)}" style="padding:0 3px">${fmt(p.use, 2)}</span></td></tr>`; }).join('');
+    body.appendChild(t);
+    t.querySelectorAll('[data-p]').forEach(r => r.onclick = () => { S.sel = r.dataset.p; S.tab = 'joints'; markTabs(); renderPanel(); });
+    const sum = document.createElement('div'); sum.className = 'note';
+    sum.innerHTML = `Foot wanders ±${fmt(E.spread, 1)} mm in the walking plane and sways ±${fmt(E.wobble, 1)} mm sideways. The thickest stack is ${fmt(E.stackMax, 0)} mm; every layer pushes the hind foot ${fmt(STOCK[b.stock].tube ? 28 : STOCK[b.stock].t, 0)} mm further out from your leg line.`;
+    body.appendChild(sum);
+    body.appendChild(numRow('Strides walked', 'strides', 20, 0, 60000, 0, '', `${fmt(b.strides * HM.advance / 1e6, 1)} km of walking wears the holes.`));
+    body.appendChild(numRow('Draw slop at', 'mag', .05, 1, 40, 0, '×'));
+  }
+  if (S.tab === 'rig') {
+    const h = document.createElement('h3'); h.innerHTML = 'Reads as legs <span>against yours</span>'; body.appendChild(h);
+    for (const l of E.ledger) { const d = document.createElement('div'); d.className = 'led'; d.innerHTML = `<span class="dot ${l[2]}"></span><span>${l[0]}</span><span class="v" style="font-weight:700">${l[1]}</span>`; body.appendChild(d); }
+    const seg = document.createElement('div'); seg.className = 'vars';
+    seg.innerHTML = `<button data-legs="1" aria-pressed="${b.legs === 1}">1 leg a side</button><button data-legs="2" aria-pressed="${b.legs === 2}">2 legs a side</button><button id="hw">Horse walk timing</button>`;
+    body.appendChild(seg);
+    seg.querySelectorAll('[data-legs]').forEach(btn => btn.onclick = () => { b.legs = +btn.dataset.legs; run(); });
+    document.getElementById('hw').onclick = () => { b.phi0 = null; run(); };
+    body.appendChild(numRow('Rump mass', 'rump', .02, 0, 15, 1, 'kg'));
+    body.appendChild(numRow('Feet carry', 'share', .2, 10, 100, 0, '% of the rig', 'The rest hangs on your hip belt.'));
+    body.appendChild(numRow('Drawbar', 'Lb', 2, 450, 1600, 0, 'mm'));
+    body.appendChild(numRow('Gap between legs', 'gap', .5, 0, 300, 0, 'mm'));
+    const h2 = document.createElement('h3'); h2.innerHTML = 'Builds compared <span>tap a column</span>'; body.appendChild(h2);
+    if (CMP.length === VARS.length) {
+      const rows = [['Worst part', e => `${fmt(e.worst, 2)}×`, e => useClass(e.worst)], ['Foot wander', e => `±${fmt(e.wander, 0)}`, e => e.wander < 10 ? 'ok' : e.wander < 25 ? 'warn' : 'bad'], ['Rubbing W', e => fmt(e.fricW, 1), e => e.fricW < 3 ? 'ok' : 'warn'], ['Reads as legs', e => `${e.legible}/7`, e => e.legible >= 6 ? 'ok' : 'warn'], ['Weight kg', e => fmt(e.totalKg, 1), () => ''], ['Joint parts $', e => fmt(e.cost, 0), () => '']];
+      const t = document.createElement('table');
+      t.innerHTML = '<tr><th></th>' + VARS.map((v, i) => `<th class="${i === active ? 'on' : ''}" data-v="${i}" style="cursor:pointer">${v.name}</th>`).join('') + '</tr>' + rows.map(([n, f, c]) => `<tr><td>${n}</td>${CMP.map((e, i) => `<td class="${i === active ? 'on' : ''}"><span class="${c(e)}" style="padding:0 3px">${f(e)}</span></td>`).join('')}</tr>`).join('');
+      body.appendChild(t);
+      t.querySelectorAll('[data-v]').forEach(th => th.onclick = () => { active = +th.dataset.v; run(); });
+    }
+  }
+  if (S.tab === 'build') {
+    const nL = E.nLegs, count = {};
+    for (const pn of PINS) { const k = b.joints[pn.id]; count[k] = (count[k] || 0) + nL; }
+    const h = document.createElement('h3'); h.innerHTML = `Shopping list <span>${nL} legs</span>`; body.appendChild(h);
+    const st = STOCK[b.stock];
+    let total = 0; for (const p of PARTS) { const P0 = solve(b.G, .3); if (P0.fail) continue; for (const [a, c] of p.segs) total += len(sub(P0[c], P0[a])) * b.sigma; }
+    const t = document.createElement('table');
+    t.innerHTML = `<tr><th>Item</th><th>Qty</th></tr><tr><td>${st.name}, total bar length</td><td>${fmt(total * nL / 1000, 1)} m</td></tr>` + Object.entries(count).map(([k, n]) => `<tr><td>${JT[k].name} (${JT[k].src})</td><td>${n}</td></tr>`).join('') + `<tr><td>Crank shaft, rod across both legs</td><td>1</td></tr>`;
+    body.appendChild(t);
+    const h2 = document.createElement('h3'); h2.innerHTML = 'Joints, in the order you build them'; body.appendChild(h2);
+    const ol = document.createElement('ol'); ol.className = 'steps';
+    const order = PINS.slice().sort((p, q) => E.pins[p.id].lo - E.pins[q.id].lo);
+    ol.innerHTML = order.map(pn => { const J = JT[b.joints[pn.id]], p = E.pins[pn.id]; return `<li><b>${pn.id} ${PIN_NAMES[pn.id]}, ${J.name}.</b> ${J.how} Stack ${p.layers} layers, ${fmt(p.stackMM, 0)} mm.${p.use >= 1 ? ` <span class="bad" style="padding:0 3px">${p.why[0]}</span>` : ''}</li>`; }).join('') +
+      `<li><b>Test.</b> Turn the crank a full turn by hand: nothing should catch. Push the foot sideways; expect about ±${fmt(E.wobble, 0)} mm. Load it with ${fmt(E.Wtot / Math.max(1, E.nLegs / 2) / G0, 1)} kg and turn it 100 times, then measure again.</li>`;
+    body.appendChild(ol);
+    const n = document.createElement('div'); n.className = 'note'; n.textContent = 'Never put solvent glue or spray paint on EPS foam; it dissolves. PVC cement is a solvent too: keep it off the foam.'; body.appendChild(n);
+  }
+}
+function markTabs() { document.querySelectorAll('[data-tab]').forEach(b2 => b2.setAttribute('aria-pressed', String(b2.dataset.tab === S.tab))); }
+document.querySelectorAll('[data-tab]').forEach(b2 => b2.onclick = () => { S.tab = b2.dataset.tab; markTabs(); renderPanel(); body.scrollTop = 0; });
+document.querySelectorAll('[data-view]').forEach(b2 => b2.onclick = () => { S.view = b2.dataset.view; document.querySelectorAll('[data-view]').forEach(q => q.setAttribute('aria-pressed', String(q === b2))); });
+
+// ---------- sound ----------
+const SND = {on: false, ctx: null, prevI: null}; const flash = {};
+function soundInit() {
+  const C = new (window.AudioContext || window.webkitAudioContext)(); SND.ctx = C;
+  const master = C.createGain(); master.gain.value = .5; master.connect(C.destination); SND.master = master;
+  const buf = C.createBuffer(1, C.sampleRate, C.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; SND.noise = buf;
+  const src = C.createBufferSource(); src.buffer = buf; src.loop = true; const bp = C.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2200; bp.Q.value = .8; const hg = C.createGain(); hg.gain.value = 0; src.connect(bp); bp.connect(hg); hg.connect(master); src.start(); SND.hiss = hg;
+}
+const PIN_F = {O: 260, B: 380, M: 520, J1: 700, J2: 900, J3: 1150, J4: 1500};
+function click(freq, gain) { const C = SND.ctx, s = C.createBufferSource(); s.buffer = SND.noise; const f = C.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 6; const g = C.createGain(), t = C.currentTime; g.gain.setValueAtTime(clamp(gain, 0, 1.2), t); g.gain.exponentialRampToValueAtTime(.001, t + .06); s.connect(f); f.connect(g); g.connect(SND.master); s.start(t, Math.random() * .5); s.stop(t + .08); }
+function thud(gain) { const C = SND.ctx, o = C.createOscillator(), g = C.createGain(), t = C.currentTime; o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(45, t + .15); g.gain.setValueAtTime(clamp(gain, 0, 1), t); g.gain.exponentialRampToValueAtTime(.001, t + .2); o.connect(g); g.connect(SND.master); o.start(t); o.stop(t + .22); }
+function tickEvents() {
+  const i = iNow(), prev = SND.prevI; SND.prevI = i;
+  if (prev === null || prev === i || !S.playing) { if (SND.on && SND.ctx) SND.hiss.gain.setTargetAtTime(0, SND.ctx.currentTime, .05); return; }
+  const crossed = a => prev <= i ? (a > prev && a <= i) : (a > prev || a <= i);
+  for (const pn of PINS) { const p = E.pins[pn.id]; for (const ki of p.knockAt) for (let o = 0; o < E.offs.length; o++) { const kk = (ki + (o ? E.offs[o] : 0)) % N; if (crossed(kk)) { if (o === 0) flash[pn.id] = 1; if (SND.on) click(PIN_F[pn.id] * (1 + p.c * .3), .06 + p.c * .6 * Math.min(1, p.peak / 80)); } } }
+  if (SND.on) {
+    E.offs.forEach(o => { for (let q = 0; q < N; q++) { const k = (E.tIdx[q] + o) % N, kp = (E.tIdx[(q - 1 + N) % N] + o) % N; if (E.A.contact[k] && !E.A.contact[kp] && crossed(q)) thud(.25 + E.totalKg * .05); } });
+    SND.hiss.gain.setTargetAtTime(clamp(E.fric[i] / Math.max(p95(E.fric), 1.5) * .3, 0, .35), SND.ctx.currentTime, .03);
+  }
+}
+document.getElementById('sound').onclick = async () => {
+  SND.on = !SND.on; document.getElementById('sound').setAttribute('aria-pressed', String(SND.on));
+  if (SND.on && !SND.ctx) { try { soundInit(); } catch (e) { SND.on = false; } }
+  if (SND.ctx) { if (SND.on) await SND.ctx.resume(); else SND.ctx.suspend(); }
+};
+const playBtn = document.getElementById('play');
+function setPlaying(on) { S.playing = on; playBtn.innerHTML = on ? '<span class="icon-pause"></span>' : '<span class="icon-play"></span>'; playBtn.setAttribute('aria-label', on ? 'Pause' : 'Play'); }
+playBtn.onclick = () => setPlaying(!S.playing);
+document.getElementById('slow').onclick = e => { S.slow = !S.slow; e.currentTarget.setAttribute('aria-pressed', String(S.slow)); };
+
+let last = performance.now();
+const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (S.playing) S.t += dt * (S.slow ? .25 : 1);
+  for (const k in flash) flash[k] = Math.max(0, flash[k] - dt * 4);
+  tickEvents();
+  drawSim(); drawJoint(); drawStrip();
+  requestAnimationFrame(frame);
+}
+run();
+setPlaying(!reduce);
+requestAnimationFrame(frame);
+})();
+</script>

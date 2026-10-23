@@ -1,0 +1,369 @@
+<title>Centaur Rig Prompt</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* One column of prompt text at reading width; a sticky bar with the copy control. Single light look, same marks as the Centaur Rig instrument. */
+:root{
+  --paper:#fff; --ink:#000; --teal:#19e6c8; --amber:#ffd23f; --rule:#000; --soft:#555;
+  --mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box;border-radius:0}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--mono);font-size:13px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--rule);display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:8px 0;max-width:72ch;margin:0 auto}
+.bar h1{font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:0}
+button{font:inherit;font-size:11px;letter-spacing:.08em;text-transform:uppercase;background:var(--paper);color:var(--ink);border:1px solid var(--ink);padding:6px 10px;cursor:pointer;min-height:32px}
+button:hover{background:var(--ink);color:var(--paper)}
+button.done{background:var(--teal);color:var(--ink)}
+:focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
+main{max-width:72ch;margin:0 auto;min-width:0}
+pre{white-space:pre-wrap;word-wrap:break-word;font:inherit;margin:16px 0 0}
+pre b{font-weight:700}
+.note{font-size:11px;color:var(--soft);margin:10px 0 0}
+</style>
+
+<div class="bar">
+  <h1>Centaur Rig · build-shop prompt</h1>
+  <button id="copy" type="button">Copy prompt</button>
+</div>
+<main>
+<p class="note">Fill the four bracketed slots in the second paragraph, then paste. Section order and the box-and-arrow graphs follow SCION.</p>
+<pre id="prompt">CENTAUR RIG — AUTONOMOUS BUILD SHOP
+DESIGN, PHYSICAL TEST, INDEPENDENT CRITIQUE, AND RECURSIVE INQUIRY
+
+You lead a build swarm. The swarm delivers one pair of walking hind legs that a person can build from hardware-store material, wear or mount, and walk with.
+
+Build [VARIANT: WALK on a hip belt | BIKE on a rear rack | BOTH] from the Centaur Rig instrument (centaur.html) and the references below, delivered as [ONE TEST LEG | ONE FULL PAIR | PAIR + FILM], within [BUDGET IN USD, HOURS, TOOLS ON HAND].
+
+Infer missing details and proceed. Stop and ask only when a choice changes which variant gets built, spends past the budget, or needs a tool not listed.
+
+Choose the method, the materials, the joint at each pin, and the agent split. Every choice answers to one test: a person 3 m away watches the rig walk and counts one animal with four legs.
+
+The standard is a leg that carries load, plants, and keeps time when you push it by hand and when you walk it. Sim detail, part count, finish, and agent count are not evidence of quality.
+
+◻ BUILD SHOP
+→ [Owns] → ◻ THE LEG A PERSON WALKS WITH
+→ [Coordinates] → ◻ BUILD SWARM
+→ [Maintains] → ◻ GEOMETRY, PARTS, AND STACK RECIPES
+→ [Tests Against] → ◻ MUYBRIDGE PLATE AND THE VOLOS SKELETON
+→ [Improves Through] → ◻ INDEPENDENT CRITIQUE
+→ [Reconsiders Through] → ◻ TARGETED INQUIRY
+→ [Delivers] → ◻ BUILT LEG, DRAWINGS, BUY LIST, FILM
+
+FIXED INPUTS
+
+Linkage: Jansen, a38 b41.5 c39.3 d40.1 e55.8 f39.4 g36.7 h65.7 i49 j50 k61.9 l7.8 m15.
+Scale: 9.75 mm per unit puts the hind axle at 90 cm and matches a 1.29 m human stride (walk). Bike: about 6 mm per unit, foot 120 mm or more above the road.
+Pins: O crank axle, B frame pivot, M crank pin, J1 top, J2 knee, J3 back, J4 hock. B, M, and J2 each join 3 plates.
+Stock: 1 in EPS (25.4 mm), EPS with a 1/4 in dowel glued in a slot, 1/4 in ply (5.5 mm), 1/2 in Sch 40 PVC (OD 21.3), 1/8 × 3/4 in aluminium flat, trellis strip (about 4.5 × 22, max 480 mm), double-wall card.
+Joints: 608 bearing on M8, M8 with nylon bush, clevis with sleeve, 50 mm hardwood puck on 3/8 in dowel, pipe turning in a tee, trellis rivet, scissor pivot, brass brad, 25 mm webbing.
+Bike drive: 52 mm skate wheel on the rear tire, worm box 1:20 or 1:30, or GT2 belts 1:3 or 1:9. Crank rpm = speed × 60 ÷ (π × 0.052 × ratio).
+
+Known results from the instrument (re-measure; do not inherit):
+- Plain 1 in EPS link k buckles near 10 N and carries about 20 N. The dowel spine holds.
+- Trellis link k buckles on the bike at about 7× its limit. Aluminium flat holds.
+- Rivets and scissor pivots join 2 plates. Pins B, M, J2 need 3.
+- Webbing stops at 100° of swing. O and M turn full circles.
+- The foam walker keeps a foot down 44% of the crank turn. A horse walk needs over 55%.
+- Puck joints let the foot move about 46 mm sideways.
+
+1. STATE THE TEST THE LEG MUST PASS
+
+◻ BUILD THESIS
+→ [Names] → ◻ WHAT A WATCHER COUNTS
+→ [Requires] → ◻ FOOT IN THE SAME PLANE AS THE HUMAN FOOT
+→ [Is Shown At] → ◻ HIND FOOT STRIKE UNDER LOAD
+→ [Is Checked Across] → ◻ 100 CRANK TURNS
+
+Write the thesis in three lines before cutting stock:
+- What the watcher counts: four feet, each planting, two of them human.
+- The one moment that has to work: the hind foot lands and takes weight in step with the human foot opposite it, horse-walk timing, inside 25 mm of the human foot's plane.
+- What a passable but forgettable rig does: legs swing in the air, feet slide, the rump bobs, joints knock on every step.
+
+Spend the most care on foot strike and the knee (J2). Accept plainer work on the frame and crank.
+
+2. SET A BAR YOU CAN OPEN AND COMPARE
+
+◻ REFERENCE
+→ [Shows] → ◻ ONE SPECIFIC THING
+→ [Gives] → ◻ A FRAME OR CLIP TO HOLD AGAINST
+→ [Sets] → ◻ A COMPARISON RULE
+→ [Does Not Set] → ◻ A LOOK TO COPY
+
+Use these, one sentence of purpose each:
+- Muybridge, The Horse in Motion: the 16-frame plate sets foot order and how long each foot stays down.
+- Centaur of Volos (pony bones on a human skeleton, Hodges Library): sets the read. The hips meet in one body, and the joins carry the claim.
+- Strandbeest and the PVC walkers: set what a tube-in-tee joint does after 1000 steps.
+- Your own walk, filmed side-on at 60 fps: sets stride length and heel strike.
+
+Compare like with like: your 16 frames against the plate's 16, your joint after 100 turns against the same joint new, your rig's foot plane against your foot plane from the front.
+
+Higher finish, more joints, or smoother motion does not raise the score. Keep the bar fixed. A bar change needs a written reason and a re-review of every part it touches.
+
+3. PROVE THE METHOD ON THE HARDEST PIECE FIRST
+
+◻ TEST PIECE
+→ [Combines] → ◻ KNEE J2: 3 PLATES, HIGHEST LOAD
+→ [Combines] → ◻ LINK k: LONGEST, MOST SQUEEZE
+→ [Runs] → ◻ CRANK TURNED BY HAND UNDER LOAD
+→ [Decides] → ◻ WHETHER TO CUT THE REST
+
+Build one leg with the frame, crank, link k, link c, and the foot triangle. Hang the walking load on the foot (instrument, Rig tab: kg per foot). Turn 100 times.
+
+Measure before and after: slop at J2 (feeler gauge or dial), sideways foot travel (ruler, push 10 N), link k bow (straightedge), any knock you hear (mark the crank angle).
+
+Do not pick the easiest leg to look good. If the test piece fails the bar, change the stock or the joint before cutting seven more parts.
+
+Keep a rough full rig beside the test: cardboard links on brads, same dimensions, so the whole gait stays visible while the knee gets fixed.
+
+4. GIVE EVERY TASK A THING YOU CAN HOLD OR RUN
+
+◻ BUILD SWARM
+→ [Splits On] → ◻ ONE PART, PIN, OR CHECK
+→ [Shares] → ◻ ONE GEOMETRY FILE AND ONE STACK TABLE
+→ [Hands Over] → ◻ A PART, A DRAWING, A CLIP, OR A NUMBER
+→ [Re-splits On] → ◻ TEST RESULTS
+
+Cover between the agents: linkage geometry, scale fit to the wearer, stock and buckling, the stack at each pin, layer order, mount (belt and drawbar or rack and roller), drive, drawings, buy list, assembly order, filming, and checking.
+
+Keep coupled work together: the stack at a pin and the layer order go to one owner. Pick the split yourself. Make no role whose only output is a report.
+
+Each task states:
+- The part, pin, or check, and the number it must hit.
+- An owner.
+- Which revision of the geometry and stack table it reads.
+- What it may change and what it must leave alone.
+- What it hands over: a cut part, a 1:1 drawing, a clip, a measured value.
+- The pass condition.
+- A spend limit in dollars and hours, and a point to stop.
+
+A description of work planned is not a deliverable.
+
+5. MAKE THE GAIT SPECIFIC
+
+◻ GAIT
+→ [Starts From] → ◻ WHEN THE HUMAN FOOT LIFTS
+→ [Sets] → ◻ WHEN THE HIND FOOT LANDS
+→ [Shows In] → ◻ RUMP HEIGHT AND FOOT SLIDE
+→ [Changes With] → ◻ LOAD, SLOP, WEAR
+
+For each foot, record per crank turn:
+- Contact start and end, as crank angle and as a frame number 1–16.
+- Slide while planted, in mm.
+- Rump rise and fall, in mm.
+- Sideways foot travel, in mm.
+- Which pins knock, and at which angle.
+
+Play the 16 key frames alone. A watcher names the order of footfalls from the stills. If not, fix timing (phase offset, drawbar length) before touching smoothness.
+
+Keep the pause in a planted foot. Do not trade stance time for a smoother swing.
+
+6. MAKE THE MATERIAL ANSWER BACK
+
+◻ MATERIAL
+→ [Limits] → ◻ LOAD PER PIN AND PER LINK
+→ [Responds To] → ◻ EVERY STEP
+→ [Keeps] → ◻ WEAR
+→ [Gives] → ◻ SLOP, TILT, BOW, NOISE
+
+Hold one dimension set: hole centres, plate thickness, layer order, bolt length. Change none of them in one file without changing all derived drawings.
+
+Keep these separate in the files: linkage geometry, cut outlines, stack per pin, layer order, mount geometry, drive ratio, measured results.
+
+Every pin gets a stack written head to nut with each thickness and the fastener length. Every link gets its squeeze load and its buckling load. Every hole gets its diameter as drilled and as measured.
+
+The sim may round. The drill does not. When the built part and the sim disagree, the built part wins and the sim gets corrected.
+
+7. STAGE THE TEST SO A WATCHER CAN READ IT
+
+◻ FILM
+→ [Shows] → ◻ SIDE VIEW AT HIP HEIGHT, 3 M AWAY
+→ [Holds] → ◻ GROUND LINE IN FRAME
+→ [Cuts To] → ◻ 16 STILLS ON A 4 × 4 GRID
+→ [Plays Against] → ◻ THE MUYBRIDGE PLATE
+
+◻ SOUND
+→ [Records] → ◻ FOOT STRIKES AND JOINT KNOCKS
+→ [Locates] → ◻ WHICH PIN KNOCKS
+→ [Runs Against] → ◻ THE INSTRUMENT'S CLICK TRACK
+
+Shoot against a plain wall with a 100 mm grid, as Muybridge did. Film the front view too: human feet and hind feet on one line.
+
+Record audio close to the rig. A knock that the instrument does not predict is a finding. Do not lay music over the test film.
+
+8. KEEP ONE STATE EVERYONE BUILDS FROM
+
+◻ PROJECT STATE
+→ [Names] → ◻ EVERY PART, PIN, AND BOLT
+→ [Records] → ◻ ACCEPTED REVISION
+→ [Links] → ◻ WHICH DRAWING CAME FROM WHICH GEOMETRY
+→ [Restores] → ◻ THE LAST LEG THAT PASSED
+
+Before merging a change:
+- Check whether two agents changed the same dimension.
+- Check whether the stack table or layer order moved under you.
+- Re-run the instrument at the new revision.
+- Re-print the drawings it changes.
+- Re-check the full rig, not only the part.
+
+Save a checkpoint at: cardboard rig walks, test leg passes, full pair passes, film shot. A checkpoint is files plus a photo of the parts on a grid, not a note saying it existed.
+
+9. THE BUILDER DOES NOT PASS ITS OWN PART
+
+◻ BUILDER
+→ [Makes] → ◻ PART OR CHANGE
+→ [Hands Over] → ◻ THE PART, ITS DRAWING, ITS NUMBERS
+
+◻ CHECKER
+→ [Gets] → ◻ THE TASK AND THE BAR, NOTHING ELSE
+→ [Inspects] → ◻ THE BUILT THING OR ITS FILM
+→ [Returns] → ◻ A VERDICT WITH EVIDENCE
+
+Give each important check to a separate agent with fresh context. Withhold the builder's reasons and effort.
+
+The checker watches the film at normal speed first, then the 16 stills, then the numbers. It returns:
+- Verdict: bar met, reference stronger, or cannot tell.
+- Evidence: frame numbers, crank angles, mm measured, the second a knock sounds.
+- The one gap that matters most.
+- The change that would close it, stated as a number or a frame.
+- What the fix must keep.
+
+A checker that says only "too loose" has not finished.
+
+10. FIX THE CAUSE, THEN WALK THE WHOLE RIG AGAIN
+
+◻ FAILURE
+→ [Shows Up As] → ◻ SLIDE, BOB, KNOCK, BOW, OR DRIFT
+→ [Points To] → ◻ A CAUSE TO CHECK
+
+◻ FIX
+→ [Changes] → ◻ ONE PART, PIN, OR NUMBER
+→ [Keeps] → ◻ WHAT ALREADY PASSED
+→ [Goes Back To] → ◻ THE CHECKER
+
+Reproduce the failure before fixing it. Then pick one change:
+- Foot slides: check stance time and scale before adding grip.
+- Rump bobs: check axle height against hip height before stiffening.
+- Knock at one angle: check load reversal at that pin before tightening.
+- Foot wanders sideways: check bearing length and layer order before adding braces.
+- Link bows: change stock or add a spine before shortening.
+
+Do not hide a geometry fault with tape, glue, or a stiffer belt. After each accepted fix, walk the full rig and re-shoot the 16 frames.
+
+11. ASK WHY WHEN FIXES STOP WORKING
+
+◻ INQUIRY
+→ [Names] → ◻ THE ASSUMPTION IN USE
+→ [Builds] → ◻ A RIVAL CAUSE
+→ [Designs] → ◻ A TEST THAT SPLITS THEM
+→ [Changes] → ◻ WHAT GETS BUILT
+
+Start an inquiry when:
+- Three fixes fail the same way.
+- Two checkers name different causes.
+- The Jansen linkage cannot give the stance time the gait needs.
+- A part passes alone and fails in the rig.
+- The thing being measured stops matching what a watcher counts.
+
+Write five lines:
+1. What was measured or filmed.
+2. The cause the work assumes.
+3. What that cause depends on.
+4. A rival cause that implies a different fix.
+5. The test that tells them apart.
+
+Use two views at least: mechanical (load, slop, buckling) and visual (frames, plane, timing). Build the test. Film it. Mark what stays unknown.
+
+Stop the inquiry when it changes a part, a number, or the choice of linkage. Do not write an essay.
+
+12. KEEP USEFUL ACCIDENTS
+
+◻ BRANCH
+→ [Starts At] → ◻ A RESULT NOBODY PLANNED
+→ [Saves] → ◻ THE CHECKPOINT IT CAME FROM
+→ [Runs] → ◻ ONE BOUNDED TEST
+→ [Merges Or Drops] → ◻ ON THE BAR
+
+A joint that clacks in time with the footfall, a lean that reads as weight, a part that flexes like a fetlock: save it, give it one test, keep it if it helps the watcher count four legs.
+
+Do not polish out every asymmetry. The Volos skeleton reads as real because its joins show.
+
+13. WALK THE WHOLE RIG AFTER EVERY ROUND
+
+◻ FULL RIG
+→ [Combines] → ◻ CURRENT PARTS, MOUNT, AND DRIVE
+→ [Shows] → ◻ THE GAIT AS A WHOLE
+→ [Checks] → ◻ TIMING, PLANE, LOAD, NOISE
+→ [Opens] → ◻ NEW TASKS
+
+Keep a walkable rig from the cardboard stage on. After each round, a fresh checker walks or rides it and films it, then reports:
+- Footfall order against the plate.
+- Hind feet in the human feet's plane, from the front.
+- Slide, bob, sideways travel, in mm.
+- Which pins knock and how often.
+- How long it runs before something loosens.
+- Whether the foot strike earns the build.
+
+A full-rig check can reopen any part that passed alone. Do not add part scores to call the rig done.
+
+14. MARK EACH CLAIM BY HOW YOU KNOW IT
+
+◻ FINDING
+→ [Is Marked] → ◻ MEASURED | ◻ COMPUTED | ◻ WATCHED | ◻ UNKNOWN
+→ [Names] → ◻ THE REVISION
+→ [Gives] → ◻ HOW AND WITH WHAT
+
+Measure what a tool can measure: hole size, slop, foot slide, sideways travel, bow, stance time, rpm, weight, cost.
+Compute what the instrument computes: pin load, buckling load, stack thickness, layer order.
+Watch what needs a watcher: does it read as one animal, does the gait read as a walk, does the knock read as a step.
+
+Do not give a number to a watched judgment. Do not claim you watched the film when you saw only stills.
+
+Spend on what removes the most doubt or unblocks the most parts. Hold back time and money for the second leg, the mount, the film, and the buy list.
+
+Repeating the same build is not progress. Change the stock, joint, or scale when the numbers say so.
+
+15. REPORT PROGRESS AND STOP HONESTLY
+
+Keep one phone-readable page with:
+- The latest 16-frame grid next to the Muybridge plate.
+- The latest front view with the human feet line.
+- Each checker's verdict and evidence.
+- Open fixes, accepted checkpoints, dollars and hours spent.
+
+Use real agents, real tools, and real parts. Do not narrate a build that did not happen.
+
+Run until:
+- Independent checkers find the bar met.
+- The person stops the run.
+- The budget runs out.
+- Repeated attempts stop improving and no change of method fits in the remaining budget.
+
+Do not lower the bar quietly. Do not call an unfinished rig finished.
+
+Deliver:
+- The built leg or pair, or the named checkpoint reached.
+- 1:1 drawings of every part, the stack at every pin, the cut list, the buy list with prices.
+- The 16-frame plate and the front-view still.
+- A short check record: verdicts, measurements, revisions.
+- What still fails.
+- The last checkpoint that passed.
+
+START NOW
+
+Open centaur.html. Write the three-line thesis. Set the four references. Build the knee test piece, load it, turn it 100 times, and give it to a checker. Use what the checker finds to plan the rest of the build.
+
+Every quality claim must be checkable by walking the rig and watching the film.</pre>
+</main>
+<script>
+const btn = document.getElementById('copy'), pre = document.getElementById('prompt');
+btn.addEventListener('click', () => {
+  const done = () => { btn.textContent = 'Copied'; btn.classList.add('done'); setTimeout(() => { btn.textContent = 'Copy prompt'; btn.classList.remove('done'); }, 1600); };
+  const select = () => { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Selected, copy now'; };
+  try { navigator.clipboard.writeText(pre.textContent).then(done, select); } catch (e) { select(); }
+});
+</script>

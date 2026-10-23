@@ -1,0 +1,1158 @@
+<title>Centaur Rig</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<style>
+/* Layout: builder bench on one screen. Left: loadout of part cards. Centre: the sim (or the workshop) with a stride strip; below it the pin stack section and the leg detail. Right: scores, what fails, and the four saved builds side by side. */
+:root{
+  --paper:#fff; --ink:#000;
+  --teal:#19e6c8; --amber:#ffd23f; --red:#ff2e2e; --blue:#3b82f6;
+  --mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box;border-radius:0}
+html,body{height:100%;background:var(--paper);color:var(--ink)}
+body{margin:0;font-family:var(--mono);font-size:12px;line-height:1.35;
+  padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px));padding-block:6px;
+  display:grid;grid-template-rows:auto minmax(0,1fr);gap:6px;overflow:hidden}
+header{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;border-bottom:2px solid var(--ink);padding-bottom:5px}
+h1{font-size:15px;font-weight:700;letter-spacing:.08em;margin:0;text-transform:uppercase}
+.clock{font-variant-numeric:tabular-nums;margin-left:auto}
+.lab{display:grid;gap:6px;min-height:0;grid-template-columns:250px minmax(0,1fr) 300px;grid-template-rows:minmax(0,1fr) minmax(0,36%)}
+.pane{border:1px solid var(--ink);min-width:0;min-height:0;display:flex;flex-direction:column;background:var(--paper)}
+.pane > .bar{display:flex;flex-wrap:wrap;gap:3px 8px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--ink);padding:3px 6px;min-height:24px}
+.bar h2{font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin:0;font-weight:700}
+.bar .note{font-size:10px;font-style:italic}
+.cv{position:relative;flex:1;min-height:0}
+.cv canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#loadout{grid-column:1;grid-row:1 / span 2;overflow-y:auto}
+#center{grid-column:2;grid-row:1}
+.under{grid-column:2;grid-row:2;display:grid;gap:6px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:0}
+#stats{grid-column:3;grid-row:1 / span 2;overflow-y:auto}
+button{font:inherit;font-size:10px;letter-spacing:.07em;text-transform:uppercase;background:var(--paper);color:var(--ink);border:1px solid var(--ink);padding:3px 6px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+button:hover{background:var(--ink);color:var(--paper)}
+button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.seg{display:flex;flex-wrap:wrap;gap:3px}
+.icon-play{border-left:8px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent;width:0;height:0;display:inline-block}
+.icon-pause{width:8px;height:10px;display:inline-block;position:relative}
+.icon-pause::before,.icon-pause::after{content:"";position:absolute;top:0;width:3px;height:10px;background:currentColor}
+.icon-pause::before{left:0}.icon-pause::after{right:0}
+.icon-spk{width:10px;height:10px;display:inline-block;position:relative}
+.icon-spk::before{content:"";position:absolute;left:0;top:3px;width:4px;height:4px;background:currentColor}
+.icon-spk::after{content:"";position:absolute;left:3px;top:0;border-right:5px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent;height:0}
+/* variants */
+.vars{display:flex;gap:3px;flex-wrap:wrap}
+.var{display:grid;grid-template-columns:auto auto;gap:0 6px;align-items:center;text-transform:none;letter-spacing:0;font-size:11px;padding:2px 6px}
+.var .vd{width:8px;height:8px;border:1px solid currentColor}
+/* loadout */
+.slot{border-bottom:1px solid var(--ink)}
+.slot > .head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px;padding:5px 8px;cursor:pointer;align-items:baseline}
+.slot > .head:hover{background:rgba(59,130,246,.08)}
+.slot .k{font-size:10px;letter-spacing:.12em;text-transform:uppercase}
+.slot .cur{font-weight:700;text-align:right}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:0 8px 8px}
+.card{border:1px solid var(--ink);padding:5px 6px;cursor:pointer;display:flex;flex-direction:column;gap:2px;background:var(--paper);font:inherit;text-align:left;text-transform:none;letter-spacing:0;font-size:11px;align-items:stretch}
+.card b{font-size:11px}
+.card .d{font-size:10px;line-height:1.3}
+.card[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.card:hover{outline:2px solid var(--blue);outline-offset:-2px;background:var(--paper);color:var(--ink)}
+.card[aria-pressed="true"]:hover{background:var(--ink);color:var(--paper)}
+.tune .row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:2px 8px;align-items:baseline}
+.row .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.num{cursor:ew-resize;user-select:none;border-bottom:1px dashed var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+.num:hover{background:var(--ink);color:var(--paper)}
+.sec h3{font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin:0;padding:6px 8px 3px;font-weight:700;display:flex;justify-content:space-between;gap:8px}
+.sec h3 span{font-weight:400;letter-spacing:0;text-transform:none;font-style:italic}
+.sec{border-bottom:1px solid var(--ink)}
+.sec:last-child{border-bottom:0}
+.score{display:grid;grid-template-columns:7.2em minmax(0,1fr) auto;gap:6px;padding:2px 8px;align-items:center}
+.meter{height:9px;border:1px solid var(--ink);position:relative}
+.meter i{position:absolute;inset:0 auto 0 0;display:block}
+.ok{background:var(--teal)} .warn{background:var(--amber)} .bad{background:var(--red)}
+.fail{display:grid;grid-template-columns:3.2em minmax(0,1fr);gap:6px;padding:3px 8px;border-top:1px solid var(--ink);cursor:pointer;font-size:11px}
+.fail:hover{outline:1px solid var(--blue);outline-offset:-1px}
+.fail .u{font-weight:700;font-variant-numeric:tabular-nums;text-align:center}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{padding:2px 5px;text-align:right;font-size:11px}
+th{font-size:10px;font-weight:700;border-bottom:1px solid var(--ink)}
+td:first-child,th:first-child{text-align:left}
+td.on,th.on{background:rgba(59,130,246,.12)}
+.led{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:6px;padding:2px 8px;align-items:center;font-size:11px}
+.dot{width:9px;height:9px;border:1px solid var(--ink)}
+/* workshop */
+#shop{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+#shop[hidden]{display:none!important}
+#shopSide{border-left:1px solid var(--ink);overflow-y:auto;font-size:11px}
+#shopSide h4{font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin:0;padding:6px 8px 2px}
+#shopSide ol,#shopSide ul{margin:0;padding:0 8px 6px 26px}
+#shopSide li{margin:2px 0}
+#shopSide table td{font-size:11px}
+.cvwrap{position:relative;min-height:0}
+@media (max-width:1100px), (max-height:640px){
+  body{overflow:auto;height:auto}
+  .lab{grid-template-columns:minmax(0,1fr);grid-template-rows:auto}
+  #loadout,#center,.under,#stats{grid-column:1;grid-row:auto}
+  #center{height:64vh;min-height:340px}
+  .under{grid-template-columns:minmax(0,1fr)}
+  .under .pane{height:320px}
+  #loadout,#stats{overflow:visible}
+  #shop{grid-template-columns:minmax(0,1fr);grid-template-rows:60% 40%}
+}
+</style>
+
+<header>
+  <h1>Centaur Rig</h1>
+  <div class="seg">
+    <button id="play" aria-label="Pause"><span class="icon-pause"></span><span>Pause</span></button>
+    <button id="slow" aria-pressed="false">Slow</button>
+    <button id="sound" aria-pressed="false"><span class="icon-spk"></span><span>Sound</span></button>
+  </div>
+  <div class="seg" role="group" aria-label="Mode">
+    <button data-mode="sim" aria-pressed="true">Simulate</button>
+    <button data-mode="shop" aria-pressed="false">Build it</button>
+  </div>
+  <div class="vars" id="vars" role="group" aria-label="Saved builds"></div>
+  <div class="clock" id="clock"></div>
+</header>
+
+<div class="lab">
+  <aside class="pane" id="loadout" aria-label="Loadout">
+    <div class="bar"><h2>Loadout</h2><span class="note">tap a slot to swap</span></div>
+    <div id="slots"></div>
+    <div class="sec tune"><h3>Tune <span>drag the numbers</span></h3><div id="tune"></div></div>
+  </aside>
+
+  <section class="pane" id="center">
+    <div class="bar"><h2 id="centerTitle">Side view</h2>
+      <div class="seg" id="simBtns">
+        <button data-ov="foam" aria-pressed="true">Plates</button>
+        <button data-ov="force" aria-pressed="true">Forces</button>
+        <button data-ov="slop" aria-pressed="true">Slop</button>
+        <button data-ov="heat" aria-pressed="true">Friction heat</button>
+        <button id="horseWalk">Horse walk timing</button>
+      </div>
+    </div>
+    <div class="cv">
+      <canvas id="stage" aria-label="Side view of the centaur walking. Drag to scrub."></canvas>
+      <div id="shop" hidden>
+        <div class="cvwrap"><canvas id="sheets" aria-label="Parts nested on your foam and plywood sheets"></canvas></div>
+        <div id="shopSide"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="under">
+    <section class="pane">
+      <div class="bar"><h2>Stack through pin</h2><div class="seg" id="pinBtns"></div></div>
+      <div class="cv"><canvas id="stack" aria-label="Cross-section of the selected pin: plates, washers, spacers, tolerances, play and friction"></canvas></div>
+    </section>
+    <section class="pane">
+      <div class="bar"><h2>Near hind leg</h2><div class="seg"><button id="undo">Undo</button><button id="reset">Holy numbers</button></div></div>
+      <div class="cv"><canvas id="leg" aria-label="Near hind leg: plates, holes with clearance, forces, friction heat and foot scatter. Drag a bar to change its length."></canvas></div>
+    </section>
+  </div>
+
+  <aside class="pane" id="stats" aria-label="Scores">
+    <div class="sec"><h3>This build <span id="buildName"></span></h3><div id="scores"></div></div>
+    <div class="sec"><h3>Reads as legs <span>vs yours</span></h3><div id="ledger"></div></div>
+    <div class="sec"><h3>Gives out first <span>use ≥ 1 fails</span></h3><div id="fails"></div></div>
+    <div class="sec"><h3>Builds compared <span>tap a column</span></h3><div id="compare"></div></div>
+  </aside>
+</div>
+
+<script>
+(() => {
+'use strict';
+const COL = {paper:'#fff', ink:'#000', teal:'#19e6c8', amber:'#ffd23f', red:'#ff2e2e', blue:'#3b82f6', tint:'rgba(59,130,246,.10)', ghost:'rgba(59,130,246,.35)', faint:'rgba(0,0,0,.16)', foam:'rgba(0,0,0,.05)', wood:'#f3ead8'};
+const FONT = "'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace";
+const HOLY = {a:38, b:41.5, c:39.3, d:40.1, e:55.8, f:39.4, g:36.7, h:65.7, i:49, j:50, k:61.9, l:7.8, m:15};
+const KEYS = ['a','b','c','d','e','f','g','h','i','j','k','l','m'];
+const BARS = {a:['B','A'], l:['A','O'], m:['O','M'], j:['M','J1'], b:['B','J1'], e:['J1','J3'], d:['B','J3'],
+              c:['B','J2'], k:['M','J2'], f:['J3','J4'], g:['J2','J4'], h:['J4','F'], i:['J2','F']};
+const JOINT_DEF = {J1:['B','b','M','j',1], J2:['B','c','M','k',-1], J3:['B','d','J1','e',1], J4:['J3','f','J2','g',-1], F:['J4','h','J2','i',-1]};
+const ORDER = ['J1','J2','J3','J4','F'];
+const N = 360, TAU = Math.PI * 2, G0 = 9.81;
+const LINKS = {j:['M','J1'], k:['M','J2'], c:['B','J2'], f:['J3','J4']};
+
+// ---------- part cards. Numbers are typical published values; calibrate against your own material. ----------
+const CARDS = {
+  plate: {label:'Plates', opts:{
+    eps:  {name:'EPS 25', d:'Your foam board as it is.', t:25, tTol:1.0, rho:16, E:4e6, crush:70e3, tens:150e3, wearK:.02, mu:.55},
+    skin: {name:'EPS + skin', d:'Mesh tape and joint compound both faces.', t:27, tTol:1.4, rho:16, E:4e6, crush:70e3, tens:150e3, wearK:.006, mu:.45, skin:true},
+    spar: {name:'EPS + spar', d:'6 mm ply strip on edge inside each link.', t:25, tTol:1.0, rho:16, E:4e6, crush:70e3, tens:150e3, wearK:.02, mu:.55, spar:true},
+    ply:  {name:'Ply 6', d:'Sold as 6 mm, measures 5.2–5.8.', t:5.5, tTol:.3, rho:600, E:6e9, crush:12e6, tens:25e6, wearK:.0004, mu:.4, ply:true}
+  }},
+  hole: {label:'Holes', opts:{
+    raw:    {name:'Plain hole', d:'Pin straight through the plate.', mu:.5},
+    puck:   {name:'Wood puck', d:'Hardwood disc glued into the foam.', mu:.35},
+    tang:   {name:'Puck + tang', d:'Puck on a ply strip glued 150 mm in.', mu:.35},
+    sleeve: {name:'Printed sleeve', d:'PETG tube through puck, long bearing.', mu:.18}
+  }},
+  pin: {label:'Pins', opts:{
+    dowel:    {name:'10 mm dowel', d:'Hardwood. Diameters vary.', dia:10, dTol:.25, mu:.35},
+    bolt:     {name:'1/4 in bolt', d:'Threads ride in the hole.', dia:6.35, dTol:.08, mu:.32},
+    shoulder: {name:'M8 shoulder', d:'Smooth ground shank.', dia:8, dTol:.02, mu:.2},
+    tube:     {name:'12 mm brass', d:'Tube with a bolt inside.', dia:12, dTol:.05, mu:.16}
+  }},
+  washer: {label:'Washers', opts:{
+    none:   {name:'None', d:'Plate rubs on plate.', t:0, od:0, mu:null},
+    nylon:  {name:'Nylon', d:'1.5 mm, 24 mm across.', t:1.5, od:24, mu:.22},
+    uhmw:   {name:'UHMW', d:'1.5 mm slick plastic, 30 mm.', t:1.5, od:30, mu:.1},
+    fender: {name:'Fender', d:'Steel 1.2 mm, 40 mm wide.', t:1.2, od:40, mu:.4}
+  }},
+  nut: {label:'Nut', opts:{
+    loose: {name:'Finger loose', d:'Free to rattle.', clamp:4},
+    snug:  {name:'Snug', d:'Touching, still turns.', clamp:25},
+    tight: {name:'Tight', d:'Clamped hard.', clamp:90}
+  }},
+  legs: {label:'Legs per side', opts:{
+    one: {name:'1 per side', d:'Two hind legs, 180° apart.', n:1},
+    two: {name:'2 per side', d:'Four legs; stacks double.', n:2}
+  }},
+  make: {label:'Made by', opts:{
+    hand:  {name:'Hand cut', d:'Knife, saw, hand drill.', holeTol:.5, posTol:1.5},
+    jig:   {name:'Hand + jig', d:'Printed template, drill guide.', holeTol:.25, posTol:.5},
+    cnc:   {name:'CNC / laser', d:'Machine cut and drilled.', holeTol:.1, posTol:.15}
+  }}
+};
+const SLOT_ORDER = ['plate','hole','pin','washer','nut','legs','make'];
+const TUNE = [
+  ['Scale', 'sigma', .01, 4, 16, 2, 'mm/unit'],
+  ['Plate width', 'w', .2, 20, 160, 0, 'mm'],
+  ['Designed clearance', 'c0', .005, 0, 2, 2, 'mm'],
+  ['Rump mass', 'rump', .02, 0, 15, 1, 'kg'],
+  ['Feet carry', 'share', .2, 10, 100, 0, '%'],
+  ['Drawbar', 'Lb', 2, 450, 1600, 0, 'mm'],
+  ['Gap between legs', 'gap', .5, 0, 300, 0, 'mm'],
+  ['Strides walked', 'strides', 20, 0, 60000, 0, ''],
+  ['Draw slop at', 'mag', .05, 1, 40, 0, '×']
+];
+const base = () => ({plate:'eps', hole:'puck', pin:'dowel', washer:'none', nut:'snug', legs:'one', make:'hand', c0:.3, w:70, sigma:9.75, rump:2, share:60, Lb:760, gap:30, strides:0, mag:8, tol:'nom', phi0:null, G:{...HOLY}});
+const VARS = [
+  {name:'A', title:'Foam as it is', B: base()},
+  {name:'B', title:'Skinned + tangs', B: Object.assign(base(), {plate:'skin', hole:'tang', washer:'nylon', make:'jig'})},
+  {name:'C', title:'Foam + spars, slick', B: Object.assign(base(), {plate:'spar', hole:'sleeve', pin:'shoulder', washer:'uhmw', make:'jig'})},
+  {name:'D', title:'All ply', B: Object.assign(base(), {plate:'ply', hole:'raw', pin:'bolt', washer:'nylon', make:'cnc', w:40})}
+];
+let active = 0;
+const B = () => VARS[active].B;
+const S = {t: .3, playing: true, slow: false, mode: 'sim', height: 1750, cadence: 54, live: null, hist: [], selPin: 'J2', openSlot: 'plate', hoverBar: null, drag: null,
+  ov: {foam: true, force: true, slop: true, heat: true}};
+const cur = () => S.live || B().G;
+
+// ---------- linkage ----------
+function cc(P, r0, Q, r1, s) {
+  const dx = Q.x - P.x, dy = Q.y - P.y, d = Math.hypot(dx, dy);
+  if (d < 1e-9 || d > r0 + r1 || d < Math.abs(r0 - r1)) return null;
+  const a = (r0*r0 - r1*r1 + d*d) / (2*d), h = Math.sqrt(Math.max(0, r0*r0 - a*a));
+  const ux = dx/d, uy = dy/d, mx = P.x + a*ux, my = P.y + a*uy;
+  return {x: mx - s*h*uy, y: my + s*h*ux};
+}
+function solve(G, th) {
+  const p = {O:{x:0,y:0}, B:{x:-G.a,y:-G.l}, A:{x:0,y:-G.l}, M:{x:G.m*Math.cos(th), y:G.m*Math.sin(th)}};
+  for (const J of ORDER) { const [p0, r0, p1, r1, s] = JOINT_DEF[J]; const q = cc(p[p0], G[r0], p[p1], G[r1], s); if (!q) { p.fail = J; return p; } p[J] = q; }
+  return p;
+}
+const kIdx = ang => ((Math.round(ang / TAU * N) % N) + N) % N;
+const uv = (a, b) => { const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1; return {x: dx / L, y: dy / L}; };
+const cr = (a, b) => a.x * b.y - a.y * b.x;
+const sub = (a, b) => ({x: a.x - b.x, y: a.y - b.y});
+const add = (a, b) => ({x: a.x + b.x, y: a.y + b.y});
+const mul = (a, s) => ({x: a.x * s, y: a.y * s});
+const len = a => Math.hypot(a.x, a.y);
+function analyze(G) {
+  const fx = new Float64Array(N), fy = new Float64Array(N), ok = new Uint8Array(N);
+  let minY = Infinity, maxY = -Infinity, minX = Infinity, maxX = -Infinity, topY = -Infinity, valid = 0;
+  for (let k = 0; k < N; k++) {
+    const p = solve(G, TAU * k / N); if (!p.F) continue;
+    ok[k] = 1; fx[k] = p.F.x; fy[k] = p.F.y; valid++;
+    minY = Math.min(minY, p.F.y); maxY = Math.max(maxY, p.F.y);
+    for (const n of ['B','J1','J2','J3','J4','F','M']) { minX = Math.min(minX, p[n].x); maxX = Math.max(maxX, p[n].x); topY = Math.max(topY, p[n].y); }
+  }
+  if (!valid) { minY = -90; maxY = -70; minX = -80; maxX = 15; topY = 30; }
+  const tol = Math.max(.6, .05 * (maxY - minY)), contact = new Uint8Array(N);
+  for (let k = 0; k < N; k++) contact[k] = ok[k] && fy[k] < minY + tol ? 1 : 0;
+  let sv = 0, nv = 0;
+  for (let k = 0; k < N; k++) { const n = (k + 1) % N; if (contact[k] && contact[n]) { sv += fx[n] - fx[k]; nv++; } }
+  return {fx, fy, ok, contact, minY, maxY, minX, maxX, topY, spin: sv <= 0 ? 1 : -1, advance: nv ? Math.abs(sv / nv) * N : 0, duty: contact.reduce((s, c) => s + c, 0) / N, locked: (N - valid) / N};
+}
+function statics(P, W) {
+  if (!P.F || W <= 0) return null;
+  const uk = uv(P.J2, P.M), uc = uv(P.J2, P.B), uf = uv(P.J4, P.J3), R = {x: 0, y: W};
+  const den = cr(sub(P.J4, P.J2), uf); if (Math.abs(den) < 1e-9) return null;
+  const Ff = -cr(sub(P.F, P.J2), R) / den;
+  const rx = -(Ff * uf.x + R.x), ry = -(Ff * uf.y + R.y), det = uk.x * uc.y - uk.y * uc.x;
+  const Fk = (rx * uc.y - ry * uc.x) / det, Fc = (uk.x * ry - uk.y * rx) / det;
+  const uj = uv(P.J1, P.M), uf3 = uv(P.J3, P.J4);
+  const Fj = -Ff * cr(sub(P.J3, P.B), uf3) / cr(sub(P.J1, P.B), uj);
+  const Bup = mul(add(mul(uj, Fj), mul(uf3, Ff)), -1);
+  const Fs = add(mul(uv(P.M, P.J1), Fj), mul(uv(P.M, P.J2), Fk));
+  const J2v = add(mul(uk, Fk), mul(uc, Fc)), frameB = add(Bup, mul(uv(P.J2, P.B), Fc));
+  return {Fj, Fk, Fc, Ff, tauU: -cr(P.M, Fs),
+    pinVec: {O: mul(Fs, -1), B: Bup, M: Fs, J1: mul(uj, Fj), J2: J2v, J3: mul(uf3, Ff), J4: mul(uf, Ff)},
+    plates: {O: {frame: len(Fs), crank: len(Fs)}, B: {frame: len(frameB), up: len(Bup), c: Math.abs(Fc)}, M: {crank: len(Fs), j: Math.abs(Fj), k: Math.abs(Fk)},
+      J1: {j: Math.abs(Fj), up: Math.abs(Fj)}, J2: {k: Math.abs(Fk), c: Math.abs(Fc), lo: len(J2v)}, J3: {up: Math.abs(Ff), f: Math.abs(Ff)}, J4: {f: Math.abs(Ff), lo: Math.abs(Ff)}}};
+}
+
+// ---------- human gait ----------
+const HIPK  = [[0,25],[.1,22],[.3,5],[.5,-12],[.6,-8],[.75,18],[.88,30]];
+const KNEEK = [[0,5],[.15,18],[.4,5],[.55,30],[.72,62],[.85,40],[.97,3]];
+function curve(keys, u) {
+  u = ((u % 1) + 1) % 1; const n = keys.length; let i = n - 1;
+  for (let q = 0; q < n; q++) if (keys[q][0] <= u) i = q;
+  const k1 = keys[i], k2 = keys[(i + 1) % n], k0 = keys[(i - 1 + n) % n], k3 = keys[(i + 2) % n];
+  let u1 = k1[0], u2 = k2[0]; if (u2 <= u1) u2 += 1; let uu = u; if (uu < u1) uu += 1;
+  const t = (uu - u1) / (u2 - u1), p0 = k0[1], p1 = k1[1], p2 = k2[1], p3 = k3[1];
+  return 0.5 * ((2*p1) + (-p0 + p2)*t + (2*p0 - 5*p1 + 4*p2 - p3)*t*t + (-p0 + 3*p1 - 3*p2 + p3)*t*t*t);
+}
+function humanLegRel(H, u) {
+  const Lt = .245 * H, Ls = .246 * H, a = curve(HIPK, u) * Math.PI / 180, kf = curve(KNEEK, u) * Math.PI / 180;
+  const knee = {x: Lt * Math.sin(a), y: -Lt * Math.cos(a)};
+  return {a, knee, ank: {x: knee.x + Ls * Math.sin(a - kf), y: knee.y - Ls * Math.cos(a - kf)}};
+}
+function humanModel(H) {
+  const ankleH = .039 * H, hipY = new Float64Array(N + 1), hipX = new Float64Array(N + 1), L = [], R = [];
+  for (let k = 0; k <= N; k++) { L.push(humanLegRel(H, k / N)); R.push(humanLegRel(H, k / N + .5)); }
+  for (let k = 0; k <= N; k++) hipY[k] = ankleH + Math.max(-L[k].ank.y, -R[k].ank.y);
+  let st = 0;
+  for (let k = 0; k < N; k++) { const S2 = L[k].ank.y <= R[k].ank.y ? L : R; hipX[k + 1] = hipX[k] - (S2[k + 1].ank.x - S2[k].ank.x); if (hipY[k] + L[k].ank.y - ankleH < 8) st++; }
+  let meanHip = 0; for (let k = 0; k < N; k++) meanHip += hipY[k] / N;
+  return {H, hipY, hipX, advance: hipX[N], meanHip, duty: st / N};
+}
+
+// ---------- helpers ----------
+const lerp = (a, b, t) => a + (b - a) * t;
+const fmt = (v, d = 1) => (Math.abs(v) < 1e-9 ? 0 : v).toFixed(d);
+const wrapPi = a => Math.atan2(Math.sin(a), Math.cos(a));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function sizeCanvas(c) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1), w = c.clientWidth, h = c.clientHeight;
+  if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
+  const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); return {x, W: w, H: h};
+}
+function distPtSeg(p, a, b) { const dx = b.x - a.x, dy = b.y - a.y, L = dx*dx + dy*dy || 1e-12; const t = clamp(((p.x - a.x)*dx + (p.y - a.y)*dy) / L, 0, 1); return Math.hypot(p.x - a.x - t*dx, p.y - a.y - t*dy); }
+function segsCross(a, b, c, d) { const o = (p, q, r) => (q.x - p.x)*(r.y - p.y) - (q.y - p.y)*(r.x - p.x); return (o(a, b, c) * o(a, b, d) < 0) && (o(c, d, a) * o(c, d, b) < 0); }
+function distSegSeg(a, b, c, d) { if (segsCross(a, b, c, d)) return 0; return Math.min(distPtSeg(a, c, d), distPtSeg(b, c, d), distPtSeg(c, a, b), distPtSeg(d, a, b)); }
+function inTri(p, t) { const s = (a, b, c) => (a.x - c.x)*(b.y - c.y) - (b.x - c.x)*(a.y - c.y); const d1 = s(p, t[0], t[1]), d2 = s(p, t[1], t[2]), d3 = s(p, t[2], t[0]); return !(((d1 < 0) || (d2 < 0) || (d3 < 0)) && ((d1 > 0) || (d2 > 0) || (d3 > 0))); }
+const useClass = u => u >= 1 ? 'bad' : u >= .5 ? 'warn' : 'ok';
+const useCol = u => u >= 1 ? COL.red : u >= .5 ? COL.amber : COL.teal;
+function p95(arr) { const a = Array.from(arr).sort((x, y) => x - y); return Math.max(1e-6, a[Math.floor(a.length * .95)] || 0); }
+function heat(f) { f = clamp(f, 0, 1); return f < .5 ? `rgba(255,210,63,${.25 + f * 1.2})` : `rgba(255,46,46,${.35 + (f - .5) * 1.2})`; }
+let seed = 11; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647 * 2 - 1; };
+const MC = Array.from({length: 48}, () => ({j: rnd(), k: rnd(), c: rnd(), f: rnd(), m: rnd(), pj: rnd(), pk: rnd(), pc: rnd(), pf: rnd()}));
+const DRILLS = [3, 3.2, 3.3, 3.5, 4, 4.5, 5, 5.5, 6, 6.35, 6.5, 6.8, 7, 7.5, 8, 8.2, 8.5, 9, 9.5, 10, 10.2, 10.5, 11, 11.5, 12, 12.5, 13];
+
+// ---------- plates, pins ----------
+const PARTS = [
+  {id:'frame', name:'Frame', segs:[['B','A'],['A','O']], holes:['B','O'], ply:true},
+  {id:'crank', name:'Crank arm', segs:[['O','M']], holes:['O','M'], ply:true},
+  {id:'j', name:'Link j', segs:[['M','J1']], holes:['M','J1'], link:true},
+  {id:'k', name:'Link k', segs:[['M','J2']], holes:['M','J2'], link:true},
+  {id:'c', name:'Link c', segs:[['B','J2']], holes:['B','J2'], link:true},
+  {id:'f', name:'Link f', segs:[['J3','J4']], holes:['J3','J4'], link:true},
+  {id:'up', name:'Top triangle', segs:[['B','J1'],['J1','J3'],['J3','B']], tri:['B','J1','J3'], holes:['B','J1','J3']},
+  {id:'lo', name:'Foot triangle', segs:[['J2','J4'],['J4','F'],['F','J2']], tri:['J2','J4','F'], holes:['J2','J4'], foot:'F'}
+];
+const PINS = [
+  {id:'O', parts:['frame','crank'], name:'crank axle', main:'crank'},
+  {id:'B', parts:['frame','up','c'], name:'frame pivot', main:'up'},
+  {id:'M', parts:['crank','j','k'], name:'crank pin', main:'crank'},
+  {id:'J1', parts:['j','up'], name:'top', main:'up'},
+  {id:'J2', parts:['k','c','lo'], name:'knee', main:'lo'},
+  {id:'J3', parts:['up','f'], name:'back', main:'up'},
+  {id:'J4', parts:['f','lo'], name:'hock', main:'lo'}
+];
+const PART_REF = {frame:null, crank:['O','M'], j:['M','J1'], k:['M','J2'], c:['B','J2'], f:['J3','J4'], up:['B','J1'], lo:['J2','J4']};
+function partAngle(p, id) { const r = PART_REF[id]; if (!r) return 0; return Math.atan2(p[r[1]].y - p[r[0]].y, p[r[1]].x - p[r[0]].x); }
+const partT = (b, part) => part.ply ? 5.5 : CARDS.plate.opts[b.plate].t;
+function layering(b) {
+  const G = b.G, parts = PARTS, n = parts.length, idx = {}; parts.forEach((p, i) => idx[p.id] = i);
+  const pinD = CARDS.pin.opts[b.pin].dia;
+  const rU = b.w / 2 / b.sigma, holeU = pinD / 2 / b.sigma, gapU = 2 / b.sigma;
+  const conf = parts.map(() => new Uint8Array(n));
+  const share = (a, c) => PINS.some(pn => pn.parts.includes(a) && pn.parts.includes(c));
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) if (share(parts[i].id, parts[j].id)) conf[i][j] = conf[j][i] = 2;
+  const pinHit = PINS.map(() => new Uint8Array(n));
+  for (let s = 0; s < 72; s++) {
+    const P = solve(G, TAU * s / 72); if (P.fail) continue;
+    const geo = parts.map(p => ({segs: p.segs.map(([a, c]) => [P[a], P[c]]), tri: p.tri ? p.tri.map(k => P[k]) : null}));
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      if (conf[i][j]) continue; let hit = false;
+      for (const [a, c] of geo[i].segs) { for (const [d, e] of geo[j].segs) if (distSegSeg(a, c, d, e) < 2 * rU + gapU) { hit = true; break; } if (hit) break; }
+      if (!hit && geo[i].tri) for (const [d] of geo[j].segs) if (inTri(d, geo[i].tri)) { hit = true; break; }
+      if (!hit && geo[j].tri) for (const [d] of geo[i].segs) if (inTri(d, geo[j].tri)) { hit = true; break; }
+      if (hit) conf[i][j] = conf[j][i] = 1;
+    }
+    PINS.forEach((pn, pi) => { const pt = P[pn.id]; for (let q = 0; q < n; q++) { if (pn.parts.includes(parts[q].id) || pinHit[pi][q]) continue; const g = geo[q]; let h = g.segs.some(([a, c]) => distPtSeg(pt, a, c) < rU + holeU + gapU / 2); if (!h && g.tri) h = inTri(pt, g.tri); if (h) pinHit[pi][q] = 1; } });
+  }
+  const order = ['frame','crank','j','k','c','up','lo','f'].map(id => idx[id]), pinParts = PINS.map(pn => pn.parts.map(id => idx[id]));
+  const lay = new Int8Array(n).fill(-1); let best = null, nodes = 0;
+  const span = pi => { let lo = Infinity, hi = -Infinity, all = true; for (const q of pinParts[pi]) { if (lay[q] < 0) { all = false; continue; } lo = Math.min(lo, lay[q]); hi = Math.max(hi, lay[q]); } if (PINS[pi].id === 'O' && isFinite(lo)) lo = 0; return {lo, hi, all}; };
+  const okNow = () => { for (let pi = 0; pi < PINS.length; pi++) { const sp = span(pi); if (!sp.all) continue; for (let q = 0; q < n; q++) if (pinHit[pi][q] && lay[q] >= 0 && lay[q] >= sp.lo && lay[q] <= sp.hi) return false; } return true; };
+  const partial = () => { let c = 0; for (let pi = 0; pi < PINS.length; pi++) { const sp = span(pi); if (isFinite(sp.lo)) c += sp.hi - sp.lo; } return c; };
+  function dfs(d, L) {
+    if (++nodes > 150000) return; if (best && partial() >= best.cost) return;
+    if (d === n) { best = {cost: partial(), lay: Array.from(lay)}; return; }
+    const p = order[d], top = p === idx.frame ? 1 : L;
+    for (let l = 0; l < top; l++) { let ok = true; for (let e = 0; e < d; e++) { const q = order[e]; if (conf[p][q] && lay[q] === l) { ok = false; break; } } if (!ok) continue; lay[p] = l; if (okNow()) dfs(d + 1, L); lay[p] = -1; if (nodes > 150000) return; }
+  }
+  for (let L = 2; L <= 9 && !best; L++) { nodes = 0; dfs(0, L); }
+  const layers = best ? best.lay : parts.map((_, i) => i), layerOf = {};
+  parts.forEach((p, i) => layerOf[p.id] = layers[i]);
+  return {layerOf, nL: Math.max(...layers) + 1};
+}
+
+// ---------- the engine: one build in, everything measurable out ----------
+let HM = humanModel(S.height);
+function engine(b, G) {
+  G = G || b.G;
+  const sg = b.sigma, PL = CARDS.plate.opts[b.plate], HO = CARDS.hole.opts[b.hole], PI = CARDS.pin.opts[b.pin], WA = CARDS.washer.opts[b.washer], NU = CARDS.nut.opts[b.nut], MK = CARDS.make.opts[b.make];
+  const A = analyze(G), lay = layering(b), t = PL.t;
+  const nLegs = CARDS.legs.opts[b.legs].n * 2;
+  const offs = nLegs === 2 ? [0, N / 2] : [0, N / 2, N / 4, 3 * N / 4];
+  // masses
+  const P03 = solve(G, .3); let legKg = 0;
+  const areaOf = part => {
+    if (P03.fail) return 0;
+    if (part.tri) { const q = part.tri.map(k => P03[k]); const ar = Math.abs(cr(sub(q[1], q[0]), sub(q[2], q[0]))) / 2 * sg * sg; const per = (len(sub(q[1], q[0])) + len(sub(q[2], q[1])) + len(sub(q[0], q[2]))) * sg; return ar + per * b.w / 2 + Math.PI * b.w * b.w / 4; }
+    let L = 0; for (const [a, c] of part.segs) L += len(sub(P03[c], P03[a])) * sg; return L * b.w + Math.PI * b.w * b.w / 4;
+  };
+  for (const p of PARTS) { const a = areaOf(p) / 1e6; legKg += p.ply ? a * .0055 * 600 : a * t / 1000 * PL.rho + (PL.skin ? a * 1.2 : 0) + (PL.spar && p.link ? len(sub(P03[p.segs[0][1]], P03[p.segs[0][0]])) * sg / 1000 * .006 * t / 1000 * 600 : 0); }
+  const puckD = Math.min(.85 * b.w, 60);
+  if (!PL.ply && b.hole !== 'raw') legKg += 12 * Math.PI * (puckD / 2000) ** 2 * t / 1000 * 700;
+  const totalKg = nLegs * legKg + b.rump + .8, Wtot = totalKg * G0 * b.share / 100 * 1.5;
+  // statics around a turn of the near leg
+  const F = new Array(N), poses = new Array(N);
+  for (let k = 0; k < N; k++) {
+    const P = solve(G, TAU * k / N); poses[k] = P;
+    let nc = 0; for (const o of offs) nc += A.contact[(k + o) % N];
+    F[k] = A.contact[k] && nc ? statics(P, Wtot / nc) : null;
+  }
+  // phase: default to horse walk timing
+  let phi0 = b.phi0;
+  if (phi0 === null || phi0 === undefined) {
+    let bestP = null;
+    for (let q = 0; q < 72; q++) { const p0 = TAU * q / 72; let on = null; for (let i = 0; i < N; i++) { const k = kIdx(A.spin * TAU * i / N + p0), kp = kIdx(A.spin * TAU * (i - 1) / N + p0); if (A.contact[k] && !A.contact[kp]) { on = i / N; break; } } if (on === null) continue; const e = Math.abs(((on - .75 + 1.5) % 1) - .5); if (!bestP || e < bestP.e) bestP = {e, p: p0}; }
+    phi0 = bestP ? bestP.p : 0; b.phi0 = phi0;
+  }
+  const tIdx = new Int16Array(N); for (let i = 0; i < N; i++) tIdx[i] = kIdx(A.spin * TAU * i / N + phi0);
+  // relative angle per pin -> swing and joint speed
+  const omegaCrank = TAU * S.cadence / 60;
+  const pins = {};
+  for (const pn of PINS) {
+    const rel = new Float64Array(N); let prev = null, acc = 0, lo = Infinity, hi = -Infinity;
+    for (let k = 0; k < N; k++) { const P = poses[k]; if (P.fail) { rel[k] = acc; continue; } const r = partAngle(P, pn.parts[1]) - partAngle(P, pn.parts[0]); acc = prev === null ? r : acc + wrapPi(r - prev); prev = r; rel[k] = acc; lo = Math.min(lo, acc); hi = Math.max(hi, acc); }
+    const swing = isFinite(hi) ? (hi - lo) * 180 / Math.PI : 0;
+    // stack through this pin
+    const parts = pn.parts.map(id => PARTS.find(p => p.id === id));
+    let loL = Infinity, hiL = -Infinity; for (const p of parts) { loL = Math.min(loL, lay.layerOf[p.id]); hiL = Math.max(hiL, lay.layerOf[p.id]); }
+    if (pn.id === 'O') loL = 0;
+    const stack = [];
+    if (WA.t) stack.push({kind: 'washer', t: WA.t, tol: .1, name: 'washer'});
+    for (let L = loL; L <= hiL; L++) {
+      const p = parts.find(q => lay.layerOf[q.id] === L);
+      if (p) stack.push({kind: p.ply ? 'ply' : 'plate', t: partT(b, p), tol: p.ply ? .3 : PL.tTol, name: p.name, id: p.id, L});
+      else stack.push({kind: 'spacer', t: PL.ply ? 5.5 : t, tol: .3, name: 'spacer', L});
+      if (WA.t && L < hiL) stack.push({kind: 'washer', t: WA.t, tol: .1, name: 'washer'});
+    }
+    if (WA.t) stack.push({kind: 'washer', t: WA.t, tol: .1, name: 'washer'});
+    const stackNom = stack.reduce((s, q) => s + q.t, 0), stackWC = stack.reduce((s, q) => s + q.tol, 0), stackRSS = Math.sqrt(stack.reduce((s, q) => s + q.tol * q.tol, 0));
+    const grip = Math.ceil((stackNom + 1) * 2) / 2;
+    const interfaces = stack.length + 1; // every face from head to nut
+    // clearance with tolerances
+    const holeTol = MK.holeTol * (b.hole === 'raw' && !PL.ply ? 1.6 : 1);
+    const cNom = b.c0, cMin = b.c0 - (holeTol + PI.dTol) / 2, cMax = b.c0 + (holeTol + PI.dTol) / 2;
+    // loads, hole use, knocks
+    let maxF = 0, uMax = 0, worst = null, what = '', knocks = 0, prevOn = false, prevAng = null, fAll = 0;
+    for (let i = 0; i < N; i++) { const f = F[tIdx[i]]; if (f) fAll = Math.max(fAll, len(f.pinVec[pn.id])); }
+    const series = new Float64Array(N), useS = new Float64Array(N), knockAt = [], power = new Float64Array(N);
+    const bearLen = (b.hole === 'sleeve' ? t + 10 : t) / 1000;
+    const holeUse = (Fv, part) => {
+      const d = PI.dia / 1000, tt = partT(b, part) / 1000, w = b.w / 1000;
+      if (part.ply || PL.ply) return {u: Fv / (d * tt * 12e6), what: 'ply at the hole'};
+      const foamCap = L => L * tt * PL.crush + (PL.skin ? L * 2 * .001 * 15e6 : 0);
+      if (b.hole === 'raw') return {u: Fv / foamCap(d), what: PL.skin ? 'skin and foam at the hole' : 'foam at the hole'};
+      const wood = Fv / (d * (b.hole === 'sleeve' ? bearLen : tt) * 12e6);
+      if (b.hole === 'tang') { const sh = Fv / (2 * .15 * .6 * w * 80e3 * (PL.skin ? 3 : 1)); return sh > wood ? {u: sh, what: 'glue line, tang to foam'} : {u: wood, what: 'pin in the puck'}; }
+      const foam = Fv / foamCap(puckD / 1000);
+      return foam > wood ? {u: foam, what: `Ø${fmt(puckD, 0)} puck pressing on foam`} : {u: wood, what: 'pin in the puck'};
+    };
+    // friction: faces between layers (clamped by the nut) and the pin turning in its hole
+    const muFace = WA.mu !== null ? WA.mu : PL.mu;
+    const rFace = WA.od ? (WA.od / 2 + PI.dia / 2) / 2 : (Math.min(b.w / 2, 25) + PI.dia / 2) / 2;
+    const tauFace = muFace * NU.clamp * rFace / 1000 * Math.max(1, interfaces - 1) * .5;
+    const muPin = (PI.mu + (PL.ply ? .3 : HO.mu)) / 2;
+    for (let i = 0; i < N; i++) {
+      const k = tIdx[i], f = F[k];
+      let pm = 0, uu = 0;
+      if (f) for (const [pid, val] of Object.entries(f.plates[pn.id])) {
+        const part = PARTS.find(p => p.id === pid), hu = holeUse(val, part);
+        if (hu.u > uMax) { uMax = hu.u; worst = pid; what = hu.what; }
+        uu = Math.max(uu, hu.u); pm = Math.max(pm, val); maxF = Math.max(maxF, val);
+      }
+      series[i] = pm; useS[i] = uu;
+      const k1 = (k + A.spin + N) % N, wrel = Math.min(4, Math.abs(rel[k1] - rel[k]) / (TAU / N)) * omegaCrank;
+      power[i] = (tauFace + muPin * pm * PI.dia / 2000) * wrel;
+      const vec = f ? f.pinVec[pn.id] : {x: 0, y: 0}, m = len(vec), on = m > .15 * fAll && fAll > 0;
+      if (on) { const ang = Math.atan2(vec.y, vec.x) - partAngle(poses[k], pn.main); if (!prevOn) { knocks++; knockAt.push(i); } else if (prevAng !== null && Math.abs(wrapPi(ang - prevAng)) > 2.1) { knocks++; knockAt.push(i); } prevAng = ang; } else prevAng = null;
+      prevOn = on;
+    }
+    const meanP = power.reduce((s, v) => s + v, 0) / N;
+    const bearsFoam = !PL.ply && (b.hole === 'raw' || /foam|glue/.test(what));
+    const wearPer = (bearsFoam ? PL.wearK : .0004) * Math.min(uMax, 3) ** 2 * Math.max(.2, swing / 90) * (uMax >= 1 ? 5 : 1);
+    const cUse = Math.min(8, (b.tol === 'worst' ? cMax : cNom) + wearPer * b.strides);
+    // tilt: a plate rocks on its pin by clearance over bearing length; a hard clamp makes the stack rock as one
+    const bl = b.nut === 'tight' ? stackNom : b.hole === 'sleeve' ? t + 10 : partT(b, parts[0]);
+    const tilt = Math.atan(2 * Math.max(0, cUse) / Math.max(1, bl)) * (b.nut === 'snug' ? .7 : 1);
+    // clamp crush under the nut/washer on foam
+    const padA = Math.PI * ((WA.od || PI.dia * 1.8) / 2000) ** 2 - Math.PI * (PI.dia / 2000) ** 2;
+    const clampUse = PL.ply ? NU.clamp / padA / 12e6 : NU.clamp / padA / (b.hole === 'raw' ? PL.crush : 12e6);
+    pins[pn.id] = {maxF, uMax, worst, what, knocks, knockAt, series, useS, power, meanP, swing, wearPer, c: cUse, cNom, cMin, cMax,
+      life: wearPer > 0 ? Math.max(0, (2 - cNom) / wearPer) : Infinity, stack, stackNom, stackWC, stackRSS, grip, interfaces, tauFace, muFace, muPin, tilt, clampUse, rel};
+  }
+  // links
+  const links = {};
+  for (const [id] of Object.entries(LINKS)) {
+    let tMax = 0, cMax = 0; const Lm = G[id] * sg / 1000;
+    for (let k = 0; k < N; k++) { const f = F[k]; if (!f) continue; const v = f['F' + id]; tMax = Math.max(tMax, v); cMax = Math.max(cMax, -v); }
+    const w = b.w / 1000, tt = t / 1000;
+    let EI = PL.E * w * tt ** 3 / 12; if (PL.skin) EI += 3e9 * 2 * w * .001 * (tt / 2) ** 2; if (PL.spar) EI += 6e9 * .006 * tt ** 3 / 12;
+    const Pcr = Math.PI ** 2 * EI / (Lm * Lm);
+    const tensCap = w * tt * PL.tens + (PL.skin ? 2 * w * .001 * 100e6 : 0) + (PL.spar ? .006 * tt * 25e6 : 0);
+    links[id] = {tMax, cMax, Pcr, buck: cMax / Pcr, tens: tMax / tensCap, Lmm: Lm * 1000};
+  }
+  // slop: clearance at both ends of each link, plus hole position error from how it was made
+  const pc = id => pins[id].c;
+  const play = {j: 2 * (pc('M') + pc('J1')), k: 2 * (pc('M') + pc('J2')), c: 2 * (pc('B') + pc('J2')), f: 2 * (pc('J3') + pc('J4')), m: 2 * pc('O')};
+  const posErr = MK.posTol * 2;
+  const EA = (() => { const w = b.w / 1000, tt = t / 1000; return PL.E * w * tt + (PL.skin ? 3e9 * 2 * w * .001 : 0) + (PL.spar ? 6e9 * .006 * tt : 0); })();
+  const loaded = [];
+  for (let k = 0; k < N; k += 3) {
+    const f = F[k], Gp = {...G};
+    if (f) for (const id of Object.keys(LINKS)) { const v = f['F' + id]; Gp[id] += (Math.sign(v) * play[id] / 2 + v * G[id] * sg / EA) / sg; }
+    const P = solve(Gp, TAU * k / N); loaded.push(P.F ? {x: P.F.x, y: P.F.y, k} : null);
+  }
+  let mid = 0; { let bestR = -1; for (let k = 0; k < N; k++) if (A.contact[k]) { let run = 0; while (A.contact[(k + run) % N] && run < N) run++; if (run > bestR) { bestR = run; mid = (k + Math.floor(run / 2)) % N; } } }
+  let spread = 0; { const P0 = poses[mid]; if (P0.F) for (const r of MC) { const Gp = {...G}; for (const id of ['j','k','c','f','m']) Gp[id] += (r[id] * play[id] / 2 + (id !== 'm' ? r['p' + id] * posErr : 0)) / sg; const P = solve(Gp, TAU * mid / N); if (P.F) spread = Math.max(spread, len(sub(P.F, P0.F)) * sg); } }
+  let sag = 0; for (const p of loaded) if (p && A.contact[p.k]) sag = Math.max(sag, Math.hypot(p.x - A.fx[p.k], p.y - A.fy[p.k]) * sg);
+  // sideways wobble at the foot: each pin's tilt times its distance to the foot
+  let wobble = 0; { const P0 = poses[mid]; let ss = 0; if (P0.F) for (const pn of PINS) if (pn.id !== 'O') ss += (Math.tan(pins[pn.id].tilt) * len(sub(P0.F, P0[pn.id])) * sg * .5) ** 2; wobble = Math.sqrt(ss); }
+  // crank torque and friction
+  const torque = new Float64Array(N), fric = new Float64Array(N);
+  for (let i = 0; i < N; i++) {
+    const k = tIdx[i]; let tq = 0; for (const o of offs) { const f = F[(k + o) % N]; if (f) tq += f.tauU; }
+    torque[i] = tq * sg / 1000 * A.spin;
+    let p = 0; for (const pn of PINS) p += pins[pn.id].power[i]; fric[i] = p * nLegs;
+  }
+  const fricW = fric.reduce((s, v) => s + v, 0) / N, fricTorque = fricW / omegaCrank;
+  // planted foot: slip against the ground
+  let slip = 0; { let run = null; for (let i = 0; i <= N; i++) { const k = tIdx[i % N], body = HM.hipX[Math.min(N, i)]; if (A.contact[k] && A.ok[k]) { const wx = body + A.fx[k] * sg; run = run ? {lo: Math.min(run.lo, wx), hi: Math.max(run.hi, wx)} : {lo: wx, hi: wx}; } else if (run) { slip = Math.max(slip, run.hi - run.lo); run = null; } } if (run) slip = Math.max(slip, run.hi - run.lo); }
+  let supported = 0; for (let k = 0; k < N; k++) { let any = 0; for (const o of offs) any |= A.contact[(k + o) % N]; supported += any; }
+  // width: per-leg stack, and where the foot plate lands
+  const stackW = lay.nL * t + (CARDS.washer.opts[b.washer].t * (lay.nL + 1));
+  const legsSide = CARDS.legs.opts[b.legs].n;
+  const footZ = b.gap / 2 + (lay.layerOf.lo + .5) * (t + CARDS.washer.opts[b.washer].t) + (legsSide === 2 ? stackW / 2 : 0);
+  const sideW = legsSide * stackW + b.gap / 2;
+  const humanZ = .035 * S.height;
+  let onset = null; for (let i = 0; i < N; i++) { const k = tIdx[i], kp = tIdx[(i - 1 + N) % N]; if (A.contact[k] && !A.contact[kp]) { onset = i / N; break; } }
+  const Hc = -A.minY * sg;
+  const slope = Math.atan2(HM.meanHip - Hc, b.Lb) * 180 / Math.PI;
+  const strideRatio = A.advance * sg / HM.advance;
+  // ledger
+  const ph = onset === null ? null : ((onset - .75 + 1.5) % 1) - .5;
+  const ledger = [
+    ['Feet carry the rump', `${fmt(supported / N * 100, 0)}%`, supported / N > .97 ? 'ok' : supported / N > .85 ? 'warn' : 'bad', `For ${fmt((1 - supported / N) * 100, 0)}% of the stride no hind foot is down and the rump hangs on your belt.`],
+    ['Feet stay planted', `${fmt(slip, 0)} mm`, slip < 15 ? 'ok' : slip < 50 ? 'warn' : 'bad', 'How far a hind foot slides while it is down.'],
+    ['Level with your hips', `${fmt(slope, 1)}°`, Math.abs(slope) < 3 ? 'ok' : Math.abs(slope) < 8 ? 'warn' : 'bad', `Hind axle ${fmt(Hc / 10, 0)} cm, your hip ${fmt(HM.meanHip / 10, 0)} cm.`],
+    ['In line with your feet', `${footZ - humanZ >= 0 ? '+' : ''}${fmt(footZ - humanZ, 0)} mm`, Math.abs(footZ - humanZ) < 25 ? 'ok' : Math.abs(footZ - humanZ) < 60 ? 'warn' : 'bad', 'Every layer of plate pushes the hind foot outward.'],
+    ['Same stride', `${fmt(strideRatio * 100, 0)}%`, Math.abs(strideRatio - 1) < .03 ? 'ok' : Math.abs(strideRatio - 1) < .1 ? 'warn' : 'bad', 'Hind stride length against yours.'],
+    ['Horse walk timing', ph === null ? '–' : `${ph >= 0 ? '+' : ''}${fmt(ph * 100, 0)}%`, ph !== null && Math.abs(ph) < .06 ? 'ok' : ph !== null && Math.abs(ph) < .15 ? 'warn' : 'bad', 'Hind foot lands a quarter stride before your same-side foot.'],
+    ['Ground time like a walk', `${fmt(A.duty * 100, 0)}%`, A.duty > .55 ? 'ok' : A.duty > .45 ? 'warn' : 'bad', 'A walking horse keeps each foot down about 60% of the stride.']
+  ];
+  // worst use across everything
+  let worstUse = 0; for (const pn of PINS) worstUse = Math.max(worstUse, pins[pn.id].uMax); for (const L of Object.values(links)) worstUse = Math.max(worstUse, L.buck, L.tens);
+  const wander = spread + wobble;
+  return {b, G, A, lay, F, poses, tIdx, phi0, pins, links, play, loaded, spread, sag, wobble, wander, torque, fric, fricW, fricTorque, slip, supported: supported / N,
+    pmax: p95(PINS.flatMap(pn => Array.from(pins[pn.id].power))), footZ, humanZ, sideW, stackW, Hc, slope, strideRatio, onset, ledger, legKg, totalKg, Wtot, nLegs, offs, worstUse, mid, puckD, posErr,
+    legible: ledger.filter(l => l[2] === 'ok').length};
+}
+
+let E = null;
+function run() { E = engine(B(), cur()); renderStats(); renderPinBtns(); if (S.mode === 'shop') renderShop(); scheduleCompare(); }
+let cmpT = null, CMP = [];
+function scheduleCompare() { clearTimeout(cmpT); cmpT = setTimeout(() => { CMP = VARS.map((v, i) => i === active ? E : engine(v.B)); renderCompare(); renderVars(); }, 250); }
+
+// ---------- drawing helpers ----------
+function line(x, X, Y, pts, w, col) { x.strokeStyle = col; x.lineWidth = w; x.lineCap = 'round'; x.lineJoin = 'round'; x.beginPath(); pts.forEach((p, i) => i ? x.lineTo(X(p.x), Y(p.y)) : x.moveTo(X(p.x), Y(p.y))); x.stroke(); }
+function circle(x, X, Y, c, r, s, col, w, fill) { x.beginPath(); x.arc(X(c.x), Y(c.y), Math.max(1, r * s), 0, TAU); if (fill) { x.fillStyle = fill; x.fill(); } if (col) { x.strokeStyle = col; x.lineWidth = w; x.stroke(); } }
+function arrow(x, x0, y0, x1, y1, col, w) { const a = Math.atan2(y1 - y0, x1 - x0); if (Math.hypot(x1 - x0, y1 - y0) < 3) return; x.strokeStyle = col; x.fillStyle = col; x.lineWidth = w; x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y1); x.stroke(); x.beginPath(); x.moveTo(x1, y1); x.lineTo(x1 - 7 * Math.cos(a - .4), y1 - 7 * Math.sin(a - .4)); x.lineTo(x1 - 7 * Math.cos(a + .4), y1 - 7 * Math.sin(a + .4)); x.closePath(); x.fill(); }
+function skeleton(x, P, X, Y, col, w) { x.save(); x.strokeStyle = col; x.lineWidth = w; x.lineCap = 'round'; for (const k of KEYS) { const [a, b] = BARS[k]; if (!P[a] || !P[b]) continue; x.setLineDash(k === 'a' || k === 'l' ? [4, 3] : []); x.beginPath(); x.moveTo(X(P[a].x), Y(P[a].y)); x.lineTo(X(P[b].x), Y(P[b].y)); x.stroke(); } x.restore(); }
+function plates(x, P, X, Y, wpx, labels) {
+  const order = PARTS.slice().sort((a, b) => E.lay.layerOf[a.id] - E.lay.layerOf[b.id]);
+  for (const part of order) {
+    const segs = part.segs.filter(([a, b]) => P[a] && P[b]); if (!segs.length) continue;
+    const w = part.ply ? Math.max(2, wpx * .6) : wpx, hasTri = part.tri && part.tri.every(k => P[k]);
+    const triPath = () => { x.beginPath(); part.tri.forEach((k, i) => i ? x.lineTo(X(P[k].x), Y(P[k].y)) : x.moveTo(X(P[k].x), Y(P[k].y))); x.closePath(); };
+    x.lineCap = 'round'; x.lineJoin = 'round';
+    x.strokeStyle = COL.ink; x.lineWidth = w + 2; x.beginPath(); for (const [a, b] of segs) { x.moveTo(X(P[a].x), Y(P[a].y)); x.lineTo(X(P[b].x), Y(P[b].y)); } x.stroke();
+    if (hasTri) { x.fillStyle = COL.ink; triPath(); x.fill(); }
+    const fill = part.ply || CARDS.plate.opts[B().plate].ply ? COL.wood : COL.paper;
+    x.strokeStyle = fill; x.lineWidth = w; x.beginPath(); for (const [a, b] of segs) { x.moveTo(X(P[a].x), Y(P[a].y)); x.lineTo(X(P[b].x), Y(P[b].y)); } x.stroke();
+    if (hasTri) { x.fillStyle = fill; triPath(); x.fill(); }
+    if (CARDS.plate.opts[B().plate].spar && part.link) { const [a, b] = part.segs[0]; x.strokeStyle = '#c9a66b'; x.lineWidth = Math.max(1.5, w * .12); x.beginPath(); x.moveTo(X(P[a].x), Y(P[a].y)); x.lineTo(X(P[b].x), Y(P[b].y)); x.stroke(); }
+    if (labels && !part.ply) { const hs = part.holes.map(h => P[h]).filter(Boolean), cx = hs.reduce((a, p) => a + p.x, 0) / hs.length, cy = hs.reduce((a, p) => a + p.y, 0) / hs.length; x.fillStyle = COL.ink; x.font = `10px ${FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(`${part.id} L${E.lay.layerOf[part.id] + 1}`, X(cx), Y(cy)); }
+  }
+}
+const legPhi = (u, o) => E.A.spin * TAU * u + E.phi0 + o / N * TAU;
+const uNow = () => S.t * S.cadence / 60;
+function hipAt(u) { const n = Math.floor(u), f = u - n, kf = f * N, k = Math.floor(kf), t = kf - k; return {x: n * HM.advance + lerp(HM.hipX[k], HM.hipX[k + 1], t), y: lerp(HM.hipY[k], HM.hipY[Math.min(N, k + 1)], t)}; }
+function iNow() { return Math.floor((((uNow() % 1) + 1) % 1) * N) % N; }
+
+// ---------- stage ----------
+const stage = document.getElementById('stage');
+let flash = {};
+function drawStage() {
+  const {x, W, H} = sizeCanvas(stage), u = uNow(), hip = hipAt(u), b = B(), sg = b.sigma, G = cur(), Hh = S.height, A = E.A;
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  const stripH = 54, gy0 = H - stripH;
+  const axX = hip.x - b.Lb, Hc = E.Hc;
+  const left = axX + A.minX * sg - 140, right = hip.x + .42 * Hh;
+  const s = Math.min((W - 20) / (right - left), (gy0 - 30) / (Hh * 1.05));
+  const camX = (left + right) / 2, X = v => W / 2 + (v - camX) * s, Y = v => gy0 - 16 - v * s;
+  x.strokeStyle = COL.ink; x.lineWidth = 1.5; x.beginPath(); x.moveTo(0, Y(0)); x.lineTo(W, Y(0)); x.stroke();
+  x.lineWidth = 1; for (let t = Math.floor((camX - W / 2 / s) / 100) * 100; t <= camX + W / 2 / s; t += 100) { x.beginPath(); x.moveTo(X(t), Y(0)); x.lineTo(X(t), Y(0) + (Math.round(t) % 500 === 0 ? 7 : 3)); x.stroke(); }
+  const LX = v => X(axX + v * sg), LY = v => Y(Hc + v * sg);
+  const Ps = E.offs.map(o => solve(G, legPhi(u, o)));
+  const human = [humanLegRel(Hh, u), humanLegRel(Hh, u + .5)];
+  const drawHumanLeg = (L, col, w) => { const kn = {x: hip.x + L.knee.x, y: hip.y + L.knee.y}, an = {x: hip.x + L.ank.x, y: hip.y + L.ank.y}; line(x, X, Y, [hip, kn, an], w, col); line(x, X, Y, [{x: an.x - .045 * Hh, y: Math.max(0, an.y - .039 * Hh)}, an, {x: an.x + .11 * Hh, y: Math.max(0, an.y - .039 * Hh + 4)}], w * .6, col); };
+  // far legs (right side)
+  E.offs.forEach((o, i) => { if (i % 2 === 1 || i >= 2 && false) skeleton(x, Ps[i], LX, LY, COL.blue, Math.max(1, s * 5)); });
+  drawHumanLeg(human[1], COL.blue, Math.max(2, s * 16));
+  // rump
+  const belt = {x: hip.x - .07 * Hh, y: hip.y};
+  const rump = [{x: hip.x - .1 * Hh, y: hip.y + .02 * Hh}, {x: hip.x - .1 * Hh, y: hip.y + .17 * Hh}, {x: axX - 60, y: Hc + .15 * Hh}, {x: axX + A.minX * sg * .5, y: Hc + .08 * Hh}, {x: axX + A.minX * sg * .5, y: Hc - .02 * Hh}, {x: axX + 80, y: Hc - .04 * Hh}];
+  x.fillStyle = COL.foam; x.strokeStyle = COL.ink; x.lineWidth = 1; x.setLineDash([5, 3]); x.beginPath(); rump.forEach((p, i) => i ? x.lineTo(X(p.x), Y(p.y)) : x.moveTo(X(p.x), Y(p.y))); x.closePath(); x.fill(); x.stroke(); x.setLineDash([]);
+  line(x, X, Y, [belt, {x: axX, y: Hc}], Math.max(2, s * 12), COL.ink);
+  circle(x, X, Y, belt, 18, s, COL.ink, 1.5, COL.paper);
+  const sh = {x: hip.x + .03 * Hh, y: hip.y + .288 * Hh};
+  line(x, X, Y, [hip, sh], Math.max(3, s * 34), COL.ink);
+  circle(x, X, Y, {x: sh.x + .02 * Hh, y: sh.y + .1 * Hh}, .062 * Hh, s, COL.ink, 1.5, COL.paper);
+  const sw = -human[0].a * .7; line(x, X, Y, [sh, {x: sh.x + Math.sin(sw) * .36 * Hh, y: sh.y - Math.cos(sw) * .36 * Hh}], Math.max(2, s * 13), COL.ink);
+  // near legs (left side: offs 0 and, with 2 per side, the third entry)
+  const nearIdx = E.offs.length === 2 ? [0] : [2, 0];
+  for (const i of nearIdx) {
+    if (S.ov.foam) plates(x, Ps[i], LX, LY, Math.max(3, b.w * s), false);
+    skeleton(x, Ps[i], LX, LY, COL.ink, Math.max(1.2, s * (S.ov.foam ? 3 : 7)));
+    if (S.ov.heat) heatRings(x, Ps[i], LX, LY, E.offs[i], 4 + s * 18);
+  }
+  circle(x, X, Y, {x: axX, y: Hc}, 20, s, COL.ink, 1.5, COL.paper);
+  drawHumanLeg(human[0], COL.ink, Math.max(2, s * 20));
+  // feet
+  let nc = 0; for (const o of E.offs) nc += A.contact[kIdx(legPhi(u, o))];
+  E.offs.forEach((o, i) => {
+    const p = Ps[i]; if (!p.F) return; const k = kIdx(legPhi(u, o)); if (!A.contact[k]) return;
+    const fx = LX(p.F.x); x.fillStyle = COL.teal; x.fillRect(fx - 9, Y(0) - 2, 18, 5);
+    if (S.ov.force && i % 2 === 0) { const W2 = E.Wtot / nc; arrow(x, fx, Y(0) + 24, fx, Y(0) + 24 - Math.min(56, W2 * 1.2), COL.red, 2); x.fillStyle = COL.red; x.font = `10px ${FONT}`; x.textAlign = 'left'; x.fillText(`${fmt(W2, 0)} N`, fx + 6, Y(0) + 13); }
+  });
+  if (!nc) { x.fillStyle = COL.amber; x.fillRect(X(axX + A.minX * sg), Y(0) + 4, (A.maxX - A.minX) * sg * s, 6); }
+  x.font = `10px ${FONT}`; x.fillStyle = COL.ink; x.textAlign = 'left'; x.textBaseline = 'middle';
+  x.fillText(`${VARS[active].name} ${VARS[active].title} · ${fmt(E.totalKg, 1)} kg · hind axle ${fmt(Hc / 10, 0)} cm · friction ${fmt(E.fricW, 1)} W`, 8, 12);
+  drawPlanInset(x, W - 230, 22, 222, 92, u, hip);
+  drawStrip(x, 0, gy0, W, stripH);
+}
+function heatRings(x, P, X, Y, off, r) {
+  const i = E.tIdx.indexOf(kIdx(legPhi(uNow(), off))), ii = i < 0 ? 0 : i;
+  const pmax = E.pmax;
+  for (const pn of PINS) { const p = P[pn.id]; if (!p) continue; const v = Math.min(1, E.pins[pn.id].power[ii] / pmax); if (v < .05) continue; x.beginPath(); x.arc(X(p.x), Y(p.y), r * (.4 + v * .6), 0, TAU); x.fillStyle = heat(v); x.fill(); }
+}
+function drawPlanInset(x, x0, y0, w, h, u, hip) {
+  const b = B(), sg = b.sigma, A = E.A, Hh = S.height;
+  x.fillStyle = COL.paper; x.fillRect(x0, y0, w, h); x.strokeStyle = COL.ink; x.lineWidth = 1; x.strokeRect(x0 + .5, y0 + .5, w - 1, h - 1);
+  const span = HM.advance * 1.1 + b.Lb + 400, s = (w - 10) / span, zMax = Math.max(E.sideW, E.footZ, E.humanZ) + 40, sz = (h - 26) / (2 * zMax);
+  const X = v => x0 + w - 5 - (hip.x + .3 * Hh - v) * s, Y = z => y0 + h / 2 + 6 - z * sz;
+  x.save(); x.beginPath(); x.rect(x0, y0, w, h); x.clip();
+  x.setLineDash([3, 3]);
+  for (const z of [E.humanZ, -E.humanZ]) { x.strokeStyle = COL.ink; x.beginPath(); x.moveTo(x0, Y(z)); x.lineTo(x0 + w, Y(z)); x.stroke(); }
+  for (const z of [E.footZ, -E.footZ]) { x.strokeStyle = COL.blue; x.beginPath(); x.moveTo(x0, Y(z)); x.lineTo(x0 + w, Y(z)); x.stroke(); }
+  x.setLineDash([]);
+  for (let n = Math.floor(u) - 2; n <= Math.floor(u); n++) for (const side of [0, 1]) {
+    const us = n + side * .5; if (us > u) continue;
+    const hh = hipAt(us), leg = humanLegRel(Hh, side ? us + .5 : us);
+    x.strokeStyle = side ? COL.blue : COL.ink; x.strokeRect(X(hh.x + leg.ank.x - .04 * Hh), Y(side ? -E.humanZ : E.humanZ) - 4, .15 * Hh * s, 8);
+  }
+  E.offs.forEach((o, li) => {
+    for (let n = Math.floor(u) - 2; n <= Math.floor(u); n++) for (let i = 0; i < N; i += 2) {
+      const k = kIdx(legPhi(i / N, o)), kp = kIdx(legPhi((i - 2) / N, o)); if (!(A.contact[k] && !A.contact[kp])) continue;
+      const us = n + i / N; if (us > u) continue; const hh = hipAt(us), z = (li % 2 === 0 ? 1 : -1) * E.footZ;
+      x.fillStyle = li % 2 ? COL.blue : COL.ink; x.fillRect(X(hh.x - b.Lb + A.fx[k] * sg) - 3, Y(z) - 3, 6, 6);
+    }
+  });
+  const stack = E.stackW;
+  for (const sgn of [1, -1]) { x.fillStyle = 'rgba(0,0,0,.08)'; const zz = sgn > 0 ? E.sideW : -b.gap / 2; x.fillRect(X(hip.x - b.Lb + A.minX * sg), Y(zz), (A.maxX - A.minX) * sg * s, (E.sideW - b.gap / 2) * sz); }
+  x.restore();
+  x.fillStyle = COL.ink; x.font = `10px ${FONT}`; x.textAlign = 'left';
+  x.fillText(`from above · your feet ±${fmt(E.humanZ, 0)}`, x0 + 4, y0 + 9);
+  x.fillStyle = COL.blue; x.fillText(`hind ±${fmt(E.footZ, 0)} · side ${fmt(E.sideW, 0)} mm`, x0 + 4, y0 + h - 7);
+}
+function drawStrip(x, x0, y0, w, h) {
+  const lab = 64, pw = w - lab - 8, X = i => lab + i / N * pw;
+  x.fillStyle = COL.paper; x.fillRect(x0, y0, w, h);
+  x.strokeStyle = COL.ink; x.lineWidth = 1; x.beginPath(); x.moveTo(0, y0 + .5); x.lineTo(w, y0 + .5); x.stroke();
+  const A = E.A, rows = [y0 + 4, y0 + 22, y0 + 38];
+  x.font = `10px ${FONT}`; x.textBaseline = 'middle'; x.fillStyle = COL.ink; x.textAlign = 'left';
+  x.fillText('feet down', 4, rows[0] + 7); x.fillText('friction', 4, rows[1] + 7); x.fillText('knocks', 4, rows[2] + 7);
+  E.offs.forEach((o, li) => { for (let i = 0; i < N; i++) if (A.contact[(E.tIdx[i] + o) % N]) { x.fillStyle = li % 2 ? COL.blue : COL.ink; x.fillRect(X(i), rows[0] + li * (14 / E.offs.length), pw / N + .5, 14 / E.offs.length - 1); } });
+  const fmax = p95(E.fric);
+  x.fillStyle = 'rgba(255,46,46,.35)'; x.strokeStyle = COL.red; x.lineWidth = 1; x.beginPath(); x.moveTo(X(0), rows[1] + 14);
+  for (let i = 0; i < N; i++) x.lineTo(X(i), rows[1] + 14 - Math.min(1, E.fric[i] / fmax) * 13); x.lineTo(X(N), rows[1] + 14); x.closePath(); x.fill(); x.stroke();
+  for (const pn of PINS) for (const i of E.pins[pn.id].knockAt) { x.fillStyle = pn.id === S.selPin ? COL.blue : COL.ink; x.fillRect(X(i) - 1, rows[2], 2, 12); }
+  const i0 = iNow(); x.fillStyle = COL.blue; x.fillRect(X(i0) - 1, y0 + 2, 2, h - 4);
+  x.fillStyle = COL.ink; x.textAlign = 'right'; x.fillText(`${fmt(E.fricW, 1)} W · ${E.pins ? PINS.reduce((s, p) => s + E.pins[p.id].knocks, 0) * E.nLegs : 0} knocks per stride`, w - 6, rows[2] + 7);
+}
+stage.addEventListener('pointerdown', e => { stage.setPointerCapture(e.pointerId); S.scrub = {x: e.clientX, t: S.t}; setPlaying(false); });
+stage.addEventListener('pointermove', e => { if (S.scrub) S.t = S.scrub.t - (e.clientX - S.scrub.x) / stage.clientWidth * 1.6; });
+stage.addEventListener('pointerup', () => { S.scrub = null; });
+
+// ---------- stack section ----------
+const stackC = document.getElementById('stack');
+function drawStack() {
+  const {x, W, H} = sizeCanvas(stackC), b = B(), st = E.pins[S.selPin], PI = CARDS.pin.opts[b.pin];
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  x.font = `10px ${FONT}`; x.textBaseline = 'middle';
+  const total = st.grip + 14, padL = 16, padR = 16;
+  const sx = (W - padL - padR) / total, cy = (H - 80) * .5, rPin = Math.max(6, Math.min(26, PI.dia * 1.6)), mag = b.mag;
+  const holeGap = Math.max(1, st.c * 1.6 * mag);
+  const plateH = Math.min((H - 80) * .32, 90);
+  let xx = padL + 7 * sx;
+  // head
+  x.fillStyle = COL.ink; x.fillRect(padL, cy - rPin * 1.8, 7 * sx - 1, rPin * 3.6);
+  const iNow2 = iNow();
+  const pNow = Math.min(1, st.power[iNow2] / E.pmax);
+  for (const q of st.stack) {
+    const w = q.t * sx;
+    const tolW = q.tol * sx;
+    if (q.kind === 'washer') { x.fillStyle = CARDS.washer.opts[b.washer].mu < .15 ? '#e6f2ff' : COL.paper; x.strokeStyle = COL.ink; x.lineWidth = 1; const r = (CARDS.washer.opts[b.washer].od / 2 || 12) * 1.4; x.fillRect(xx, cy - r, w, 2 * r); x.strokeRect(xx, cy - r, w, 2 * r); }
+    else {
+      const fill = q.kind === 'spacer' ? COL.amber : (q.kind === 'ply' || CARDS.plate.opts[b.plate].ply) ? COL.wood : COL.paper;
+      // plate above and below the pin, hole gap shows clearance drawn at mag
+      x.fillStyle = fill; x.strokeStyle = COL.ink; x.lineWidth = 1;
+      const hTop = q.kind === 'spacer' ? rPin * 1.6 : plateH;
+      x.fillRect(xx, cy - rPin - holeGap - hTop, w, hTop); x.strokeRect(xx, cy - rPin - holeGap - hTop, w, hTop);
+      x.fillRect(xx, cy + rPin + holeGap * .1, w, hTop * .6); x.strokeRect(xx, cy + rPin + holeGap * .1, w, hTop * .6);
+      // puck or sleeve band around the hole
+      if (q.kind === 'plate' && b.hole !== 'raw' && !CARDS.plate.opts[b.plate].ply) { x.fillStyle = b.hole === 'sleeve' ? '#e6f2ff' : COL.wood; const pr = Math.min(hTop, E.puckD / 2 * 1.2); x.fillRect(xx + 1, cy - rPin - holeGap - pr, w - 2, pr); x.fillRect(xx + 1, cy + rPin + holeGap * .1, w - 2, Math.min(pr, hTop * .6)); }
+      // tolerance band on thickness
+      x.strokeStyle = COL.blue; x.setLineDash([2, 2]); x.strokeRect(xx - tolW / 2, cy - rPin - holeGap - hTop - 4, w + tolW, 4); x.setLineDash([]);
+      x.save(); x.translate(xx + w / 2, cy - rPin - holeGap - hTop / 2); x.rotate(-Math.PI / 2); x.fillStyle = COL.ink; x.textAlign = 'center';
+      x.fillText(q.kind === 'spacer' ? `spacer ${fmt(q.t, 1)}` : `${q.id || ''} ${fmt(q.t, 1)}±${fmt(q.tol, 1)}`, 0, 0); x.restore();
+    }
+    // rubbing face glow on the left face of this item
+    if (S.ov.heat && pNow > .05) { x.fillStyle = heat(pNow); x.fillRect(xx - 1.5, cy - rPin * 2.2, 3, rPin * 4.4); }
+    xx += w;
+  }
+  // axial play and nut
+  const play = st.grip - st.stackNom;
+  x.fillStyle = COL.teal; x.fillRect(xx, cy - rPin * .8, Math.max(1, play * sx), rPin * 1.6);
+  xx += play * sx;
+  x.fillStyle = COL.ink; x.fillRect(xx, cy - rPin * 1.6, Math.max(4, 6 * sx), rPin * 3.2);
+  // pin
+  x.fillStyle = '#666'; x.fillRect(padL + 7 * sx, cy - rPin, xx - padL - 7 * sx, rPin * 2);
+  x.fillStyle = COL.paper; x.font = `10px ${FONT}`; x.textAlign = 'center'; x.fillText(`${PI.name}`, (padL + xx) / 2, cy);
+  // dimension line
+  const dy = H - 74;
+  x.strokeStyle = COL.ink; x.lineWidth = 1; x.beginPath(); x.moveTo(padL + 7 * sx, dy); x.lineTo(padL + 7 * sx + st.stackNom * sx, dy); x.stroke();
+  x.fillStyle = COL.ink; x.textAlign = 'left';
+  const L1 = `stack ${fmt(st.stackNom, 1)} mm  worst ±${fmt(st.stackWC, 1)}  likely ±${fmt(st.stackRSS, 1)}  grip ${fmt(st.grip, 1)}  play ${fmt(play, 1)}`;
+  const L2 = `hole ${fmt(PI.dia + 2 * b.c0, 2)} on pin ${fmt(PI.dia, 2)}: clearance ${fmt(st.cMin, 2)} to ${fmt(st.cMax, 2)} mm${st.cMin < 0 ? ' (can bind: ream)' : ''}, now ${fmt(st.c, 2)}`;
+  const L3 = `tilts ${fmt(st.tilt * 180 / Math.PI, 1)}° · ${st.interfaces} rubbing faces at μ ${fmt(st.muFace, 2)} · pin μ ${fmt(st.muPin, 2)} · ${fmt(st.meanP, 2)} W · nut ${st.clampUse >= 1 ? 'crushes the foam' : 'holds'}`;
+  const words = [L1, L2, L3].join('  ·  ').split(' '), lines = []; let ln = '';
+  for (const w of words) { if (x.measureText(ln + ' ' + w).width > W - 12 && ln) { lines.push(ln); ln = w; } else ln = ln ? ln + ' ' + w : w; }
+  if (ln) lines.push(ln);
+  lines.slice(-5).forEach((t2, i, arr) => x.fillText(t2, 6, H - 8 - (arr.length - 1 - i) * 13));
+}
+function renderPinBtns() {
+  const box = document.getElementById('pinBtns'); box.innerHTML = '';
+  for (const pn of PINS) { const b = document.createElement('button'); b.textContent = pn.id; b.title = pn.name; b.setAttribute('aria-pressed', String(S.selPin === pn.id)); b.onclick = () => { S.selPin = pn.id; renderPinBtns(); renderStats(); }; box.appendChild(b); }
+}
+
+// ---------- leg detail ----------
+const legC = document.getElementById('leg');
+let LV = null;
+function drawLeg() {
+  const {x, W, H} = sizeCanvas(legC), b = B(), G = cur(), sg = b.sigma, u = uNow(), A = E.A;
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  const span = (A.maxX - A.minX) + b.w / sg + 8, hgt = (A.topY - A.minY) + b.w / sg + 8, s = Math.min(W / span, (H - 14) / hgt);
+  const cx = (A.maxX + A.minX) / 2, cy = (A.topY + A.minY) / 2, X = v => W / 2 + (v - cx) * s, Y = v => (H - 10) / 2 - (v - cy) * s, pxmm = s / sg;
+  LV = {X, Y, s};
+  const phi = legPhi(u, 0), k = kIdx(phi), P = solve(G, phi), f = E.F[k];
+  x.font = `10px ${FONT}`; x.textBaseline = 'middle';
+  x.strokeStyle = COL.ink; x.lineWidth = 1; x.setLineDash([2, 3]); x.beginPath(); let on = false;
+  for (let i = 0; i <= N; i++) { const q = i % N; if (!A.ok[q]) { on = false; continue; } on ? x.lineTo(X(A.fx[q]), Y(A.fy[q])) : x.moveTo(X(A.fx[q]), Y(A.fy[q])); on = true; } x.stroke(); x.setLineDash([]);
+  if (S.ov.slop) { x.strokeStyle = COL.red; x.lineWidth = 1.5; x.setLineDash([5, 3]); x.beginPath(); on = false; for (const p of E.loaded.concat([E.loaded[0]])) { if (!p) { on = false; continue; } const px = X(A.fx[p.k] + (p.x - A.fx[p.k]) * b.mag), py = Y(A.fy[p.k] + (p.y - A.fy[p.k]) * b.mag); on ? x.lineTo(px, py) : x.moveTo(px, py); on = true; } x.stroke(); x.setLineDash([]); }
+  if (S.ov.foam) plates(x, P, X, Y, Math.max(4, b.w * pxmm), true);
+  skeleton(x, P, X, Y, S.ov.foam ? 'rgba(0,0,0,.5)' : COL.ink, S.ov.foam ? 1 : 2);
+  if (S.hoverBar) { const [a, c] = BARS[S.hoverBar]; if (P[a] && P[c]) line(x, X, Y, [P[a], P[c]], 4, COL.blue); }
+  if (S.ov.slop && P.F) { x.fillStyle = COL.red; for (const r of MC) { const Gp = {...G}; for (const id of ['j','k','c','f','m']) Gp[id] += (r[id] * E.play[id] / 2 + (id !== 'm' ? r['p' + id] * E.posErr : 0)) / sg * b.mag; const Q = solve(Gp, phi); if (Q.F) x.fillRect(X(Q.F.x) - 1.5, Y(Q.F.y) - 1.5, 3, 3); } }
+  let fMax = 1; if (f) for (const pn of PINS) fMax = Math.max(fMax, len(f.pinVec[pn.id]));
+  const ii = Math.max(0, E.tIdx.indexOf(k));
+  const pmax = E.pmax;
+  for (const pn of PINS) {
+    const p = P[pn.id]; if (!p) continue;
+    const st = E.pins[pn.id], pinR = Math.max(2.5, CARDS.pin.opts[b.pin].dia / 2 * pxmm), holeR = pinR + st.c * pxmm * b.mag;
+    const vec = f ? f.pinVec[pn.id] : null, m = vec ? len(vec) : 0, off = m > 1e-6 ? {x: vec.x / m, y: vec.y / m} : {x: 0, y: -1};
+    if (S.ov.heat) { const v = Math.min(1, st.power[ii] / pmax); if (v > .05) { x.beginPath(); x.arc(X(p.x), Y(p.y), holeR + 4 + v * 10, 0, TAU); x.fillStyle = heat(v); x.fill(); } }
+    const fl = flash[pn.id] || 0;
+    x.beginPath(); x.arc(X(p.x), Y(p.y), holeR, 0, TAU); x.fillStyle = COL.paper; x.fill(); x.lineWidth = 3; x.strokeStyle = f ? useCol(st.useS[ii]) : COL.ink; x.stroke();
+    if (fl > 0) { x.strokeStyle = COL.blue; x.lineWidth = 2; x.beginPath(); x.arc(X(p.x), Y(p.y), holeR + 6 + (1 - fl) * 10, 0, TAU); x.stroke(); }
+    x.beginPath(); x.arc(X(p.x) + off.x * (holeR - pinR), Y(p.y) - off.y * (holeR - pinR), pinR, 0, TAU); x.fillStyle = COL.ink; x.fill();
+    if (S.ov.force && m > fMax * .05) arrow(x, X(p.x), Y(p.y), X(p.x) + vec.x / fMax * 44, Y(p.y) - vec.y / fMax * 44, COL.red, 1.5);
+    const sel = S.selPin === pn.id; x.fillStyle = sel ? COL.blue : COL.ink; x.font = `${sel ? 700 : 500} 10px ${FONT}`; x.textAlign = 'left'; x.fillText(pn.id, X(p.x) + holeR + 3, Y(p.y) - holeR - 3);
+    if (sel) { x.strokeStyle = COL.blue; x.lineWidth = 1.5; x.beginPath(); x.arc(X(p.x), Y(p.y), holeR + 5, 0, TAU); x.stroke(); }
+  }
+  x.font = `10px ${FONT}`; x.fillStyle = COL.ink; x.textAlign = 'left';
+  x.fillText(`slop drawn ${b.mag}× · foot wanders ±${fmt(E.spread, 1)} mm, sways ±${fmt(E.wobble, 1)} mm sideways`, 6, H - 7);
+  if (P.fail) { x.fillStyle = COL.red; x.fillText(`jammed at ${P.fail}`, 6, 10); }
+}
+function legHit(px, py) {
+  if (!LV) return null; const P = solve(cur(), legPhi(uNow(), 0));
+  for (const pn of PINS) { const p = P[pn.id]; if (p && Math.hypot(px - LV.X(p.x), py - LV.Y(p.y)) < 11) return {type: 'pin', id: pn.id}; }
+  let best = null; for (const k of KEYS) { const [a, b] = BARS[k]; if (!P[a] || !P[b]) continue; const pa = {x: LV.X(P[a].x), y: LV.Y(P[a].y)}, pb = {x: LV.X(P[b].x), y: LV.Y(P[b].y)}, d = distPtSeg({x: px, y: py}, pa, pb); if (d < 8 && (!best || d < best.d)) best = {type: 'bar', k, d, pa, pb}; }
+  return best;
+}
+legC.addEventListener('pointerdown', e => {
+  const r = legC.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top, h = legHit(px, py); if (!h) return;
+  if (h.type === 'pin') { S.selPin = h.id; renderPinBtns(); renderStats(); return; }
+  legC.setPointerCapture(e.pointerId);
+  const dx = h.pb.x - h.pa.x, dy = h.pb.y - h.pa.y, L = Math.hypot(dx, dy) || 1, nearB = Math.hypot(px - h.pb.x, py - h.pb.y) < Math.hypot(px - h.pa.x, py - h.pa.y);
+  S.drag = {k: h.k, ux: dx / L, uy: dy / L, sign: nearB ? 1 : -1, L0: B().G[h.k], x0: px, y0: py, s: LV.s};
+});
+legC.addEventListener('pointermove', e => {
+  const r = legC.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top, d = S.drag;
+  if (d) { const v = Math.round(clamp(d.L0 + d.sign * ((px - d.x0) * d.ux + (py - d.y0) * d.uy) / d.s, 1, 140) * 10) / 10; S.live = {...B().G, [d.k]: v}; run(); return; }
+  const h = legHit(px, py); legC.style.cursor = h ? (h.type === 'bar' ? 'ew-resize' : 'pointer') : 'default'; S.hoverBar = h && h.type === 'bar' ? h.k : null;
+});
+legC.addEventListener('pointerup', () => { const d = S.drag; S.drag = null; if (!d) return; if (S.live && S.live[d.k] !== d.L0) { S.hist.push({...B().G}); B().G = {...S.live}; } S.live = null; run(); });
+legC.addEventListener('pointerleave', () => { if (!S.drag) S.hoverBar = null; });
+document.getElementById('undo').onclick = () => { if (S.hist.length) { B().G = S.hist.pop(); run(); } };
+document.getElementById('reset').onclick = () => { S.hist.push({...B().G}); B().G = {...HOLY}; run(); };
+
+// ---------- loadout ----------
+function makeNum(el, get, set, step, min, max, dec, onLive, onCommit) {
+  el.classList.add('num'); el.tabIndex = 0; el.setAttribute('role', 'slider');
+  const show = () => { el.textContent = fmt(get(), dec); };
+  let d = null;
+  el.addEventListener('pointerdown', e => { el.setPointerCapture(e.pointerId); d = {x: e.clientX, v: get()}; e.preventDefault(); });
+  el.addEventListener('pointermove', e => { if (!d) return; set(clamp(+(d.v + (e.clientX - d.x) * step).toFixed(dec), min, max)); show(); onLive(); });
+  el.addEventListener('pointerup', () => { if (d) onCommit(); d = null; });
+  el.addEventListener('keydown', e => { let dv = 0; const m = e.shiftKey ? 10 : 1; if (e.key === 'ArrowUp' || e.key === 'ArrowRight') dv = step * 10 * m; if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') dv = -step * 10 * m; if (!dv) return; e.preventDefault(); set(clamp(+(get() + dv).toFixed(dec), min, max)); show(); onCommit(); });
+  show();
+}
+function renderLoadout() {
+  const box = document.getElementById('slots'); box.innerHTML = '';
+  for (const key of SLOT_ORDER) {
+    const slot = CARDS[key], curK = B()[key], open = S.openSlot === key;
+    const div = document.createElement('div'); div.className = 'slot';
+    div.innerHTML = `<div class="head" role="button" tabindex="0" aria-expanded="${open}"><span class="k">${slot.label}</span><span class="cur">${slot.opts[curK].name}</span></div>`;
+    const head = div.firstChild;
+    head.onclick = () => { S.openSlot = open ? null : key; renderLoadout(); };
+    head.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); head.click(); } };
+    if (open) {
+      const cards = document.createElement('div'); cards.className = 'cards';
+      for (const [k, o] of Object.entries(slot.opts)) {
+        const c = document.createElement('button'); c.className = 'card'; c.setAttribute('aria-pressed', String(k === curK));
+        c.innerHTML = `<b>${o.name}</b><span class="d">${o.d}</span>`;
+        c.onclick = () => { B()[key] = k; renderLoadout(); run(); };
+        cards.appendChild(c);
+      }
+      div.appendChild(cards);
+    }
+    box.appendChild(div);
+  }
+  const tune = document.getElementById('tune'); tune.innerHTML = '';
+  for (const [label, key, step, min, max, dec, unit] of TUNE) {
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = `<span>${label}</span><span class="v"><span data-n></span> <span style="font-weight:400">${unit}</span></span>`;
+    tune.appendChild(row);
+    makeNum(row.querySelector('[data-n]'), () => B()[key], v => { B()[key] = v; }, step, min, max, dec, () => run(), () => run());
+  }
+  const ex = document.createElement('div'); ex.className = 'row';
+  ex.innerHTML = `<span>Tolerances</span><span class="seg"><button data-tol="nom" aria-pressed="${B().tol === 'nom'}">Typical</button><button data-tol="worst" aria-pressed="${B().tol === 'worst'}">Worst case</button></span>`;
+  tune.appendChild(ex);
+  ex.querySelectorAll('[data-tol]').forEach(btn => btn.onclick = () => { B().tol = btn.dataset.tol; renderLoadout(); run(); });
+  const fit = document.createElement('div'); fit.className = 'row';
+  fit.innerHTML = '<span></span><span class="seg"><button id="fitScale">Fit scale to your stride</button></span>';
+  tune.appendChild(fit);
+  document.getElementById('fitScale').onclick = () => { B().sigma = +(HM.advance / E.A.advance).toFixed(2); renderLoadout(); run(); };
+}
+
+// ---------- variants ----------
+function renderVars() {
+  const box = document.getElementById('vars'); box.innerHTML = '';
+  VARS.forEach((v, i) => {
+    const e = CMP[i], cls = e ? useClass(e.worstUse) : 'ok';
+    const btn = document.createElement('button'); btn.className = 'var'; btn.setAttribute('aria-pressed', String(i === active)); btn.title = v.title;
+    btn.innerHTML = `<span class="vd ${cls}"></span><span>${v.name} ${v.title}</span>`;
+    btn.onclick = () => { active = i; S.hist = []; renderLoadout(); run(); };
+    box.appendChild(btn);
+  });
+  const dup = document.createElement('button'); dup.textContent = 'Copy to next'; dup.title = 'Copy this build over the next slot';
+  dup.onclick = () => { const n = (active + 1) % VARS.length; VARS[n].B = JSON.parse(JSON.stringify(B())); VARS[n].title = VARS[active].title + ' copy'; active = n; renderLoadout(); run(); };
+  box.appendChild(dup);
+}
+
+// ---------- stats ----------
+function renderStats() {
+  if (!E) return;
+  document.getElementById('buildName').textContent = `${VARS[active].name} ${VARS[active].title}`;
+  const sc = [];
+  const bar = (label, frac, val, cls) => sc.push(`<div class="score"><span>${label}</span><span class="meter"><i class="${cls}" style="width:${clamp(frac, 0, 1) * 100}%"></i></span><span class="v">${val}</span></div>`);
+  bar('Strength', 1 - Math.min(1, E.worstUse), `${fmt(E.worstUse, 2)}×`, useClass(E.worstUse));
+  bar('Foot wander', Math.min(1, E.wander / 40), `±${fmt(E.wander, 0)} mm`, E.wander < 10 ? 'ok' : E.wander < 25 ? 'warn' : 'bad');
+  bar('Friction', Math.min(1, E.fricW / 20), `${fmt(E.fricW, 1)} W`, E.fricW < 4 ? 'ok' : E.fricW < 12 ? 'warn' : 'bad');
+  bar('Reads as legs', E.legible / 7, `${E.legible}/7`, E.legible >= 6 ? 'ok' : E.legible >= 4 ? 'warn' : 'bad');
+  bar('Weight', Math.min(1, E.totalKg / 15), `${fmt(E.totalKg, 1)} kg`, E.totalKg < 6 ? 'ok' : E.totalKg < 10 ? 'warn' : 'bad');
+  bar('Width a side', Math.min(1, E.sideW / 300), `${fmt(E.sideW, 0)} mm`, E.sideW < 140 ? 'ok' : E.sideW < 220 ? 'warn' : 'bad');
+  document.getElementById('scores').innerHTML = sc.join('') + `<div class="row" style="font-size:11px"><span>${E.lay.nL} layers × ${fmt(CARDS.plate.opts[B().plate].t, 1)} mm, ${E.nLegs} legs, ${fmt(E.legKg, 2)} kg each</span><span></span></div>`;
+  document.getElementById('ledger').innerHTML = E.ledger.map(l => `<div class="led" title="${l[3]}"><span class="dot ${l[2]}"></span><span>${l[0]}</span><span class="v" style="font-weight:700">${l[1]}</span></div>`).join('');
+  const items = [];
+  for (const pn of PINS) { const st = E.pins[pn.id]; items.push({u: st.uMax, pin: pn.id, t: `<b>${pn.id}</b> ${st.what}, ${fmt(st.maxF, 0)} N. ${st.uMax >= 1 ? 'Crushes at once.' : isFinite(st.life) && st.life < 1e7 ? `+2 mm slop in ${fmt(st.life * HM.advance / 1e6, 1)} km.` : 'Holds.'}`}); if (st.clampUse >= 1) items.push({u: st.clampUse, pin: pn.id, t: `<b>${pn.id}</b> nut sinks into the foam; add a fender washer or a puck.`}); if (st.cMin < 0) items.push({u: 1 + -st.cMin, pin: pn.id, t: `<b>${pn.id}</b> pin can be tighter than the hole (${fmt(st.cMin, 2)} mm): will bind until reamed.`}); }
+  for (const [id, L] of Object.entries(E.links)) { if (L.cMax > 0) items.push({u: L.buck, pin: null, t: `<b>Link ${id}</b> buckles at ${fmt(L.Pcr, 0)} N, carries ${fmt(L.cMax, 0)} N.`}); }
+  items.push({u: E.wander / 25, pin: null, t: `<b>Foot</b> wanders ±${fmt(E.spread, 1)} mm and sways ±${fmt(E.wobble, 1)} mm sideways.`});
+  items.push({u: E.fricW / 12, pin: null, t: `<b>Friction</b> ${fmt(E.fricW, 1)} W, ${fmt(E.fricTorque, 2)} N·m at the crank.`});
+  items.sort((a, b) => b.u - a.u);
+  document.getElementById('fails').innerHTML = items.slice(0, 5).map(it => `<div class="fail" ${it.pin ? `data-pin="${it.pin}"` : ''}><span class="u ${useClass(it.u)}">${fmt(it.u, 2)}</span><span>${it.t}</span></div>`).join('');
+  document.querySelectorAll('#fails [data-pin]').forEach(el => el.onclick = () => { S.selPin = el.dataset.pin; renderPinBtns(); renderStats(); });
+}
+function renderCompare() {
+  if (CMP.length < VARS.length) return;
+  const rows = [
+    ['Strength', e => `${fmt(e.worstUse, 2)}×`, e => useClass(e.worstUse)],
+    ['Foot wander', e => `±${fmt(e.wander, 0)}`, e => e.wander < 10 ? 'ok' : e.wander < 25 ? 'warn' : 'bad'],
+    ['Friction W', e => fmt(e.fricW, 1), e => e.fricW < 4 ? 'ok' : e.fricW < 12 ? 'warn' : 'bad'],
+    ['Reads as legs', e => `${e.legible}/7`, e => e.legible >= 6 ? 'ok' : e.legible >= 4 ? 'warn' : 'bad'],
+    ['Weight kg', e => fmt(e.totalKg, 1), e => e.totalKg < 6 ? 'ok' : 'warn'],
+    ['Side mm', e => fmt(e.sideW, 0), e => e.sideW < 140 ? 'ok' : 'warn'],
+    ['Slop at 5 km', e => { let worst = 0; for (const p of PINS) worst = Math.max(worst, e.pins[p.id].cNom + e.pins[p.id].wearPer * 5e6 / HM.advance); return `${fmt(Math.min(8, worst), 1)} mm`; }, () => '']
+  ];
+  let h = '<table><tr><th></th>' + VARS.map((v, i) => `<th class="${i === active ? 'on' : ''}" data-v="${i}" style="cursor:pointer">${v.name}</th>`).join('') + '</tr>';
+  for (const [name, val, cls] of rows) h += `<tr><td>${name}</td>` + CMP.map((e, i) => `<td class="${i === active ? 'on' : ''}"><span class="${cls(e)}" style="padding:0 3px">${val(e)}</span></td>`).join('') + '</tr>';
+  h += '</table>';
+  const box = document.getElementById('compare'); box.innerHTML = h;
+  box.querySelectorAll('[data-v]').forEach(th => th.onclick = () => { active = +th.dataset.v; renderLoadout(); run(); });
+}
+
+// ---------- workshop ----------
+const sheetsC = document.getElementById('sheets');
+let NEST = null;
+const STOCK = {foam: {w: 610, h: 1220, name: 'EPS board 610 × 1220'}, ply: {w: 600, h: 1200, name: 'ply panel 600 × 1200'}};
+function partOutline(part) {
+  const b = B(), P = solve(b.G, .3), sg = b.sigma;
+  const names = new Set(); part.segs.forEach(([a, c]) => { names.add(a); names.add(c); });
+  const [a0, b0] = part.segs[0]; const ang = Math.atan2(P[b0].y - P[a0].y, P[b0].x - P[a0].x), ca = Math.cos(-ang), sa = Math.sin(-ang), pts = {};
+  for (const n of names) { const dx = (P[n].x - P[a0].x) * sg, dy = (P[n].y - P[a0].y) * sg; pts[n] = {x: dx * ca - dy * sa, y: dx * sa + dy * ca}; }
+  let mx = Infinity, my = Infinity, Mx = -Infinity, My = -Infinity; for (const n in pts) { mx = Math.min(mx, pts[n].x); my = Math.min(my, pts[n].y); Mx = Math.max(Mx, pts[n].x); My = Math.max(My, pts[n].y); }
+  const w = part.ply ? Math.min(b.w, 50) : b.w, r = w / 2; for (const n in pts) { pts[n].x -= mx - r; pts[n].y -= my - r; }
+  return {pts, w: Mx - mx + 2 * r, h: My - my + 2 * r, pw: w};
+}
+function nest() {
+  const b = B(), PL = CARDS.plate.opts[b.plate], nLegs = CARDS.legs.opts[b.legs].n * 2, out = {foam: [], ply: []};
+  const items = [];
+  for (const p of PARTS) { const g = partOutline(p); for (let q = 0; q < nLegs; q++) items.push({p, g, mat: p.ply || PL.ply ? 'ply' : 'foam', copy: q + 1}); }
+  for (const mat of ['foam', 'ply']) {
+    const st = STOCK[mat], list = items.filter(i => i.mat === mat).sort((a, b) => b.g.h - a.g.h);
+    const sheets = []; let sh = null, x0 = 0, y0 = 0, rowH = 0; const gap = 8;
+    for (const it of list) {
+      let w = it.g.w, h = it.g.h, rot = false; if (w > st.w - 10 && h <= st.w - 10) { [w, h] = [h, w]; rot = true; }
+      if (!sh || (x0 + w > st.w && y0 + rowH + gap + h > st.h)) { sh = []; sheets.push(sh); x0 = 0; y0 = 0; rowH = 0; }
+      if (x0 + w > st.w) { x0 = 0; y0 += rowH + gap; rowH = 0; }
+      if (y0 + h > st.h) { sh = []; sheets.push(sh); x0 = 0; y0 = 0; rowH = 0; }
+      sh.push({...it, x: x0, y: y0, w, h, rot}); x0 += w + gap; rowH = Math.max(rowH, h);
+    }
+    out[mat] = sheets;
+  }
+  NEST = out;
+}
+function drawSheets() {
+  const {x, W, H} = sizeCanvas(sheetsC); x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  if (!NEST) return;
+  const all = [...NEST.foam.map(s => ({mat: 'foam', s})), ...NEST.ply.map(s => ({mat: 'ply', s}))];
+  const n = all.length, cols = Math.min(n, Math.max(1, Math.floor(W / 150))), rows = Math.ceil(n / cols);
+  const cw = W / cols, ch = (H - 10) / rows;
+  x.font = `10px ${FONT}`; x.textBaseline = 'middle';
+  all.forEach((sheet, si) => {
+    const st = STOCK[sheet.mat], c = si % cols, r = Math.floor(si / cols);
+    const s = Math.min((cw - 16) / st.w, (ch - 26) / st.h), ox = c * cw + (cw - st.w * s) / 2, oy = r * ch + 18;
+    x.fillStyle = sheet.mat === 'ply' ? COL.wood : '#f7f7f7'; x.fillRect(ox, oy, st.w * s, st.h * s); x.strokeStyle = COL.ink; x.lineWidth = 1; x.strokeRect(ox, oy, st.w * s, st.h * s);
+    x.fillStyle = COL.ink; x.textAlign = 'left'; x.fillText(`${st.name} #${si + 1 - (sheet.mat === 'ply' ? NEST.foam.length : 0)}`, ox, oy - 8);
+    for (const it of sheet.s) {
+      const P = it.g.pts, tx = v => it.rot ? v.y : v.x, ty = v => it.rot ? v.x : v.y;
+      const X = v => ox + (it.x + v) * s, Y = v => oy + (it.y + v) * s;
+      const pts = {}; for (const k in P) pts[k] = {x: tx(P[k]), y: ty(P[k])};
+      const wpx = it.g.pw * s;
+      x.save(); x.lineCap = 'round'; x.lineJoin = 'round';
+      x.strokeStyle = COL.ink; x.lineWidth = wpx + 1.5; x.beginPath(); for (const [a, b] of it.p.segs) { x.moveTo(X(pts[a].x), Y(pts[a].y)); x.lineTo(X(pts[b].x), Y(pts[b].y)); } x.stroke();
+      if (it.p.tri) { x.fillStyle = COL.ink; x.beginPath(); it.p.tri.forEach((k, i) => i ? x.lineTo(X(pts[k].x), Y(pts[k].y)) : x.moveTo(X(pts[k].x), Y(pts[k].y))); x.closePath(); x.fill(); }
+      x.strokeStyle = COL.paper; x.lineWidth = wpx; x.beginPath(); for (const [a, b] of it.p.segs) { x.moveTo(X(pts[a].x), Y(pts[a].y)); x.lineTo(X(pts[b].x), Y(pts[b].y)); } x.stroke();
+      if (it.p.tri) { x.fillStyle = COL.paper; x.beginPath(); it.p.tri.forEach((k, i) => i ? x.lineTo(X(pts[k].x), Y(pts[k].y)) : x.moveTo(X(pts[k].x), Y(pts[k].y))); x.closePath(); x.fill(); }
+      for (const h of it.p.holes) { x.beginPath(); x.arc(X(pts[h].x), Y(pts[h].y), Math.max(1, (B().hole !== 'raw' && !it.p.ply && it.mat === 'foam' ? E.puckD / 2 : CARDS.pin.opts[B().pin].dia / 2) * s), 0, TAU); x.strokeStyle = COL.ink; x.lineWidth = 1; x.stroke(); }
+      x.restore();
+      const hs = it.p.holes.map(h => pts[h]); const mx = hs.reduce((a, p) => a + p.x, 0) / hs.length, my = hs.reduce((a, p) => a + p.y, 0) / hs.length;
+      x.fillStyle = COL.ink; x.textAlign = 'center'; if (wpx > 7) x.fillText(`${it.p.id}${it.copy}`, X(mx), Y(my));
+    }
+  });
+}
+function nearestDrill(d) { return DRILLS.reduce((b, q) => (q >= d - .05 && (b === null || q < b)) ? q : b, null) || DRILLS[DRILLS.length - 1]; }
+function renderShop() {
+  nest();
+  const b = B(), PL = CARDS.plate.opts[b.plate], PI = CARDS.pin.opts[b.pin], WA = CARDS.washer.opts[b.washer], HO = CARDS.hole.opts[b.hole], nLegs = CARDS.legs.opts[b.legs].n * 2;
+  const holeD = PI.dia + 2 * b.c0, drill = nearestDrill(holeD);
+  // hardware list
+  const pinsByLen = {}; let washers = 0, spacers = 0, nuts = 0;
+  for (const pn of PINS) { if (pn.id === 'O') continue; const st = E.pins[pn.id], L = Math.ceil((st.grip + (WA.t ? 0 : 2) + 8) / 5) * 5; pinsByLen[L] = (pinsByLen[L] || 0) + nLegs; washers += st.stack.filter(q => q.kind === 'washer').length * nLegs; spacers += st.stack.filter(q => q.kind === 'spacer').length * nLegs; nuts += nLegs; }
+  const pucks = !PL.ply && b.hole !== 'raw' ? 13 * nLegs : 0;
+  const bom = [
+    ...Object.entries(pinsByLen).map(([L, n]) => [`${PI.name}, ${L} mm`, n]),
+    [b.pin === 'dowel' ? 'Wood screw + washer to cap each dowel end' : 'Nylock nut', nuts],
+    WA.t ? [`${WA.name} washer ${WA.od} mm`, washers] : null,
+    spacers ? [`Spacer ${fmt(PL.ply ? 5.5 : PL.t, 1)} mm thick`, spacers] : null,
+    pucks ? [`Hardwood puck Ø${fmt(E.puckD, 0)} × ${PL.t} mm`, pucks] : null,
+    b.hole === 'tang' ? ['Ply tang strip 150 × ' + fmt(b.w * .6, 0) + ' mm', 8 * nLegs] : null,
+    b.hole === 'sleeve' ? [`PETG sleeve ${fmt(holeD, 1)} bore, ${PL.t + 10} long`, 13 * nLegs] : null,
+    PL.spar ? ['6 mm ply spar strips, on edge in each link', 4 * nLegs] : null,
+    ['Crank shaft: threaded rod or 10 mm steel rod', 1],
+    ['Foam-safe glue (PVA or foam construction adhesive)', 1]
+  ].filter(Boolean);
+  const foamN = NEST.foam.length, plyN = NEST.ply.length;
+  const steps = [
+    `Copy the SVG from this page into a drawing app and print it at 100%, or trace it. Check one dimension with a ruler before cutting.`,
+    `Cut ${foamN ? `${foamN} EPS board${foamN > 1 ? 's' : ''}` : 'no foam'} and ${plyN} ply panel${plyN > 1 ? 's' : ''} as laid out. Foam: a fresh snap blade in two passes, or a hot wire. Never solvent glue or spray paint on EPS; it dissolves.`,
+    !PL.ply && b.hole !== 'raw' ? `Bore each hole position to Ø${fmt(E.puckD, 0)} with a hole saw run backwards (it melts less), glue in a hardwood puck flush with both faces, let it cure.` : `Mark hole centres with a printed template so position error stays near ±${CARDS.make.opts[b.make].posTol} mm.`,
+    `Drill pin holes at ${fmt(drill, 2)} mm, which leaves ${fmt((drill - PI.dia) / 2, 2)} mm clearance (designed ${fmt(holeD, 2)}: ${PI.name} with ${fmt(b.c0, 2)} mm clearance). Drill square: a 1° lean over ${PL.t} mm moves the far side ${fmt(PL.t * Math.tan(Math.PI / 180), 2)} mm.`,
+    PL.skin ? 'Skin both faces with mesh tape and thin joint compound before drilling through; let it dry overnight.' : null,
+    PL.spar ? 'Slot each link down its centre line and glue the ply spar in on edge.' : null,
+    `Stack each pin from the frame outward in the layer order shown under Stack through pin${WA.t ? ', with a washer between every pair of plates' : ''}${spacers ? `; ${spacers / nLegs} spacer${spacers / nLegs > 1 ? 's' : ''} per leg fill empty layers` : ''}.`,
+    `Set every nut ${CARDS.nut.opts[b.nut].name.toLowerCase()}. Turn the crank a full turn by hand; it should not catch. Push the foot sideways: it should move about ±${fmt(E.wobble, 0)} mm.`,
+    `Hang it on a stand, load the foot with ${fmt(E.Wtot / Math.max(1, E.nLegs / 2) / 9.81, 1)} kg and turn it 100 times. Measure the slop again; the model says ±${fmt(E.spread, 1)} mm new.`
+  ].filter(Boolean);
+  document.getElementById('shopSide').innerHTML =
+    `<h4>Stock</h4><table><tr><td>${STOCK.foam.name} (${PL.ply ? '–' : fmt(PL.t, 0) + ' mm'})</td><td>${foamN}</td></tr><tr><td>${STOCK.ply.name} (6 mm)</td><td>${plyN}</td></tr></table>` +
+    `<h4>Hardware for ${nLegs} legs</h4><table>${bom.map(([n, q]) => `<tr><td>${n}</td><td>${q}</td></tr>`).join('')}</table>` +
+    `<h4>Steps</h4><ol>${steps.map(s => `<li>${s}</li>`).join('')}</ol>` +
+    `<h4>Files</h4><div style="padding:0 8px 8px" class="seg"><button id="cpSVG">Copy SVG</button><button id="cpSCAD">Copy OpenSCAD</button></div>`;
+  hookExports();
+  drawSheets();
+}
+function hullPts(points) { const P = points.slice().sort((a, b) => a.x - b.x || a.y - b.y), c = (o, a, b) => (a.x - o.x)*(b.y - o.y) - (a.y - o.y)*(b.x - o.x), lo = [], up = []; for (const p of P) { while (lo.length >= 2 && c(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); } for (let i = P.length - 1; i >= 0; i--) { const p = P[i]; while (up.length >= 2 && c(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); } up.pop(); lo.pop(); return lo.concat(up); }
+const circ = (c, r, n = 32) => Array.from({length: n}, (_, i) => ({x: c.x + r * Math.cos(TAU * i / n), y: c.y + r * Math.sin(TAU * i / n)}));
+function exports() {
+  const b = B(), PI = CARDS.pin.opts[b.pin], holeD = PI.dia + 2 * b.c0;
+  let x = 0, svg = '', scad = `// Centaur Rig, one leg. ${CARDS.plate.opts[b.plate].name}, holes ${fmt(holeD, 2)} mm.\n`;
+  let maxH = 0;
+  for (const p of PARTS) {
+    const g = partOutline(p), pieces = p.tri ? [p.tri] : p.segs, r = g.pw / 2, hd = !CARDS.plate.opts[b.plate].ply && !p.ply && b.hole !== 'raw' ? E.puckD : holeD;
+    svg += `<g id="${p.id}" transform="translate(${fmt(x, 1)} 0)" fill="none" stroke="#000" stroke-width="0.2">`;
+    for (const pc of pieces) { const pts = []; for (const n of pc) pts.push(...circ(g.pts[n], r)); svg += `<path d="M${hullPts(pts).map(q => fmt(q.x, 2) + ' ' + fmt(q.y, 2)).join(' L')} Z"/>`; }
+    for (const h of p.holes) svg += `<circle cx="${fmt(g.pts[h].x, 2)}" cy="${fmt(g.pts[h].y, 2)}" r="${fmt(hd / 2, 2)}"/>`;
+    svg += `<text x="${fmt(g.w / 2, 1)}" y="${fmt(g.h / 2, 1)}" font-size="8">${p.id}</text></g>\n`;
+    scad += `module ${p.id}(){linear_extrude(${p.ply ? 5.5 : CARDS.plate.opts[b.plate].t}) difference(){union(){${pieces.map(pc => `hull(){${pc.map(n => `translate([${fmt(g.pts[n].x, 2)},${fmt(g.pts[n].y, 2)}])circle(d=${g.pw},$fn=48);`).join('')}}`).join('')}}${p.holes.map(h => `translate([${fmt(g.pts[h].x, 2)},${fmt(g.pts[h].y, 2)}])circle(d=${fmt(hd, 2)},$fn=32);`).join('')}}}\ntranslate([${fmt(x, 1)},0,0]) ${p.id}();\n`;
+    x += g.w + 10; maxH = Math.max(maxH, g.h);
+  }
+  return {svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${fmt(x, 1)}mm" height="${fmt(maxH, 1)}mm" viewBox="0 0 ${fmt(x, 1)} ${fmt(maxH, 1)}">\n<!-- one leg; cut ${CARDS.legs.opts[b.legs].n * 2} of each. Puck holes shown where pucks go. -->\n${svg}</svg>`, scad};
+}
+function hookExports() {
+  for (const [id, key, label] of [['cpSVG', 'svg', 'Copy SVG'], ['cpSCAD', 'scad', 'Copy OpenSCAD']]) {
+    const el = document.getElementById(id); if (!el) continue;
+    el.onclick = async () => { const txt = exports()[key]; try { await navigator.clipboard.writeText(txt); el.textContent = 'Copied'; } catch (e) { el.textContent = 'Copy blocked'; } setTimeout(() => el.textContent = label, 1500); };
+  }
+}
+
+// ---------- sound: knocks click, faces hiss, foam squeaks, feet thud ----------
+const SND = {on: false, ctx: null, prevI: null};
+function soundInit() {
+  const C = new (window.AudioContext || window.webkitAudioContext)(); SND.ctx = C;
+  const master = C.createGain(); master.gain.value = .5; master.connect(C.destination); SND.master = master;
+  const buf = C.createBuffer(1, C.sampleRate * 2, C.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; SND.noise = buf;
+  const src = C.createBufferSource(); src.buffer = buf; src.loop = true;
+  const bp = C.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2400; bp.Q.value = .8;
+  const hg = C.createGain(); hg.gain.value = 0; src.connect(bp); bp.connect(hg); hg.connect(master); src.start(); SND.hiss = hg; SND.hissF = bp;
+  const osc = C.createOscillator(); osc.type = 'triangle'; osc.frequency.value = 1100; const lfo = C.createOscillator(); lfo.frequency.value = 23; const lg = C.createGain(); lg.gain.value = 60; lfo.connect(lg); lg.connect(osc.frequency);
+  const sg = C.createGain(); sg.gain.value = 0; osc.connect(sg); sg.connect(master); osc.start(); lfo.start(); SND.squeak = sg; SND.squeakOsc = osc;
+}
+const PIN_F = {O: 260, B: 380, M: 520, J1: 700, J2: 900, J3: 1150, J4: 1500};
+function click(freq, gain) {
+  const C = SND.ctx, s = C.createBufferSource(); s.buffer = SND.noise;
+  const f = C.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 6;
+  const g = C.createGain(), t = C.currentTime; g.gain.setValueAtTime(clamp(gain, 0, 1.2), t); g.gain.exponentialRampToValueAtTime(.001, t + .06);
+  s.connect(f); f.connect(g); g.connect(SND.master); s.start(t, Math.random()); s.stop(t + .08);
+}
+function thud(gain) {
+  const C = SND.ctx, o = C.createOscillator(), g = C.createGain(), t = C.currentTime;
+  o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(45, t + .15);
+  g.gain.setValueAtTime(clamp(gain, 0, 1), t); g.gain.exponentialRampToValueAtTime(.001, t + .2);
+  o.connect(g); g.connect(SND.master); o.start(t); o.stop(t + .22);
+}
+function soundTick() {
+  if (!SND.on || !SND.ctx || !E) return;
+  const i = iNow(), prev = SND.prevI; SND.prevI = i;
+  const crossed = (a) => prev !== null && (prev <= i ? (a > prev && a <= i) : (a > prev || a <= i));
+  const b = B();
+  if (S.playing && prev !== null && prev !== i) {
+    for (const pn of PINS) { const st = E.pins[pn.id]; for (const ki of st.knockAt) for (let o = 0; o < E.offs.length; o++) { const kk = (ki + (o ? Math.round(E.offs[o]) : 0)) % N; if (crossed(kk)) flash[pn.id] = 1, click(PIN_F[pn.id] * (1 + st.c * .3), .08 + st.c * .5 * Math.min(1, st.maxF / 80)); } }
+    E.offs.forEach((o, li) => { for (let q = 0; q < N; q++) { const k = (E.tIdx[q] + o) % N, kp = (E.tIdx[(q - 1 + N) % N] + o) % N; if (E.A.contact[k] && !E.A.contact[kp] && crossed(q)) thud(.25 + E.totalKg * .05); } });
+  }
+  const fNow = S.playing ? Math.min(1, E.fric[i] / Math.max(p95(E.fric), 2)) : 0;
+  const t = SND.ctx.currentTime;
+  SND.hiss.gain.setTargetAtTime(clamp(fNow * .35, 0, .4), t, .03);
+  const foamOnFoam = CARDS.washer.opts[b.washer].mu === null && !CARDS.plate.opts[b.plate].ply;
+  SND.squeak.gain.setTargetAtTime(foamOnFoam && S.playing ? clamp(fNow * .12, 0, .12) : 0, t, .03);
+  SND.hissF.frequency.setTargetAtTime(1400 + fNow * 2000, t, .05);
+}
+document.getElementById('sound').onclick = async () => {
+  SND.on = !SND.on; document.getElementById('sound').setAttribute('aria-pressed', String(SND.on));
+  if (SND.on && !SND.ctx) { try { soundInit(); } catch (e) { SND.on = false; } }
+  if (SND.ctx) { if (SND.on) await SND.ctx.resume(); else SND.ctx.suspend(); }
+};
+
+// ---------- header controls ----------
+const playBtn = document.getElementById('play');
+function setPlaying(on) { S.playing = on; playBtn.innerHTML = on ? '<span class="icon-pause"></span><span>Pause</span>' : '<span class="icon-play"></span><span>Play</span>'; playBtn.setAttribute('aria-label', on ? 'Pause' : 'Play'); }
+playBtn.onclick = () => setPlaying(!S.playing);
+const slowBtn = document.getElementById('slow');
+slowBtn.onclick = () => { S.slow = !S.slow; slowBtn.setAttribute('aria-pressed', String(S.slow)); };
+document.querySelectorAll('[data-ov]').forEach(btn => btn.onclick = () => { const k = btn.dataset.ov; S.ov[k] = !S.ov[k]; btn.setAttribute('aria-pressed', String(S.ov[k])); });
+document.getElementById('horseWalk').onclick = () => { B().phi0 = null; run(); };
+document.querySelectorAll('[data-mode]').forEach(btn => btn.onclick = () => {
+  S.mode = btn.dataset.mode; document.querySelectorAll('[data-mode]').forEach(q => q.setAttribute('aria-pressed', String(q === btn)));
+  const shop = S.mode === 'shop';
+  document.getElementById('shop').hidden = !shop; document.getElementById('stage').style.visibility = shop ? 'hidden' : 'visible';
+  document.getElementById('simBtns').style.visibility = shop ? 'hidden' : 'visible';
+  document.getElementById('centerTitle').textContent = shop ? 'Build it: your sheets, parts, hardware, steps' : 'Side view';
+  if (shop) renderShop();
+});
+window.addEventListener('resize', () => { if (S.mode === 'shop') drawSheets(); });
+
+let last = performance.now();
+const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (S.playing) S.t += dt * (S.slow ? .25 : 1);
+  for (const k in flash) flash[k] = Math.max(0, flash[k] - dt * 4);
+  if (!SND.on) { // flash knocks visually even without sound
+    const i = iNow(), prev = SND.prevI; SND.prevI = i;
+    if (prev !== null && prev !== i && S.playing) for (const pn of PINS) for (const ki of E.pins[pn.id].knockAt) { if (prev <= i ? (ki > prev && ki <= i) : (ki > prev || ki <= i)) flash[pn.id] = 1; }
+  } else soundTick();
+  if (S.mode === 'sim') drawStage();
+  drawStack(); drawLeg();
+  const u = uNow();
+  document.getElementById('clock').textContent = `stride ${Math.floor(u)} · ${fmt((((u % 1) + 1) % 1) * 100, 0).padStart(2, '0')}%`;
+  requestAnimationFrame(frame);
+}
+renderLoadout();
+run();
+renderVars();
+setPlaying(!reduce);
+requestAnimationFrame(frame);
+})();
+</script>

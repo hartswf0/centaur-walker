@@ -1,0 +1,1290 @@
+<title>Centaur Rig</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap">
+<style>
+/* Layout: three stacked benches on one clock. RIG (human front, Jansen hind), JOINTS (each pin in time), BUILD (plates, layers, pins, cut sheet). Numbers sit beside each bench; one column on phones. */
+:root{
+  --paper:#fff; --ink:#000;
+  --teal:#19e6c8; --amber:#ffd23f; --red:#ff2e2e; --blue:#3b82f6;
+  --mono:'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box;border-radius:0}
+html,body{background:var(--paper);color:var(--ink)}
+body{font-family:var(--mono);font-size:13px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:2px solid var(--ink);padding-block:10px 8px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;justify-content:space-between}
+h1{font-size:22px;font-weight:700;letter-spacing:.06em;margin:0;text-transform:uppercase}
+.clock{font-variant-numeric:tabular-nums;font-size:12px}
+.lede{max-width:78ch;font-size:12px;margin:10px 0 0}
+h2.sec{font-size:13px;letter-spacing:.16em;text-transform:uppercase;margin:28px 0 8px;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+h2.sec .n{background:var(--ink);color:var(--paper);padding:0 6px}
+h2.sec .q{font-weight:400;letter-spacing:0;text-transform:none;font-style:italic;font-size:12px}
+.bench{display:grid;gap:16px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:1060px){.bench{grid-template-columns:minmax(0,1fr) 380px}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.panel{border:1px solid var(--ink);min-width:0}
+.ph{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--ink);padding:6px 8px}
+.ph h3{font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin:0;font-weight:700}
+.ph .note{font-size:11px;font-style:italic}
+button{font:inherit;font-size:11px;letter-spacing:.08em;text-transform:uppercase;background:var(--paper);color:var(--ink);border:1px solid var(--ink);padding:4px 8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+button:hover{background:var(--ink);color:var(--paper)}
+button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+button:disabled{opacity:.35;cursor:default;background:var(--paper);color:var(--ink)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+canvas{display:block;width:100%;touch-action:none}
+#rig{aspect-ratio:16/9;min-height:300px;max-height:68vh}
+#leg{aspect-ratio:1/1;max-height:560px;min-height:300px}
+#leg.on-bar{cursor:ew-resize}
+#stack{aspect-ratio:4/3;max-height:560px;min-height:300px}
+.icon-play{border-left:9px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent;width:0;height:0;display:inline-block}
+.icon-pause{width:9px;height:10px;display:inline-block;position:relative}
+.icon-pause::before,.icon-pause::after{content:"";position:absolute;top:0;width:3px;height:10px;background:currentColor}
+.icon-pause::before{left:0}.icon-pause::after{right:0}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;border-bottom:1px solid var(--ink)}
+.kv:last-child{border-bottom:0}
+.kv > div{padding:5px 8px;font-size:12px}
+.kv .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.kv .x{grid-column:1/-1;padding-top:0;font-size:11px}
+.num{cursor:ew-resize;user-select:none;border-bottom:1px dashed var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+.num:hover{background:var(--ink);color:var(--paper)}
+.flag{padding:0 4px}
+.flag.bad{background:var(--red)} .flag.warn{background:var(--amber)} .flag.ok{background:var(--teal)}
+.status{border-top:1px solid var(--ink);padding:6px 8px;font-size:12px;display:flex;flex-wrap:wrap;gap:4px 16px;min-height:2.2em}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{padding:3px 8px;text-align:left;font-size:12px;vertical-align:top}
+th{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;border-bottom:1px solid var(--ink)}
+tbody tr td{border-bottom:1px solid var(--ink)}
+tbody tr:last-child td{border-bottom:0}
+tr.hot{background:var(--ink);color:var(--paper)}
+tr.hot .num{color:var(--paper);border-color:var(--paper)}
+td.key{font-weight:700}
+.scroll{overflow-x:auto}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;padding:6px 8px;border-top:1px solid var(--ink)}
+.sw{display:inline-block;width:14px;height:8px;margin-right:5px;vertical-align:middle;border:1px solid var(--ink)}
+.copied{background:var(--teal)}
+textarea{width:100%;font:11px var(--mono);border:0;border-top:1px solid var(--ink);height:120px;padding:6px 8px;resize:vertical;background:var(--paper);color:var(--ink)}
+</style>
+
+<div class="top">
+  <h1>Centaur Rig</h1>
+  <div class="seg">
+    <button id="play" aria-label="Pause"><span class="icon-pause"></span><span>Pause</span></button>
+    <button id="slow" aria-pressed="false">Slow</button>
+  </div>
+  <div class="clock" id="clock"></div>
+</div>
+<p class="lede">You walk in front. A Jansen pair walks behind, on one crank, towed by a drawbar from your hip belt. Every pin is a hole in a flat plate. The three benches below share one clock and one set of bar lengths.</p>
+
+<!-- ============ RIG ============ -->
+<h2 class="sec"><span class="n">1</span> Rig <span class="q">How does your stride turn the hind crank?</span></h2>
+<div class="bench">
+  <section class="panel">
+    <div class="ph">
+      <div class="seg" role="group" aria-label="Drive">
+        <button data-drive="wheel" aria-pressed="true">Ground wheel</button>
+        <button data-drive="hand" aria-pressed="false">Hand crank</button>
+        <button data-drive="treadle" aria-pressed="false">Thigh rods</button>
+      </div>
+      <div class="seg" role="group" aria-label="Crank turns per stride">
+        <button data-k="0.5">½ turn</button><button data-k="1" aria-pressed="true">1 turn</button><button data-k="2">2 turns</button>
+        <span class="note" style="align-self:center">per stride</span>
+      </div>
+    </div>
+    <canvas id="rig" aria-label="Side view of the centaur rig walking"></canvas>
+    <div class="status" id="rigStatus"></div>
+    <canvas id="steps" aria-label="Footfall of the two human feet and four hind feet. Drag a hind row sideways to change the crank phase."></canvas>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--ink)"></span>near-side foot down</span>
+      <span><span class="sw" style="background:var(--blue)"></span>far-side foot down</span>
+      <span><span class="sw" style="background:var(--amber)"></span>a hind side has no foot down</span>
+      <span><span class="sw" style="background:var(--red)"></span>slip or collision</span>
+      <span>Drag a hind row to set crank phase.</span>
+    </div>
+  </section>
+  <div class="col">
+    <section class="panel">
+      <div class="ph"><h3>Rig numbers</h3><span class="note">dashed values drag</span></div>
+      <div id="rigKV"></div>
+      <div class="ph" style="border-top:1px solid var(--ink)"><div class="seg">
+        <button id="matchStride">Match stride</button><button id="matchHip">Level drawbar</button><button id="bestPhase">Best phase</button>
+      </div></div>
+    </section>
+    <section class="panel">
+      <div class="ph"><h3>Drive</h3></div>
+      <div id="driveKV"></div>
+    </section>
+  </div>
+</div>
+
+<!-- ============ JOINTS ============ -->
+<h2 class="sec"><span class="n">2</span> Joints in time <span class="q">Where does every pin go, and how far does each hole turn?</span></h2>
+<div class="bench">
+  <section class="panel">
+    <div class="ph"><h3>Near hind leg, normal and mirrored</h3><span class="note">Drag a bar to change its length. Hover a pin.</span></div>
+    <canvas id="leg" aria-label="Hind leg pair with the path of every joint over one crank turn"></canvas>
+    <canvas id="angles" aria-label="Relative angle at each pin over one crank turn"></canvas>
+    <div class="legend"><span>Each row: the angle between the plates a pin joins, over one crank turn. Swing is how far that hole rotates on its pin.</span></div>
+  </section>
+  <div class="col">
+    <section class="panel">
+      <div class="ph"><h3>Bars (Jansen units)</h3><div class="seg"><button id="undo">Undo</button><button id="reset">Holy numbers</button></div></div>
+      <table><thead><tr><th>Bar</th><th>Length</th><th>At rig scale</th><th>vs Jansen</th></tr></thead><tbody id="bars"></tbody></table>
+    </section>
+  </div>
+</div>
+
+<!-- ============ BUILD ============ -->
+<h2 class="sec"><span class="n">3</span> Build <span class="q">Which plate goes in which layer, and how long is each pin?</span></h2>
+<div class="bench">
+  <section class="panel">
+    <div class="ph">
+      <div class="seg" role="group" aria-label="Material preset">
+        <button data-preset="paper">Card + brads</button>
+        <button data-preset="print" aria-pressed="true">Printed + M3</button>
+        <button data-preset="ply">Full size ply + M8</button>
+      </div>
+      <span class="note">exploded stack, inner layer at the back</span>
+    </div>
+    <canvas id="stack" aria-label="Exploded view of the plate layers with pins through them"></canvas>
+    <div class="status" id="buildStatus"></div>
+    <div class="ph" style="border-top:1px solid var(--ink)"><h3>Cut sheet, one side</h3><span class="note">hole-to-hole distances in mm</span></div>
+    <canvas id="sheet" aria-label="Flat plates laid out with holes and dimensions"></canvas>
+  </section>
+  <div class="col">
+    <section class="panel">
+      <div class="ph"><h3>Material</h3></div>
+      <div id="matKV"></div>
+    </section>
+    <section class="panel">
+      <div class="ph"><h3>Pins</h3><span class="note">hover to find</span></div>
+      <div class="scroll"><table><thead><tr><th>Pin</th><th>Layers</th><th>Grip</th><th>Fastener</th><th>Turns</th></tr></thead><tbody id="pins"></tbody></table></div>
+    </section>
+    <section class="panel">
+      <div class="ph"><h3>Plates</h3></div>
+      <div class="scroll"><table><thead><tr><th>Plate</th><th>Layer</th><th>Span</th><th>Qty</th></tr></thead><tbody id="plates"></tbody></table></div>
+    </section>
+    <section class="panel">
+      <div class="ph"><h3>Export</h3><div class="seg"><button id="cpSVG">Copy SVG</button><button id="cpSCAD">Copy OpenSCAD</button></div></div>
+      <textarea id="out" aria-label="Export text" readonly></textarea>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const COL = {paper:'#fff', ink:'#000', teal:'#19e6c8', amber:'#ffd23f', red:'#ff2e2e', blue:'#3b82f6', tint:'rgba(59,130,246,.10)', ghost:'rgba(59,130,246,.28)'};
+const FONT = "'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace";
+const HOLY = {a:38, b:41.5, c:39.3, d:40.1, e:55.8, f:39.4, g:36.7, h:65.7, i:49, j:50, k:61.9, l:7.8, m:15};
+const KEYS = ['a','b','c','d','e','f','g','h','i','j','k','l','m'];
+const BARS = {a:['B','A'], l:['A','O'], m:['O','M'], j:['M','J1'], b:['B','J1'], e:['J1','J3'], d:['B','J3'],
+              c:['B','J2'], k:['M','J2'], f:['J3','J4'], g:['J2','J4'], h:['J4','F'], i:['J2','F']};
+const JOINT_DEF = {J1:['B','b','M','j',1], J2:['B','c','M','k',-1], J3:['B','d','J1','e',1], J4:['J3','f','J2','g',-1], F:['J4','h','J2','i',-1]};
+const ORDER = ['J1','J2','J3','J4','F'];
+const N = 360, TAU = Math.PI * 2;
+
+// ---------- linkage ----------
+function cc(P, r0, Q, r1, s) {
+  const dx = Q.x - P.x, dy = Q.y - P.y, d = Math.hypot(dx, dy);
+  if (d < 1e-9 || d > r0 + r1 || d < Math.abs(r0 - r1)) return null;
+  const a = (r0*r0 - r1*r1 + d*d) / (2*d), h = Math.sqrt(Math.max(0, r0*r0 - a*a));
+  const ux = dx/d, uy = dy/d, mx = P.x + a*ux, my = P.y + a*uy;
+  return {x: mx - s*h*uy, y: my + s*h*ux};
+}
+function solve(G, th) {
+  const p = {O:{x:0,y:0}, B:{x:-G.a,y:-G.l}, A:{x:0,y:-G.l}, M:{x:G.m*Math.cos(th), y:G.m*Math.sin(th)}};
+  for (const J of ORDER) {
+    const [p0, r0, p1, r1, s] = JOINT_DEF[J];
+    const q = cc(p[p0], G[r0], p[p1], G[r1], s);
+    if (!q) { p.fail = J; return p; }
+    p[J] = q;
+  }
+  return p;
+}
+// normal leg + mirrored leg on the same crank pin. Mirrored names carry a prime.
+function pairPts(G, phi) {
+  const p = solve(G, phi), q = solve(G, Math.PI - phi), o = {};
+  for (const k in p) if (p[k] && typeof p[k] === 'object') o[k] = p[k];
+  for (const k of ['B','J1','J2','J3','J4','F']) if (q[k]) o[k + "'"] = {x: -q[k].x, y: q[k].y};
+  o.fail = p.fail || q.fail || null;
+  return o;
+}
+const kIdx = ang => ((Math.round(ang / TAU * N) % N) + N) % N;
+
+function analyze(G) {
+  const fx = new Float64Array(N), fy = new Float64Array(N), ok = new Uint8Array(N);
+  let minY = Infinity, maxY = -Infinity, valid = 0;
+  for (let k = 0; k < N; k++) {
+    const p = solve(G, TAU * k / N);
+    if (p.F) { ok[k] = 1; fx[k] = p.F.x; fy[k] = p.F.y; valid++; minY = Math.min(minY, p.F.y); maxY = Math.max(maxY, p.F.y); }
+  }
+  if (!valid) { minY = -90; maxY = -70; }
+  const lift = maxY - minY, tol = Math.max(0.6, 0.05 * lift);
+  const contact = new Uint8Array(N);
+  for (let k = 0; k < N; k++) contact[k] = ok[k] && fy[k] < minY + tol ? 1 : 0;
+  let sv = 0, nv = 0, cxMin = Infinity, cxMax = -Infinity;
+  for (let k = 0; k < N; k++) {
+    if (!contact[k]) continue;
+    cxMin = Math.min(cxMin, fx[k]); cxMax = Math.max(cxMax, fx[k]);
+    const n = (k + 1) % N; if (contact[n]) { sv += fx[n] - fx[k]; nv++; }
+  }
+  const spin = sv <= 0 ? 1 : -1;
+  const advance = nv ? Math.abs(sv / nv) * N : 0; // units per crank turn
+  return {fx, fy, ok, contact, minY, maxY, lift, spin, advance, stride: isFinite(cxMax) ? cxMax - cxMin : 0,
+          duty: contact.reduce((s, c) => s + c, 0) / N, locked: (N - valid) / N};
+}
+
+// ---------- human gait (sagittal, degrees; heel strike at u = 0) ----------
+const HIPK  = [[0,25],[.1,22],[.3,5],[.5,-12],[.6,-8],[.75,18],[.88,30]];
+const KNEEK = [[0,5],[.15,18],[.4,5],[.55,30],[.72,62],[.85,40],[.97,3]];
+function curve(keys, u) {
+  u = ((u % 1) + 1) % 1;
+  const n = keys.length; let i = n - 1;
+  for (let q = 0; q < n; q++) if (keys[q][0] <= u) i = q;
+  const k1 = keys[i], k2 = keys[(i + 1) % n], k0 = keys[(i - 1 + n) % n], k3 = keys[(i + 2) % n];
+  let u1 = k1[0], u2 = k2[0]; if (u2 <= u1) u2 += 1; let uu = u; if (uu < u1) uu += 1;
+  const t = (uu - u1) / (u2 - u1), p0 = k0[1], p1 = k1[1], p2 = k2[1], p3 = k3[1];
+  return 0.5 * ((2*p1) + (-p0 + p2)*t + (2*p0 - 5*p1 + 4*p2 - p3)*t*t + (-p0 + 3*p1 - 3*p2 + p3)*t*t*t);
+}
+function humanLegRel(H, u) {
+  const Lt = .245 * H, Ls = .246 * H;
+  const a = curve(HIPK, u) * Math.PI / 180, kf = curve(KNEEK, u) * Math.PI / 180;
+  const knee = {x: Lt * Math.sin(a), y: -Lt * Math.cos(a)};
+  const ank = {x: knee.x + Ls * Math.sin(a - kf), y: knee.y - Ls * Math.cos(a - kf)};
+  return {a, kf, knee, ank};
+}
+function humanModel(H) {
+  const ankleH = .039 * H, hipY = new Float64Array(N + 1), hipX = new Float64Array(N + 1), stL = new Uint8Array(N), stR = new Uint8Array(N);
+  const L = [], R = [];
+  for (let k = 0; k <= N; k++) { L.push(humanLegRel(H, k / N)); R.push(humanLegRel(H, k / N + .5)); }
+  for (let k = 0; k <= N; k++) hipY[k] = ankleH + Math.max(-L[k].ank.y, -R[k].ank.y);
+  for (let k = 0; k < N; k++) {
+    const useL = L[k].ank.y <= R[k].ank.y, S = useL ? L : R;
+    hipX[k + 1] = hipX[k] - (S[k + 1].ank.x - S[k].ank.x);
+    stL[k] = (hipY[k] + L[k].ank.y - ankleH) < 6 ? 1 : 0;
+    stR[k] = (hipY[k] + R[k].ank.y - ankleH) < 6 ? 1 : 0;
+  }
+  let meanHip = 0; for (let k = 0; k < N; k++) meanHip += hipY[k] / N;
+  return {H, ankleH, hipY, hipX, advance: hipX[N], stL, stR, meanHip};
+}
+
+// ---------- state ----------
+const S = {
+  G: {...HOLY}, live: null, hist: [{...HOLY}],
+  U: 0.1, playing: true, slow: false,
+  // rig
+  height: 1750, cadence: 54, kTurns: 1, sigma: 10.5, lbU: 112, phi0: 0.6, drive: 'wheel', wheelD: 670,
+  // build
+  preset: 'print', sb: 2.0, t: 3, d: 3.3, w: 9, gap: 0.6,
+  hoverPin: null, hoverPart: null, hoverBar: null, drag: null,
+};
+const cur = () => S.live || S.G;
+let A = null, HM = null, RIG = null, BUILD = null, TIMEA = null;
+
+// ---------- helpers ----------
+const lerp = (a, b, t) => a + (b - a) * t;
+const fmt = (v, d = 1) => (Math.abs(v) < 1e-9 ? 0 : v).toFixed(d);
+const sgn = v => (v > 0 ? '+' : v < 0 ? '−' : '±') + Math.abs(v).toFixed(1);
+const wrapPi = a => Math.atan2(Math.sin(a), Math.cos(a));
+function sizeCanvas(c, h) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (h) c.style.height = h + 'px';
+  const w = c.clientWidth, hh = h || c.clientHeight;
+  if (c.width !== Math.round(w * dpr) || c.height !== Math.round(hh * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(hh * dpr); }
+  const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return {x, W: w, H: hh};
+}
+function distPtSeg(p, a, b) {
+  const dx = b.x - a.x, dy = b.y - a.y, L = dx*dx + dy*dy || 1e-12;
+  const t = Math.max(0, Math.min(1, ((p.x - a.x)*dx + (p.y - a.y)*dy) / L));
+  return Math.hypot(p.x - a.x - t*dx, p.y - a.y - t*dy);
+}
+function segsCross(a, b, c, d) {
+  const o = (p, q, r) => (q.x - p.x)*(r.y - p.y) - (q.y - p.y)*(r.x - p.x);
+  return (o(a, b, c) * o(a, b, d) < 0) && (o(c, d, a) * o(c, d, b) < 0);
+}
+function distSegSeg(a, b, c, d) {
+  if (segsCross(a, b, c, d)) return 0;
+  return Math.min(distPtSeg(a, c, d), distPtSeg(b, c, d), distPtSeg(c, a, b), distPtSeg(d, a, b));
+}
+function inTri(p, t) {
+  const s = (a, b, c) => (a.x - c.x)*(b.y - c.y) - (b.x - c.x)*(a.y - c.y);
+  const d1 = s(p, t[0], t[1]), d2 = s(p, t[1], t[2]), d3 = s(p, t[2], t[0]);
+  return !(((d1 < 0) || (d2 < 0) || (d3 < 0)) && ((d1 > 0) || (d2 > 0) || (d3 > 0)));
+}
+function makeNum(el, get, set, step, min, max, dec, commit) {
+  el.classList.add('num'); el.tabIndex = 0; el.setAttribute('role', 'slider');
+  const show = () => { el.textContent = fmt(get(), dec); el.setAttribute('aria-valuenow', get()); };
+  let d = null;
+  el.addEventListener('pointerdown', e => { el.setPointerCapture(e.pointerId); d = {x: e.clientX, v: get()}; e.preventDefault(); });
+  el.addEventListener('pointermove', e => { if (!d) return; set(Math.max(min, Math.min(max, +(d.v + (e.clientX - d.x) * step).toFixed(dec)))); show(); });
+  el.addEventListener('pointerup', () => { if (d && commit) commit(); d = null; });
+  el.addEventListener('keydown', e => {
+    const m = e.shiftKey ? 10 : 1;
+    let dv = 0; if (e.key === 'ArrowUp' || e.key === 'ArrowRight') dv = step * 10 * m; if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') dv = -step * 10 * m;
+    if (!dv) return; e.preventDefault(); set(Math.max(min, Math.min(max, +(get() + dv).toFixed(dec)))); show(); if (commit) commit();
+  });
+  show(); return show;
+}
+
+// ---------- RIG computation ----------
+function hindPhi(U, side) { return A.spin * TAU * S.kTurns * U + S.phi0 + side * Math.PI; }
+function hipAt(U) {
+  const n = Math.floor(U), f = U - n, kf = f * N, k = Math.floor(kf), t = kf - k;
+  return {x: n * HM.advance + lerp(HM.hipX[k], HM.hipX[k + 1], t), y: lerp(HM.hipY[k], HM.hipY[Math.min(N, k + 1)], t)};
+}
+function rigCompute() {
+  const G = cur(), sg = S.sigma;
+  const hindAdv = S.kTurns * A.advance * sg;
+  const slip = HM.advance ? hindAdv / HM.advance - 1 : 0;
+  const Hc = -A.minY * sg;
+  const Lb = S.lbU * sg;
+  const frontPivotY = Hc - G.l * sg;
+  const pitch = Math.atan2(HM.meanHip - frontPivotY, Lb - G.a * sg) * 180 / Math.PI;
+  // hind contact by human cycle, per leg: [L, L', R, R']
+  const hc = [0,1,2,3].map(() => new Uint8Array(N)), hl = [0,1,2,3].map(() => new Uint8Array(N));
+  for (let k = 0; k < N; k++) {
+    for (let s = 0; s < 2; s++) {
+      const phi = hindPhi(k / N, s);
+      const i1 = kIdx(phi), i2 = kIdx(Math.PI - phi);
+      hc[s*2][k] = A.contact[i1]; hc[s*2+1][k] = A.contact[i2];
+      hl[s*2][k] = A.ok[i1] ? 0 : 1; hl[s*2+1][k] = A.ok[i2] ? 0 : 1;
+    }
+  }
+  let sideGap = new Uint8Array(N), minHind = 4, minSide = 2;
+  for (let k = 0; k < N; k++) {
+    const l = hc[0][k] + hc[1][k], r = hc[2][k] + hc[3][k];
+    if (!l || !r) sideGap[k] = 1;
+    minHind = Math.min(minHind, l + r); minSide = Math.min(minSide, l, r);
+  }
+  // collision: near human shin vs near mirrored hind leg; thigh rods
+  let minClear = Infinity, clearU = 0;
+  const rodL = [Infinity, -Infinity], rodR = [Infinity, -Infinity];
+  for (let k = 0; k < N; k += 3) {
+    const U = k / N, hip = {x: HM.hipX[k], y: HM.hipY[k]};
+    const ax = hip.x - Lb;
+    for (const side of [0, 1]) {
+      const leg = humanLegRel(S.height, U + side * .5);
+      const knee = {x: hip.x + leg.knee.x, y: hip.y + leg.knee.y}, ank = {x: hip.x + leg.ank.x, y: hip.y + leg.ank.y};
+      const P = pairPts(G, hindPhi(U, side));
+      const W = q => q && {x: ax + q.x * sg, y: Hc + q.y * sg};
+      for (const [p, q] of [["B'","J1'"],["J1'","J3'"],["J3'","J4'"],["J4'","F'"],["J2'","F'"],["B'","J3'"]]) {
+        if (!P[p] || !P[q]) continue;
+        const dd = Math.min(distSegSeg(knee, ank, W(P[p]), W(P[q])), distSegSeg(hip, knee, W(P[p]), W(P[q])));
+        if (dd < minClear) { minClear = dd; clearU = U; }
+      }
+      // thigh rod: 60% down the thigh to this side's crank pin
+      const tp = {x: hip.x + leg.knee.x * .6, y: hip.y + leg.knee.y * .6};
+      const pin = W(P.M);
+      const len = Math.hypot(pin.x - tp.x, pin.y - tp.y);
+      const r = side ? rodR : rodL; r[0] = Math.min(r[0], len); r[1] = Math.max(r[1], len);
+    }
+  }
+  // wheel sprockets
+  const ratio = S.kTurns * Math.PI * S.wheelD / (HM.advance || 1); // crank turns per wheel turn = Tw / Tc
+  let best = null;
+  for (let Tc = 14; Tc <= 52; Tc++) for (let Tw = 11; Tw <= 60; Tw++) {
+    const e = Math.abs(Tw / Tc / ratio - 1);
+    if (!best || e < best.e - 1e-9 || (Math.abs(e - best.e) < 1e-9 && Tc + Tw < best.Tc + best.Tw)) best = {Tc, Tw, e};
+  }
+  RIG = {hindAdv, slip, Hc, Lb, pitch, hc, hl, sideGap, minHind, minSide, minClear, clearU, rodL, rodR, ratio, sprk: best,
+         crankR: G.m * sg, rpm: S.cadence * S.kTurns, frontPivotY};
+}
+function recomputeAll(geomChanged) {
+  A = analyze(cur());
+  if (!HM || HM.H !== S.height) HM = humanModel(S.height);
+  rigCompute();
+  timeCompute();
+  if (geomChanged !== false && !S.live) buildCompute();
+  renderRigKV(); renderBars(); renderStatus();
+}
+
+// ---------- JOINTS-IN-TIME computation ----------
+const PIN_LIST = [
+  {id:'O',  parts:['frame','crank']},
+  {id:'B',  parts:['frame','up','c']},
+  {id:'M',  parts:['crank','j','k']},
+  {id:'J1', parts:['j','up']},
+  {id:'J2', parts:['k','c','lo']},
+  {id:'J3', parts:['up','f']},
+  {id:'J4', parts:['f','lo']}
+];
+const PART_REF = {frame:null, crank:['O','M'], j:['M','J1'], k:['M','J2'], c:['B','J2'], f:['J3','J4'], up:['B','J1'], lo:['J2','J4']};
+function partAngle(p, id) { const r = PART_REF[id]; if (!r) return 0; const a = p[r[0]], b = p[r[1]]; return Math.atan2(b.y - a.y, b.x - a.x); }
+function timeCompute() {
+  const G = cur(), traces = {}, rel = {};
+  for (const n of ['M','J1','J2','J3','J4','F']) traces[n] = [];
+  for (const pin of PIN_LIST) rel[pin.id] = pin.parts.slice(1).map(() => new Float64Array(N + 1).fill(NaN));
+  const prev = {};
+  for (let k = 0; k <= N; k++) {
+    const p = solve(G, TAU * k / N);
+    for (const n in traces) traces[n].push(p[n] ? {x: p[n].x, y: p[n].y} : null);
+    if (p.fail) continue;
+    for (const pin of PIN_LIST) {
+      const a0 = partAngle(p, pin.parts[0]);
+      pin.parts.slice(1).forEach((q, i) => {
+        let v = partAngle(p, q) - a0;
+        const key = pin.id + i;
+        if (prev[key] !== undefined) v = prev[key] + wrapPi(v - prev[key]);
+        prev[key] = v; rel[pin.id][i][k] = v;
+      });
+    }
+  }
+  const swing = {};
+  for (const pin of PIN_LIST) {
+    let sw = 0;
+    rel[pin.id].forEach(arr => { let lo = Infinity, hi = -Infinity; for (const v of arr) if (!isNaN(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } if (isFinite(hi)) sw = Math.max(sw, (hi - lo) * 180 / Math.PI); });
+    swing[pin.id] = sw;
+  }
+  TIMEA = {traces, rel, swing};
+}
+
+// ---------- BUILD computation: plates, layers, pins ----------
+function partsDef() {
+  const P = [
+    {id:'frame', name:'Frame (one per side)', segs:[['B','A'],['A','O'],['A',"B'"]], holes:['B','O',"B'"], qty:2},
+    {id:'crank', name:'Crank arm', segs:[['O','M']], holes:['O','M'], qty:2},
+  ];
+  for (const pr of ['', "'"]) {
+    const t = pr ? ' (mirror)' : '';
+    P.push({id:'j'+pr, name:'Link j'+t, segs:[['M','J1'+pr]], holes:['M','J1'+pr], qty:2},
+           {id:'k'+pr, name:'Link k'+t, segs:[['M','J2'+pr]], holes:['M','J2'+pr], qty:2},
+           {id:'c'+pr, name:'Link c'+t, segs:[['B'+pr,'J2'+pr]], holes:['B'+pr,'J2'+pr], qty:2},
+           {id:'f'+pr, name:'Link f'+t, segs:[['J3'+pr,'J4'+pr]], holes:['J3'+pr,'J4'+pr], qty:2},
+           {id:'up'+pr, name:'Top triangle b d e'+t, segs:[['B'+pr,'J1'+pr],['J1'+pr,'J3'+pr],['J3'+pr,'B'+pr]], tri:['B'+pr,'J1'+pr,'J3'+pr], holes:['B'+pr,'J1'+pr,'J3'+pr], qty:2},
+           {id:'lo'+pr, name:'Foot triangle g h i'+t, segs:[['J2'+pr,'J4'+pr],['J4'+pr,'F'+pr],['F'+pr,'J2'+pr]], tri:['J2'+pr,'J4'+pr,'F'+pr], holes:['J2'+pr,'J4'+pr], foot:'F'+pr, qty:2});
+  }
+  return P;
+}
+function pinsDef() {
+  const out = [{id:'O', at:'O', parts:['frame','crank'], axle:true}, {id:'M', at:'M', parts:['crank','j','k',"j'","k'"]}];
+  for (const pr of ['', "'"]) out.push(
+    {id:'B'+pr, at:'B'+pr, parts:['frame','up'+pr,'c'+pr]},
+    {id:'J1'+pr, at:'J1'+pr, parts:['j'+pr,'up'+pr]},
+    {id:'J2'+pr, at:'J2'+pr, parts:['k'+pr,'c'+pr,'lo'+pr]},
+    {id:'J3'+pr, at:'J3'+pr, parts:['up'+pr,'f'+pr]},
+    {id:'J4'+pr, at:'J4'+pr, parts:['f'+pr,'lo'+pr]});
+  return out;
+}
+function buildCompute() {
+  const G = S.G, parts = partsDef(), pins = pinsDef(), n = parts.length;
+  const idx = {}; parts.forEach((p, i) => idx[p.id] = i);
+  const rU = S.w / 2 / S.sb, holeU = S.d / 2 / S.sb, gapU = S.gap / S.sb;
+  const conf = parts.map(() => new Uint8Array(n));
+  const share = (a, b) => pins.some(pn => pn.parts.includes(a) && pn.parts.includes(b));
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) if (share(parts[i].id, parts[j].id)) conf[i][j] = conf[j][i] = 2;
+  const pinHit = pins.map(() => new Uint8Array(n));
+  const samples = 90;
+  let jam = false;
+  for (let s = 0; s < samples; s++) {
+    const P = pairPts(G, TAU * s / samples);
+    if (P.fail) { jam = true; continue; }
+    const geo = parts.map(p => ({segs: p.segs.map(([a, b]) => [P[a], P[b]]), tri: p.tri ? p.tri.map(k => P[k]) : null}));
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      if (conf[i][j]) continue;
+      let hit = false;
+      for (const [a, b] of geo[i].segs) { for (const [c, d] of geo[j].segs) if (distSegSeg(a, b, c, d) < 2 * rU + gapU) { hit = true; break; } if (hit) break; }
+      if (!hit && geo[i].tri) for (const [c] of geo[j].segs) if (inTri(c, geo[i].tri)) { hit = true; break; }
+      if (!hit && geo[j].tri) for (const [c] of geo[i].segs) if (inTri(c, geo[j].tri)) { hit = true; break; }
+      if (hit) conf[i][j] = conf[j][i] = 1;
+    }
+    pins.forEach((pn, pi) => {
+      const pt = P[pn.at];
+      for (let q = 0; q < n; q++) {
+        if (pn.parts.includes(parts[q].id) || pinHit[pi][q]) continue;
+        const g = geo[q];
+        let h = g.segs.some(([a, b]) => distPtSeg(pt, a, b) < rU + holeU + gapU / 2);
+        if (!h && g.tri) h = inTri(pt, g.tri);
+        if (h) pinHit[pi][q] = 1;
+      }
+    });
+  }
+  // layer search: frame fixed innermost (layer 0); fewest layers, then shortest total pin length.
+  // Plates are placed pin by pin; a pin is checked the moment all its plates are placed.
+  const pref = ['frame','crank','j','k',"j'","k'",'c','up','lo','f',"c'","up'","lo'","f'"];
+  const order = pref.map(id => idx[id]).filter(v => v !== undefined);
+  const pinParts = pins.map(pn => pn.parts.map(id => idx[id]));
+  const lay = new Int8Array(n).fill(-1);
+  let best = null, nodes = 0;
+  function span(pi) {
+    let lo = Infinity, hi = -Infinity, all = true;
+    for (const q of pinParts[pi]) { if (lay[q] < 0) { all = false; continue; } lo = Math.min(lo, lay[q]); hi = Math.max(hi, lay[q]); }
+    if (pins[pi].axle && isFinite(lo)) lo = 0;
+    return {lo, hi, all};
+  }
+  function okNow() {
+    for (let pi = 0; pi < pins.length; pi++) {
+      const sp = span(pi); if (!sp.all) continue;
+      for (let q = 0; q < n; q++) if (pinHit[pi][q] && lay[q] >= 0 && lay[q] >= sp.lo && lay[q] <= sp.hi) return false;
+    }
+    return true;
+  }
+  function partial() { let c = 0; for (let pi = 0; pi < pins.length; pi++) { const sp = span(pi); if (isFinite(sp.lo)) c += sp.hi - sp.lo; } return c; }
+  function dfs(d, L) {
+    if (++nodes > 400000) return;
+    if (best && partial() >= best.cost) return;
+    if (d === n) { best = {cost: partial(), lay: Array.from(lay)}; return; }
+    const p = order[d];
+    const top = p === idx.frame ? 1 : L;
+    for (let l = 0; l < top; l++) {
+      let ok = true;
+      for (let e = 0; e < d; e++) { const q = order[e]; if (conf[p][q] && lay[q] === l) { ok = false; break; } }
+      if (!ok) continue;
+      lay[p] = l;
+      if (okNow()) dfs(d + 1, L);
+      lay[p] = -1;
+      if (nodes > 400000) return;
+    }
+  }
+  let L = 2;
+  for (; L <= 10 && !best; L++) { nodes = 0; dfs(0, L); }
+  const layers = best ? best.lay : parts.map((_, i) => i);
+  const nL = best ? Math.max(...layers) + 1 : n;
+  const pinOut = pins.map((pn, pi) => {
+    let lo = Infinity, hi = -Infinity;
+    for (const q of pinParts[pi]) { lo = Math.min(lo, layers[q]); hi = Math.max(hi, layers[q]); }
+    if (pn.axle) lo = 0;
+    return {...pn, lo, hi};
+  });
+  BUILD = {parts, pins: pinOut, layers, nL, conf, pinHit, jam, solved: !!best, capped: nodes > 400000, idx};
+  renderBuildTables(); makeExport();
+}
+
+// ---------- RIG drawing ----------
+const rigC = document.getElementById('rig');
+function drawJansen(x, P, X, Y, col, w, fill) {
+  x.save(); x.lineCap = 'round'; x.lineJoin = 'round';
+  if (fill) {
+    x.fillStyle = COL.tint;
+    for (const pr of ['', "'"]) for (const tri of [['B','J1','J3'], ['J2','J4','F']]) {
+      const t = tri.map(k => P[k + pr]); if (t.some(v => !v)) continue;
+      x.beginPath(); x.moveTo(X(t[0].x), Y(t[0].y)); x.lineTo(X(t[1].x), Y(t[1].y)); x.lineTo(X(t[2].x), Y(t[2].y)); x.closePath(); x.fill();
+    }
+  }
+  x.strokeStyle = col; x.lineWidth = w;
+  for (const pr of ['', "'"]) for (const k of KEYS) {
+    if (k === 'a' || k === 'l') continue;
+    let [a, b] = BARS[k];
+    const A2 = ['M','O','A'].includes(a) ? a : a + pr, B2 = ['M','O','A'].includes(b) ? b : b + pr;
+    if (!P[A2] || !P[B2]) continue;
+    x.beginPath(); x.moveTo(X(P[A2].x), Y(P[A2].y)); x.lineTo(X(P[B2].x), Y(P[B2].y)); x.stroke();
+  }
+  x.restore();
+}
+function drawRig() {
+  const {x, W, H} = sizeCanvas(rigC);
+  const G = cur(), sg = S.sigma, U = S.U, hip = hipAt(U), R = RIG;
+  const left = hip.x - R.Lb - (G.a + 48) * sg - (S.drive === 'wheel' ? S.wheelD + 60 : 0), right = hip.x + .45 * S.height;
+  const s = Math.min((W - 30) / (right - left), (H - 56) / (.98 * S.height + 120));
+  const camX = (left + right) / 2;
+  const X = v => W / 2 + (v - camX) * s, Y = v => H - 30 - v * s;
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  x.font = `11px ${FONT}`; x.textBaseline = 'middle';
+  const k = Math.floor(((U % 1) + 1) % 1 * N) % N;
+  if (R.sideGap[k]) { x.fillStyle = COL.amber; x.fillRect(0, Y(0), W, H - Y(0)); }
+  // ground + metre ticks
+  x.strokeStyle = COL.ink; x.lineWidth = 1.5; x.beginPath(); x.moveTo(0, Y(0)); x.lineTo(W, Y(0)); x.stroke();
+  x.lineWidth = 1; x.fillStyle = COL.ink; x.textAlign = 'center';
+  const w0 = camX - W / 2 / s, w1 = camX + W / 2 / s;
+  for (let t = Math.floor(w0 / 100) * 100; t <= w1; t += 100) {
+    const big = Math.round(t) % 1000 === 0;
+    x.beginPath(); x.moveTo(X(t), Y(0)); x.lineTo(X(t), Y(0) + (big ? 8 : 3)); x.stroke();
+    if (big) x.fillText((t / 1000).toFixed(0) + ' m', X(t), H - 10);
+  }
+  const axX = hip.x - R.Lb, Hc = R.Hc;
+  const WX = q => X(axX + q.x * sg), WY = q => Y(Hc + q.y * sg);
+  const hind = [0, 1].map(side => pairPts(G, hindPhi(U, side)));
+  const human = [0, 1].map(side => humanLegRel(S.height, U + side * .5));
+  const lw = Math.max(1.2, s * 14);
+  // far side: right hind pair and right human leg
+  drawJansen(x, hind[1], v => X(axX + v * sg), v => Y(Hc + v * sg), COL.blue, lw * .8, false);
+  drawHumanLeg(x, X, Y, hip, human[1], COL.blue, lw * .9);
+  // drive (behind body)
+  drawDrive(x, X, Y, hip, hind, human, s);
+  // hind frame + drawbar
+  const Bn = hind[0].B, Bm = hind[0]["B'"];
+  x.strokeStyle = COL.ink; x.lineWidth = lw * 1.4; x.lineCap = 'round';
+  x.beginPath(); x.moveTo(WX(Bn), WY(Bn)); x.lineTo(WX(Bm), WY(Bm)); x.stroke();
+  x.beginPath(); x.moveTo(X(axX), Y(Hc)); x.lineTo(X(axX), Y(Hc - G.l * sg)); x.stroke();
+  const belt = {x: hip.x - .07 * S.height, y: hip.y};
+  x.lineWidth = lw * 1.2;
+  x.beginPath(); x.moveTo(X(belt.x), Y(belt.y)); x.lineTo(WX(Bm), WY(Bm)); x.stroke();
+  for (const p of [belt, {x: axX + Bm.x * sg, y: Hc + Bm.y * sg}]) { x.beginPath(); x.arc(X(p.x), Y(p.y), Math.max(3, s * 22), 0, TAU); x.fillStyle = COL.paper; x.fill(); x.lineWidth = 1.5; x.stroke(); }
+  // near hind pair
+  drawJansen(x, hind[0], v => X(axX + v * sg), v => Y(Hc + v * sg), COL.ink, lw, true);
+  x.beginPath(); x.arc(X(axX), Y(Hc), Math.max(3, s * 25), 0, TAU); x.fillStyle = COL.ink; x.fill();
+  // human body
+  drawHumanBody(x, X, Y, hip, human, s, lw);
+  drawHumanLeg(x, X, Y, hip, human[0], COL.ink, lw * 1.1);
+  // contacts and slip
+  const footMark = (wx, col) => { x.fillStyle = col; x.fillRect(X(wx) - 10, Y(0) - 2, 20, 5); };
+  if (HM.stL[k]) footMark(hip.x + human[0].ank.x, COL.teal);
+  if (HM.stR[k]) footMark(hip.x + human[1].ank.x, COL.teal);
+  for (let side = 0; side < 2; side++) for (const pr of ['', "'"]) {
+    const li = side * 2 + (pr ? 1 : 0), F = hind[side]['F' + pr];
+    if (!F || !R.hc[li][k]) continue;
+    footMark(axX + F.x * sg, COL.teal);
+    if (Math.abs(R.slip) > 0.02) { x.strokeStyle = COL.red; x.lineWidth = 3; const L = Math.min(60, Math.abs(R.slip) * 400); x.beginPath(); x.moveTo(X(axX + F.x * sg), Y(0) + 6); x.lineTo(X(axX + F.x * sg) - Math.sign(R.slip) * L, Y(0) + 6); x.stroke(); }
+  }
+  // hip height reference
+  x.setLineDash([4, 4]); x.strokeStyle = COL.blue; x.lineWidth = 1;
+  x.beginPath(); x.moveTo(X(axX - 200), Y(Hc)); x.lineTo(X(hip.x + 300), Y(Hc)); x.stroke(); x.setLineDash([]);
+  x.fillStyle = COL.blue; x.textAlign = 'left'; x.fillText(`crank axle ${fmt(Hc / 10, 0)} cm`, X(hip.x + 300) + 6, Y(Hc));
+  // readout
+  const rd = `stride ${(Math.floor(U)).toString()}   ${(((U % 1) + 1) % 1 * 100).toFixed(0)}%`;
+  x.font = `11px ${FONT}`; x.fillStyle = COL.paper; const tw = x.measureText(rd).width + 12; x.fillRect(4, 4, tw, 20); x.strokeStyle = COL.ink; x.lineWidth = 1; x.strokeRect(4.5, 4.5, tw - 1, 19);
+  x.fillStyle = COL.ink; x.textAlign = 'left'; x.fillText(rd, 10, 14);
+}
+function drawHumanLeg(x, X, Y, hip, L, col, w) {
+  x.save(); x.strokeStyle = col; x.lineWidth = w; x.lineCap = 'round'; x.lineJoin = 'round';
+  const kn = {x: hip.x + L.knee.x, y: hip.y + L.knee.y}, an = {x: hip.x + L.ank.x, y: hip.y + L.ank.y};
+  const fl = .152 * S.height;
+  const toe = {x: an.x + fl * .75, y: Math.max(0, an.y - .039 * S.height + 5)};
+  const heel = {x: an.x - fl * .25, y: Math.max(0, an.y - .039 * S.height)};
+  x.beginPath(); x.moveTo(X(hip.x), Y(hip.y)); x.lineTo(X(kn.x), Y(kn.y)); x.lineTo(X(an.x), Y(an.y)); x.stroke();
+  x.beginPath(); x.moveTo(X(heel.x), Y(heel.y)); x.lineTo(X(an.x), Y(an.y)); x.lineTo(X(toe.x), Y(toe.y)); x.closePath(); x.stroke();
+  x.restore();
+}
+function drawHumanBody(x, X, Y, hip, human, s, lw) {
+  const H = S.height, sh = {x: hip.x + .03 * H, y: hip.y + .288 * H};
+  x.save(); x.strokeStyle = COL.ink; x.lineCap = 'round'; x.lineJoin = 'round';
+  x.lineWidth = lw * 2.2; x.beginPath(); x.moveTo(X(hip.x), Y(hip.y)); x.lineTo(X(sh.x), Y(sh.y)); x.stroke();
+  x.lineWidth = 1.5; x.beginPath(); x.arc(X(sh.x + .02 * H), Y(sh.y + .1 * H), .062 * H * s, 0, TAU); x.fillStyle = COL.paper; x.fill(); x.stroke();
+  // belt
+  x.fillStyle = COL.ink; x.fillRect(X(hip.x - .07 * H), Y(hip.y + .02 * H), (.12 * H) * s, Math.max(3, .02 * H * s));
+  // arms
+  const ua = .186 * H, fa = .146 * H + .05 * H;
+  for (const side of [1, 0]) {
+    x.strokeStyle = side ? COL.blue : COL.ink; x.lineWidth = lw * (side ? .8 : 1);
+    let hand;
+    if (S.drive === 'hand') { const c = handCrankCenter(hip), ph = hindPhi(S.U, side); hand = {x: c.x + Math.cos(ph) * 170, y: c.y + Math.sin(ph) * 170}; }
+    else { const sw = -human[side].a * .7; hand = {x: sh.x + Math.sin(sw) * (ua + fa) * .95, y: sh.y - Math.cos(sw) * (ua + fa) * .95}; }
+    const dx = hand.x - sh.x, dy = hand.y - sh.y, d = Math.min(Math.hypot(dx, dy), ua + fa - 1);
+    const a0 = Math.atan2(dy, dx), cA = Math.acos(Math.max(-1, Math.min(1, (ua*ua + d*d - fa*fa) / (2*ua*d))));
+    const el = {x: sh.x + ua * Math.cos(a0 - cA), y: sh.y + ua * Math.sin(a0 - cA)};
+    x.beginPath(); x.moveTo(X(sh.x), Y(sh.y)); x.lineTo(X(el.x), Y(el.y)); x.lineTo(X(hand.x), Y(hand.y)); x.stroke();
+  }
+  x.restore();
+}
+const handCrankCenter = hip => ({x: hip.x + .26 * S.height, y: hip.y + .17 * S.height});
+function sprocketR(T) { return 12.7 / (2 * Math.sin(Math.PI / T)); }
+function chain(x, X, Y, c1, r1, c2, r2, col) {
+  const dx = c2.x - c1.x, dy = c2.y - c1.y, d = Math.hypot(dx, dy), a = Math.atan2(dy, dx), b = Math.asin(Math.max(-1, Math.min(1, (r1 - r2) / d)));
+  x.strokeStyle = col; x.lineWidth = 1.5; x.setLineDash([3, 2]);
+  for (const sgn2 of [1, -1]) {
+    const t = a + sgn2 * (Math.PI / 2 + b);
+    x.beginPath(); x.moveTo(X(c1.x + r1 * Math.cos(t)), Y(c1.y + r1 * Math.sin(t))); x.lineTo(X(c2.x + r2 * Math.cos(t)), Y(c2.y + r2 * Math.sin(t))); x.stroke();
+  }
+  x.setLineDash([]);
+  for (const [c, r] of [[c1, r1], [c2, r2]]) { x.beginPath(); x.arc(X(c.x), Y(c.y), r * (Math.abs(X(1) - X(0))), 0, TAU); x.stroke(); }
+}
+function drawDrive(x, X, Y, hip, hind, human, s) {
+  const R = RIG, axX = hip.x - R.Lb, Hc = R.Hc, axle = {x: axX, y: Hc};
+  x.save();
+  if (S.drive === 'wheel') {
+    const rr = S.wheelD / 2, wc = {x: axX - (cur().a + 45) * S.sigma - rr, y: rr};
+    const ang = -hip.x / rr;
+    x.strokeStyle = COL.ink; x.lineWidth = 2; x.beginPath(); x.arc(X(wc.x), Y(wc.y), rr * s, 0, TAU); x.stroke();
+    x.lineWidth = 1; for (let i = 0; i < 6; i++) { const t = ang + i * Math.PI / 3; x.beginPath(); x.moveTo(X(wc.x), Y(wc.y)); x.lineTo(X(wc.x + Math.cos(t) * rr), Y(wc.y + Math.sin(t) * rr)); x.stroke(); }
+    // fork from drawbar
+    const fb = {x: axX - cur().a * S.sigma, y: Hc - cur().l * S.sigma};
+    x.lineWidth = 2; x.beginPath(); x.moveTo(X(fb.x), Y(fb.y)); x.lineTo(X(wc.x), Y(wc.y)); x.stroke();
+    if (R.sprk) chain(x, X, Y, wc, sprocketR(R.sprk.Tw), axle, sprocketR(R.sprk.Tc), COL.ink);
+  } else if (S.drive === 'hand') {
+    const c = handCrankCenter(hip);
+    x.strokeStyle = COL.ink; x.lineWidth = 2;
+    x.beginPath(); x.moveTo(X(hip.x - .02 * S.height), Y(hip.y + .03 * S.height)); x.lineTo(X(c.x), Y(c.y)); x.stroke();
+    chain(x, X, Y, c, sprocketR(36), axle, sprocketR(36), COL.ink);
+    for (const side of [0, 1]) { const ph = hindPhi(S.U, side); x.strokeStyle = side ? COL.blue : COL.ink; x.lineWidth = 3; x.beginPath(); x.moveTo(X(c.x), Y(c.y)); x.lineTo(X(c.x + Math.cos(ph) * 170), Y(c.y + Math.sin(ph) * 170)); x.stroke(); }
+  } else {
+    for (const side of [1, 0]) {
+      const L = human[side], tp = {x: hip.x + L.knee.x * .6, y: hip.y + L.knee.y * .6}, M = hind[side].M;
+      const pin = {x: axX + M.x * S.sigma, y: Hc + M.y * S.sigma};
+      const r = side ? R.rodR : R.rodL, len = Math.hypot(pin.x - tp.x, pin.y - tp.y), mid = (r[0] + r[1]) / 2, str = r[1] - r[0];
+      const bad = str > 30;
+      x.strokeStyle = bad ? COL.red : (side ? COL.blue : COL.ink); x.lineWidth = 2.5;
+      x.setLineDash(len > mid ? [] : [6, 3]);
+      x.beginPath(); x.moveTo(X(tp.x), Y(tp.y)); x.lineTo(X(pin.x), Y(pin.y)); x.stroke(); x.setLineDash([]);
+      x.fillStyle = COL.paper; x.lineWidth = 1.5; for (const p of [tp, pin]) { x.beginPath(); x.arc(X(p.x), Y(p.y), 4, 0, TAU); x.fill(); x.stroke(); }
+    }
+  }
+  x.restore();
+}
+
+// ---------- footfall strip ----------
+const stepsC = document.getElementById('steps');
+const ST = {lab: 64, rh: 18, top: 4};
+const STEP_ROWS = [{id:'You L', h:'L'}, {id:'You R', h:'R'}, {id:'Hind L', li:0}, {id:"Hind L′", li:1}, {id:'Hind R', li:2}, {id:"Hind R′", li:3}];
+function drawSteps() {
+  const H = ST.top + STEP_ROWS.length * ST.rh + 18;
+  const {x, W} = sizeCanvas(stepsC, H);
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  const pw = W - ST.lab - 8, X = u => ST.lab + u / 2 * pw;
+  x.fillStyle = COL.amber;
+  for (let c = 0; c < 2; c++) for (let k = 0; k < N; k++) if (RIG.sideGap[k]) x.fillRect(X(c + k / N), ST.top, pw / 2 / N + .6, STEP_ROWS.length * ST.rh);
+  x.font = `11px ${FONT}`; x.textBaseline = 'middle';
+  STEP_ROWS.forEach((r, i) => {
+    const y = ST.top + i * ST.rh, far = r.h === 'R' || r.li >= 2;
+    const arr = r.h ? (r.h === 'L' ? HM.stL : HM.stR) : RIG.hc[r.li], lk = r.h ? null : RIG.hl[r.li];
+    x.fillStyle = far ? COL.blue : COL.ink; x.textAlign = 'left'; x.fillText(r.id, 4, y + ST.rh / 2);
+    for (let c = 0; c < 2; c++) {
+      let k = 0;
+      while (k < N) {
+        const on = arr[k] || (lk && lk[k]);
+        if (!on) { k++; continue; }
+        const isL = lk && lk[k]; let e = k; while (e < N && (isL ? lk[e] : arr[e])) e++;
+        x.fillStyle = isL ? COL.red : far ? COL.blue : COL.ink;
+        x.fillRect(X(c + k / N), y + 4, X(c + e / N) - X(c + k / N), ST.rh - 8); k = e;
+      }
+    }
+    x.strokeStyle = COL.ink; x.lineWidth = .5; x.beginPath(); x.moveTo(ST.lab, y + ST.rh); x.lineTo(W - 8, y + ST.rh); x.stroke();
+  });
+  x.fillStyle = COL.ink; x.textAlign = 'center';
+  for (let q = 0; q <= 8; q++) { const xx = X(q / 4); x.fillRect(xx, ST.top + STEP_ROWS.length * ST.rh, 1, 4); if (q % 2 === 0) x.fillText(String(q / 4), xx, H - 6); }
+  const u = ((S.U % 1) + 1) % 1; x.fillStyle = COL.blue;
+  for (const c of [0, 1]) x.fillRect(X(c + u) - 1, ST.top, 2, STEP_ROWS.length * ST.rh);
+}
+stepsC.addEventListener('pointerdown', e => {
+  const r = stepsC.getBoundingClientRect(), row = Math.floor((e.clientY - r.top - ST.top) / ST.rh);
+  if (row < 2 || row >= STEP_ROWS.length) return;
+  stepsC.setPointerCapture(e.pointerId);
+  S.stepDrag = {x0: e.clientX, p0: S.phi0, pw: r.width - ST.lab - 8};
+});
+stepsC.addEventListener('pointermove', e => {
+  const d = S.stepDrag; if (!d) return;
+  const du = (e.clientX - d.x0) / d.pw * 2;
+  S.phi0 = d.p0 - A.spin * TAU * S.kTurns * du;
+  rigCompute(); renderRigKV(); renderStatus();
+});
+stepsC.addEventListener('pointerup', () => { S.stepDrag = null; });
+
+// ---------- rig panels ----------
+const rigKV = document.getElementById('rigKV'), driveKV = document.getElementById('driveKV');
+function kvRow(label, valueHTML, extra) { return `<div class="kv"><div>${label}</div><div class="v">${valueHTML}</div>${extra ? `<div class="x">${extra}</div>` : ''}</div>`; }
+const numHooks = {};
+function bindNum(id, get, set, step, min, max, dec, after) {
+  const el = document.getElementById(id); if (!el) return;
+  numHooks[id] = makeNum(el, get, v => { set(v); after(); }, step, min, max, dec, null);
+}
+function renderRigKV() {
+  const R = RIG, G = cur(), sg = S.sigma, H = HM;
+  const slipFlag = Math.abs(R.slip) < .02 ? 'ok' : Math.abs(R.slip) < .08 ? 'warn' : 'bad';
+  const levelFlag = Math.abs(R.pitch) < 4 ? 'ok' : Math.abs(R.pitch) < 10 ? 'warn' : 'bad';
+  const clearFlag = R.minClear > 60 ? 'ok' : R.minClear > 25 ? 'warn' : 'bad';
+  const armNote = R.crankR > 160 && R.crankR < 180 ? 'Inside the 165–175 mm range of bicycle crank arms: a real crank arm can be this part.' : `Bicycle crank arms are 165–175 mm.`;
+  rigKV.innerHTML =
+    kvRow('Your height', `<span id="nH"></span> mm`) +
+    kvRow('Your stride (two steps)', `${fmt(H.advance / 1000, 2)} m`) +
+    kvRow('Scale', `<span id="nSig"></span> mm per unit`) +
+    kvRow('Hind stride per crank turn', `${fmt(A.advance * sg / 1000, 2)} m`) +
+    kvRow('Hind feet vs your feet', `<span class="flag ${slipFlag}">${R.slip >= 0 ? '+' : '−'}${Math.abs(R.slip * 100).toFixed(1)}%</span>`, Math.abs(R.slip) < .02 ? 'Hind feet keep pace with yours.' : R.slip > 0 ? 'Hind feet push backward faster than you walk: they scuff.' : 'Hind feet fall behind your pace: they drag.') +
+    kvRow('Crank axle height', `${fmt(R.Hc / 10, 0)} cm`, `Your hip averages ${fmt(H.meanHip / 10, 0)} cm.`) +
+    kvRow('Drawbar length', `<span id="nLb"></span> mm`) +
+    kvRow('Drawbar slope', `<span class="flag ${levelFlag}">${fmt(R.pitch, 1)}°</span>`, R.pitch > 0 ? 'Belt end is higher than the hind frame.' : 'Belt end is lower than the hind frame.') +
+    kvRow('Closest hind part to your leg', `<span class="flag ${clearFlag}">${isFinite(R.minClear) ? fmt(R.minClear, 0) + ' mm' : '–'}</span>`, R.minClear < 60 ? `At ${(R.clearU * 100).toFixed(0)}% of your stride. Lengthen the drawbar.` : '') +
+    kvRow('Crank radius m', `${fmt(R.crankR, 0)} mm`, armNote) +
+    kvRow('Longest plate (h)', `${fmt(G.h * sg, 0)} mm`) +
+    kvRow('Hind feet down, fewest', `${R.minHind} of 4`, R.minSide === 0 ? '<span class="flag warn">One side has no hind foot down for part of the stride.</span>' : 'Each side always has a hind foot down.');
+  bindNum('nH', () => S.height, v => { S.height = v; }, 2, 1200, 2100, 0, () => recomputeAll(false));
+  bindNum('nSig', () => S.sigma, v => { S.sigma = v; }, 0.02, 2, 25, 2, () => recomputeAll(false));
+  bindNum('nLb', () => S.lbU * S.sigma, v => { S.lbU = v / S.sigma; }, 2, 300, 3000, 0, () => recomputeAll(false));
+
+  let d = '';
+  if (S.drive === 'wheel') {
+    const sp = R.sprk;
+    d = kvRow('Wheel diameter', `<span id="nWD"></span> mm`) +
+        kvRow('Wheel turns per stride', fmt(H.advance / (Math.PI * S.wheelD), 2)) +
+        kvRow('Crank turns per wheel turn', fmt(R.ratio, 3)) +
+        kvRow('Sprockets, wheel : crank', `${sp.Tw}T : ${sp.Tc}T`, `Ratio error ${(sp.e * 100).toFixed(2)}%. The wheel sets pace, so the hind legs can never drift out of step with the ground. Any error shows up as hind-foot slip.`) +
+        kvRow('Crank speed', `${fmt(R.rpm, 0)} rpm`);
+  } else if (S.drive === 'hand') {
+    d = kvRow('Your cadence', `<span id="nCad"></span> strides/min`) +
+        kvRow('Hand crank speed', `${fmt(R.rpm, 0)} rpm`, R.rpm >= 40 && R.rpm <= 80 ? 'A comfortable hand-cycle cadence. Chain 1:1 to the hind crank.' : 'Hand cycles are comfortable from about 40 to 80 rpm. Change the chain ratio or crank turns per stride.') +
+        kvRow('Phase', 'set by your hands', 'Nothing ties your hands to your feet. Keeping the hind legs in step with your walk is a skill you learn, like rowing.');
+  } else {
+    const sL = R.rodL[1] - R.rodL[0], sR = R.rodR[1] - R.rodR[0], worst = Math.max(sL, sR);
+    d = kvRow('Rod length change, left', `<span class="flag ${sL < 15 ? 'ok' : sL < 40 ? 'warn' : 'bad'}">${fmt(sL, 0)} mm</span>`) +
+        kvRow('Rod length change, right', `<span class="flag ${sR < 15 ? 'ok' : sR < 40 ? 'warn' : 'bad'}">${fmt(sR, 0)} mm</span>`,
+          'A rigid rod needs this to be near zero. Your thigh swings on an arc set by your gait; the crank pin runs on a circle. They agree only at the right phase and rod length.') +
+        kvRow('Dead points', '2 per stride', 'Both thighs reverse at the same instants (one fully forward, one fully back), so both rods lose leverage together. Carry the crank through with a flywheel or with the hind legs’ own momentum, or take the second rod from a shin, which peaks at a different moment.') +
+        kvRow('Worst rod', `${fmt(worst, 0)} mm`, worst > 40 ? 'Use cord on a spring return, or press Best phase.' : '');
+  }
+  driveKV.innerHTML = d;
+  bindNum('nWD', () => S.wheelD, v => { S.wheelD = v; }, 2, 200, 900, 0, () => recomputeAll(false));
+  bindNum('nCad', () => S.cadence, v => { S.cadence = v; }, .2, 30, 80, 0, () => recomputeAll(false));
+}
+function renderStatus() {
+  const st = document.getElementById('rigStatus'), R = RIG, parts = [];
+  if (A.locked > 0) parts.push(`<span class="flag bad">The hind linkage jams for ${(A.locked * 100).toFixed(0)}% of a crank turn.</span>`);
+  if (Math.abs(R.slip) >= .02) parts.push(`<span class="flag ${Math.abs(R.slip) < .08 ? 'warn' : 'bad'}">Hind feet ${R.slip > 0 ? 'scuff' : 'drag'} ${Math.abs(R.slip * 100).toFixed(0)}%. Press Match stride.</span>`);
+  if (Math.abs(R.pitch) >= 4) parts.push(`<span class="flag warn">Drawbar slopes ${fmt(R.pitch, 0)}°. Press Level drawbar, or mount the belt pivot ${fmt(Math.abs(HM.meanHip - R.frontPivotY) / 10, 0)} cm ${R.pitch > 0 ? 'lower' : 'higher'}.</span>`);
+  if (R.minClear < 25) parts.push(`<span class="flag bad">A mirrored hind leg hits your leg.</span>`);
+  if (!parts.length) parts.push('Hind feet keep pace, the drawbar is level, and nothing touches your legs.');
+  st.innerHTML = parts.join('');
+}
+
+document.querySelectorAll('[data-drive]').forEach(b => b.onclick = () => {
+  S.drive = b.dataset.drive; document.querySelectorAll('[data-drive]').forEach(q => q.setAttribute('aria-pressed', String(q === b))); renderRigKV();
+});
+document.querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
+  S.kTurns = +b.dataset.k; document.querySelectorAll('[data-k]').forEach(q => q.setAttribute('aria-pressed', String(q === b))); recomputeAll(false);
+});
+document.getElementById('matchStride').onclick = () => { S.sigma = +(HM.advance / (S.kTurns * A.advance)).toFixed(2); recomputeAll(false); };
+document.getElementById('matchHip').onclick = () => { const den = -A.minY - cur().l; if (den > 0) S.sigma = +(HM.meanHip / den).toFixed(2); recomputeAll(false); };
+document.getElementById('bestPhase').onclick = () => {
+  let best = null; const keep = S.phi0;
+  for (let i = 0; i < 72; i++) {
+    S.phi0 = TAU * i / 72; rigCompute();
+    const sc = S.drive === 'treadle' ? Math.max(RIG.rodL[1] - RIG.rodL[0], RIG.rodR[1] - RIG.rodR[0]) : -RIG.minClear;
+    if (!best || sc < best.sc) best = {sc, p: S.phi0};
+  }
+  S.phi0 = best ? best.p : keep; recomputeAll(false);
+};
+
+// ---------- JOINTS drawing ----------
+const legC = document.getElementById('leg'), angC = document.getElementById('angles');
+let legView = null;
+const PIN_NAMES = {O:'crank axle', B:'frame pivot', M:'crank pin', J1:'top', J2:'knee', J3:'back', J4:'shin'};
+function drawLegView() {
+  const {x, W, H} = sizeCanvas(legC);
+  const G = cur(), Aa = A;
+  // fit both legs: x from -(a+40) to +(a+40), y from minY to ~+40
+  const span = 2 * (G.a + 45), hgt = (40 - Aa.minY) + 16;
+  const s = Math.min(W / span, H / hgt) * .94;
+  const cx = 0, cy = (40 + Aa.minY) / 2;
+  const X = v => W / 2 + (v - cx) * s, Y = v => H / 2 - (v - cy) * s;
+  legView = {X, Y, s};
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  x.font = `11px ${FONT}`; x.textBaseline = 'middle';
+  // ground line at foot minimum
+  x.strokeStyle = COL.ink; x.lineWidth = 1; x.beginPath(); x.moveTo(0, Y(Aa.minY)); x.lineTo(W, Y(Aa.minY)); x.stroke();
+  const phi = hindPhi(S.U, 0);
+  // onion skins
+  for (let i = 0; i < 12; i++) {
+    const P = pairPts(G, phi - TAU * (i + 1) / 12);
+    x.globalAlpha = .55;
+    drawJansen(x, P, X, Y, COL.ghost, 1, false);
+    x.globalAlpha = 1;
+  }
+  // joint traces for both legs
+  const T = TIMEA.traces;
+  for (const name of Object.keys(T)) for (const mir of [false, true]) {
+    const hot = S.hoverPin && S.hoverPin.replace("'", '') === name;
+    x.strokeStyle = name === 'F' ? COL.ink : hot ? COL.blue : COL.ink; x.lineWidth = hot ? 3 : name === 'F' ? 1.6 : .9;
+    x.setLineDash(name === 'F' || hot ? [] : [2, 3]);
+    x.beginPath(); let on = false;
+    for (let k = 0; k <= N; k++) {
+      // mirrored trace: angle pi - theta, x flipped
+      const kk = mir ? kIdx(Math.PI - TAU * k / N) : k;
+      const p = T[name][kk];
+      if (!p) { on = false; continue; }
+      const px = X(mir ? -p.x : p.x), py = Y(p.y);
+      on ? x.lineTo(px, py) : x.moveTo(px, py); on = true;
+    }
+    x.stroke(); x.setLineDash([]);
+  }
+  // foot contact
+  x.strokeStyle = COL.teal; x.lineWidth = 5;
+  for (const mir of [false, true]) {
+    x.beginPath(); let on = false;
+    for (let k = 0; k <= N; k++) { const i = k % N; if (!Aa.contact[i]) { on = false; continue; } const px = X(mir ? -Aa.fx[i] : Aa.fx[i]), py = Y(Aa.fy[i]); on ? x.lineTo(px, py) : x.moveTo(px, py); on = true; }
+    x.stroke();
+  }
+  // crank circle
+  x.strokeStyle = COL.ink; x.lineWidth = 1; x.beginPath(); x.arc(X(0), Y(0), G.m * s, 0, TAU); x.stroke();
+  // current legs
+  const P = pairPts(G, phi);
+  drawJansen(x, P, X, Y, COL.ink, Math.max(1.5, s * .7), true);
+  // hovered bar
+  if (S.hoverBar) {
+    const [a, b] = BARS[S.hoverBar];
+    for (const pr of ['', "'"]) {
+      const A2 = ['M','O','A'].includes(a) ? a : a + pr, B2 = ['M','O','A'].includes(b) ? b : b + pr;
+      if (!P[A2] || !P[B2]) continue;
+      x.strokeStyle = COL.blue; x.lineWidth = Math.max(3, s * 1.4); x.lineCap = 'round';
+      x.beginPath(); x.moveTo(X(P[A2].x), Y(P[A2].y)); x.lineTo(X(P[B2].x), Y(P[B2].y)); x.stroke();
+    }
+  }
+  // frame
+  x.strokeStyle = COL.ink; x.lineWidth = Math.max(2, s); x.setLineDash([5, 3]);
+  x.beginPath(); x.moveTo(X(P.B.x), Y(P.B.y)); x.lineTo(X(P["B'"].x), Y(P["B'"].y)); x.moveTo(X(0), Y(P.A.y)); x.lineTo(X(0), Y(0)); x.stroke(); x.setLineDash([]);
+  // pins as holes
+  const pinR = Math.max(3.5, s * 1.4);
+  for (const pn of pinsDef()) {
+    const p = P[pn.at]; if (!p) continue;
+    const hot = S.hoverPin === pn.id;
+    x.beginPath(); x.arc(X(p.x), Y(p.y), hot ? pinR + 3 : pinR, 0, TAU);
+    x.fillStyle = hot ? COL.blue : COL.paper; x.fill(); x.strokeStyle = COL.ink; x.lineWidth = 1.5; x.stroke();
+    if (pn.id === 'O' || pn.id === 'B' || pn.id === "B'") { x.fillStyle = COL.ink; x.fillRect(X(p.x) - 2, Y(p.y) - 2, 4, 4); }
+    x.fillStyle = hot ? COL.blue : COL.ink; x.textAlign = 'left'; x.font = `${hot ? 700 : 500} 11px ${FONT}`;
+    x.fillText(pn.id, X(p.x) + pinR + 4, Y(p.y) - pinR - 2);
+  }
+  // jam
+  if (P.fail) { x.fillStyle = COL.red; x.textAlign = 'center'; x.fillText(`jammed at the ${P.fail}`, W / 2, 16); }
+  // caption
+  x.font = `11px ${FONT}`; x.fillStyle = COL.ink; x.textAlign = 'left';
+  x.fillText('dotted: each pin’s path · faint: last 12 positions · teal: foot on ground', 8, H - 10);
+}
+const ANG = {lab: 112, rh: 32, top: 4, right: 150};
+function drawAngles() {
+  const rows = PIN_LIST.length, H = ANG.top + rows * ANG.rh + 18;
+  const {x, W} = sizeCanvas(angC, H);
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  x.font = `11px ${FONT}`; x.textBaseline = 'middle';
+  const right = Math.min(ANG.right, W * .3), pw = W - ANG.lab - right - 8, X = u => ANG.lab + u * pw;
+  const u = (((hindPhi(S.U, 0) / TAU) % 1) + 1) % 1;
+  PIN_LIST.forEach((pin, i) => {
+    const y = ANG.top + i * ANG.rh, hot = S.hoverPin === pin.id;
+    if (hot) { x.fillStyle = COL.ink; x.fillRect(0, y, W, ANG.rh); }
+    const fg = hot ? COL.paper : COL.ink;
+    x.fillStyle = fg; x.textAlign = 'left'; x.font = `700 11px ${FONT}`; x.fillText(pin.id, 6, y + ANG.rh / 2);
+    x.font = `11px ${FONT}`; x.fillText(PIN_NAMES[pin.id], 34, y + ANG.rh / 2);
+    // curves
+    const arrs = TIMEA.rel[pin.id];
+    let lo = Infinity, hi = -Infinity; arrs.forEach(a => { for (const v of a) if (!isNaN(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } });
+    if (!isFinite(lo)) { lo = 0; hi = 1; }
+    const rng = Math.max(hi - lo, 1e-6);
+    arrs.forEach((arr, j) => {
+      x.strokeStyle = hot ? COL.paper : j ? COL.blue : COL.ink; x.lineWidth = 1.4;
+      x.beginPath(); let on = false;
+      for (let k = 0; k <= N; k++) { const v = arr[k]; if (isNaN(v)) { on = false; continue; } const py = y + ANG.rh - 4 - (v - lo) / rng * (ANG.rh - 8); on ? x.lineTo(X(k / N), py) : x.moveTo(X(k / N), py); on = true; }
+      x.stroke();
+    });
+    const sw = TIMEA.swing[pin.id], full = sw > 300;
+    x.textAlign = 'left'; x.fillStyle = fg;
+    x.fillText(full ? 'full turns' : `swings ${sw.toFixed(0)}°`, W - right + 4, y + ANG.rh / 2 - 6);
+    x.fillText(full ? 'needs a bushing' : sw > 60 ? 'plain hole, wears' : 'plain hole', W - right + 4, y + ANG.rh / 2 + 6);
+    x.strokeStyle = hot ? COL.paper : COL.ink; x.lineWidth = .5; x.beginPath(); x.moveTo(0, y + ANG.rh); x.lineTo(W, y + ANG.rh); x.stroke();
+  });
+  x.fillStyle = COL.blue; x.fillRect(X(u) - 1, ANG.top, 2, rows * ANG.rh);
+  x.fillStyle = COL.ink; x.textAlign = 'center';
+  for (let q = 0; q <= 4; q++) x.fillText(`${q * 90}°`, X(q / 4), H - 6);
+}
+angC.addEventListener('pointermove', e => {
+  const r = angC.getBoundingClientRect(), i = Math.floor((e.clientY - r.top - ANG.top) / ANG.rh);
+  const id = PIN_LIST[i] ? PIN_LIST[i].id : null; if (id !== S.hoverPin) { S.hoverPin = id; syncPinRows(); }
+});
+angC.addEventListener('pointerleave', () => { S.hoverPin = null; syncPinRows(); });
+
+// leg view: bar drag + pin hover
+function legHit(px, py) {
+  if (!legView) return null;
+  const {X, Y} = legView, P = pairPts(cur(), hindPhi(S.U, 0));
+  for (const pn of pinsDef()) { const p = P[pn.at]; if (p && Math.hypot(px - X(p.x), py - Y(p.y)) < 9) return {type:'pin', id: pn.id}; }
+  let best = null;
+  for (const k of KEYS) for (const pr of ['', "'"]) {
+    const [a, b] = BARS[k];
+    const A2 = ['M','O','A'].includes(a) ? a : a + pr, B2 = ['M','O','A'].includes(b) ? b : b + pr;
+    if (!P[A2] || !P[B2]) continue;
+    const pa = {x: X(P[A2].x), y: Y(P[A2].y)}, pb = {x: X(P[B2].x), y: Y(P[B2].y)};
+    const d = distPtSeg({x: px, y: py}, pa, pb);
+    if (d < 8 && (!best || d < best.d)) best = {type:'bar', k, d, pa, pb};
+  }
+  return best;
+}
+legC.addEventListener('pointerdown', e => {
+  const r = legC.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top, h = legHit(px, py);
+  if (!h || h.type !== 'bar') return;
+  legC.setPointerCapture(e.pointerId);
+  const dx = h.pb.x - h.pa.x, dy = h.pb.y - h.pa.y, L = Math.hypot(dx, dy) || 1;
+  const nearB = Math.hypot(px - h.pb.x, py - h.pb.y) < Math.hypot(px - h.pa.x, py - h.pa.y);
+  S.drag = {k: h.k, ux: dx / L, uy: dy / L, sign: nearB ? 1 : -1, L0: S.G[h.k], x0: px, y0: py, s: legView.s};
+});
+legC.addEventListener('pointermove', e => {
+  const r = legC.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top, d = S.drag;
+  if (d) {
+    const v = Math.round(Math.max(1, Math.min(140, d.L0 + d.sign * ((px - d.x0) * d.ux + (py - d.y0) * d.uy) / d.s)) * 10) / 10;
+    S.live = {...S.G, [d.k]: v}; recomputeAll(); return;
+  }
+  const h = legHit(px, py);
+  legC.className = h && h.type === 'bar' ? 'on-bar' : '';
+  const bar = h && h.type === 'bar' ? h.k : null, pin = h && h.type === 'pin' ? h.id : null;
+  if (bar !== S.hoverBar || pin !== S.hoverPin) { S.hoverBar = bar; S.hoverPin = pin; syncBarRows(); syncPinRows(); }
+});
+legC.addEventListener('pointerup', () => {
+  const d = S.drag; S.drag = null; if (!d) return;
+  if (S.live && S.live[d.k] !== d.L0) commitG(S.live); else { S.live = null; recomputeAll(); }
+});
+legC.addEventListener('pointerleave', () => { if (!S.drag) { S.hoverBar = null; S.hoverPin = null; syncBarRows(); syncPinRows(); } });
+
+// ---------- bars table ----------
+const barBody = document.getElementById('bars'), barRows = {};
+for (const k of KEYS) {
+  const tr = document.createElement('tr'); tr.dataset.k = k;
+  tr.innerHTML = `<td class="key">${k}</td><td><span data-v></span></td><td class="mm"></td><td class="dl"></td>`;
+  tr.onmouseenter = () => { S.hoverBar = k; syncBarRows(); };
+  tr.onmouseleave = () => { S.hoverBar = null; syncBarRows(); };
+  barBody.appendChild(tr); barRows[k] = tr;
+  makeNum(tr.querySelector('[data-v]'), () => cur()[k], v => { S.live = {...S.G, [k]: v}; recomputeAll(); }, .1, 1, 140, 1, () => { if (S.live) commitG(S.live); });
+}
+function renderBars() {
+  const G = cur();
+  for (const k of KEYS) {
+    const tr = barRows[k], dv = G[k] - HOLY[k];
+    const v = tr.querySelector('[data-v]'); if (document.activeElement !== v || !S.live) v.textContent = fmt(G[k]);
+    tr.querySelector('.mm').textContent = `${fmt(G[k] * S.sigma, 0)} mm`;
+    tr.querySelector('.dl').innerHTML = Math.abs(dv) < .05 ? '·' : `<span class="flag warn">${sgn(dv)}</span>`;
+  }
+}
+function syncBarRows() { for (const k of KEYS) barRows[k].classList.toggle('hot', S.hoverBar === k); }
+function commitG(G) { S.G = {...G}; S.live = null; S.hist.push({...G}); if (S.hist.length > 80) S.hist.shift(); recomputeAll(); }
+document.getElementById('undo').onclick = () => { if (S.hist.length > 1) { S.hist.pop(); S.G = {...S.hist[S.hist.length - 1]}; recomputeAll(); } };
+document.getElementById('reset').onclick = () => commitG(HOLY);
+
+// ---------- BUILD drawing ----------
+const stackC = document.getElementById('stack'), sheetC = document.getElementById('sheet');
+function plateShape(x, P, part, X, Y, s, wpx, outline, fillCol) {
+  const segs = part.segs.filter(([a, b]) => P[a] && P[b]);
+  x.lineCap = 'round'; x.lineJoin = 'round';
+  // outer ink
+  x.strokeStyle = outline; x.lineWidth = wpx + 2;
+  x.beginPath(); for (const [a, b] of segs) { x.moveTo(X(P[a].x), Y(P[a].y)); x.lineTo(X(P[b].x), Y(P[b].y)); } x.stroke();
+  if (part.tri && part.tri.every(k => P[k])) { x.fillStyle = outline; x.beginPath(); part.tri.forEach((k, i) => i ? x.lineTo(X(P[k].x), Y(P[k].y)) : x.moveTo(X(P[k].x), Y(P[k].y))); x.closePath(); x.fill(); }
+  // inner paper
+  x.strokeStyle = fillCol; x.lineWidth = wpx;
+  x.beginPath(); for (const [a, b] of segs) { x.moveTo(X(P[a].x), Y(P[a].y)); x.lineTo(X(P[b].x), Y(P[b].y)); } x.stroke();
+  if (part.tri && part.tri.every(k => P[k])) { x.fillStyle = fillCol; x.beginPath(); part.tri.forEach((k, i) => i ? x.lineTo(X(P[k].x), Y(P[k].y)) : x.moveTo(X(P[k].x), Y(P[k].y))); x.closePath(); x.fill(); }
+}
+function drawStack() {
+  const {x, W, H} = sizeCanvas(stackC);
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, H);
+  if (!BUILD) return;
+  const G = S.G, B = BUILD, nL = B.nL;
+  const span = 2 * (G.a + 50), hgt = 40 - A.minY + 10;
+  const s = Math.min(W * .62 / span, H * .52 / hgt);
+  const offY = (H - hgt * s - 40) / Math.max(1, nL - 1);
+  const offX = Math.min(offY * 1.2, (W - span * s - 20) / Math.max(1, nL - 1));
+  const P = pairPts(G, hindPhi(S.U, 0));
+  const wpx = Math.max(2, S.w / S.sb * s), hpx = Math.max(1.2, S.d / 2 / S.sb * s);
+  x.font = `11px ${FONT}`; x.textBaseline = 'middle';
+  const used = span * s + offX * (nL - 1), pad = Math.max(10, (W - used) / 2);
+  const base = (L) => ({ox: pad + (nL - 1 - L) * offX, oy: 14 + L * offY});
+  for (let L = 0; L < nL; L++) {
+    const {ox, oy} = base(L);
+    const X = v => ox + (v + G.a + 50) * s, Y = v => oy + (40 - v) * s;
+    B.parts.forEach((part, pi) => {
+      if (B.layers[pi] !== L) return;
+      const hot = S.hoverPart === part.id;
+      plateShape(x, P, part, X, Y, s, wpx, hot ? COL.blue : COL.ink, COL.paper);
+      for (const hn of part.holes) { const p = P[hn]; if (!p) continue; x.beginPath(); x.arc(X(p.x), Y(p.y), hpx, 0, TAU); x.strokeStyle = COL.ink; x.lineWidth = 1; x.stroke(); }
+    });
+    x.fillStyle = COL.ink; x.textAlign = 'left';
+    x.fillText(L === 0 ? 'L1 inner' : L === nL - 1 ? `L${L + 1} outer` : `L${L + 1}`, ox, Y(A.minY) + 14);
+  }
+  // pins through the stack
+  for (const pn of B.pins) {
+    const p = P[pn.at]; if (!p) continue;
+    const a = base(pn.lo), b = base(pn.hi);
+    const Xa = a.ox + (p.x + G.a + 50) * s, Ya = a.oy + (40 - p.y) * s, Xb = b.ox + (p.x + G.a + 50) * s, Yb = b.oy + (40 - p.y) * s;
+    const hot = S.hoverPin === pn.id;
+    x.strokeStyle = hot ? COL.blue : COL.red; x.lineWidth = hot ? 4 : 2;
+    x.beginPath(); x.moveTo(Xa, Ya); x.lineTo(Xb, Yb); x.stroke();
+    x.fillStyle = hot ? COL.blue : COL.red; x.fillRect(Xb - 3, Yb - 3, 6, 6);
+  }
+}
+function partLocal(part) {
+  // rigid geometry of a plate, from the pose at crank angle 0 (holy or current), rotated so the first segment lies along x
+  const P = pairPts(S.G, 0.3);
+  const pts = {}; const names = new Set(); part.segs.forEach(([a, b]) => { names.add(a); names.add(b); });
+  const [a0, b0] = part.segs[0]; if (!P[a0] || !P[b0]) return null;
+  const ang = Math.atan2(P[b0].y - P[a0].y, P[b0].x - P[a0].x);
+  const c = Math.cos(-ang), sn = Math.sin(-ang);
+  for (const n of names) { if (!P[n]) return null; const dx = (P[n].x - P[a0].x) * S.sb, dy = (P[n].y - P[a0].y) * S.sb; pts[n] = {x: dx * c - dy * sn, y: dx * sn + dy * c}; }
+  // normalize min to 0
+  let mx = Infinity, my = Infinity, Mx = -Infinity, My = -Infinity;
+  for (const n in pts) { mx = Math.min(mx, pts[n].x); my = Math.min(my, pts[n].y); Mx = Math.max(Mx, pts[n].x); My = Math.max(My, pts[n].y); }
+  const r = S.w / 2;
+  for (const n in pts) { pts[n].x -= mx - r; pts[n].y -= my - r; }
+  return {pts, w: Mx - mx + 2 * r, h: My - my + 2 * r};
+}
+let sheetLayout = null;
+function layoutSheet(maxW) {
+  const parts = partsDef().filter(p => !p.id.endsWith("'"));
+  const items = parts.map(p => ({p, g: partLocal(p)})).filter(i => i.g);
+  let x = 0, y = 0, rowH = 0, gap = Math.max(4, S.w * .6), W = 0;
+  for (const it of items) {
+    if (x > 0 && x + it.g.w > maxW) { x = 0; y += rowH + gap; rowH = 0; }
+    it.ox = x; it.oy = y; x += it.g.w + gap; rowH = Math.max(rowH, it.g.h); W = Math.max(W, x);
+  }
+  return {items, W, H: y + rowH};
+}
+function drawSheet() {
+  const cw = sheetC.clientWidth;
+  // lay out in mm for a target width proportional to canvas
+  const totalMM = (() => { const l = layoutSheet(1e9); return l.W; })();
+  const target = Math.max(totalMM / 2.4, 10);
+  const L = layoutSheet(target);
+  const s = (cw - 24) / Math.max(L.W, 1);
+  const Hc = Math.min(900, L.H * s + 40);
+  const {x, W} = sizeCanvas(sheetC, Hc);
+  sheetLayout = L;
+  x.fillStyle = COL.paper; x.fillRect(0, 0, W, Hc);
+  x.font = `10px ${FONT}`; x.textBaseline = 'middle';
+  for (const it of L.items) {
+    const X = v => 12 + (it.ox + v) * s, Y = v => 16 + (it.oy + v) * s;
+    const hot = S.hoverPart === it.p.id;
+    plateShape(x, it.g.pts, it.p, X, Y, s, Math.max(2, S.w * s), hot ? COL.blue : COL.ink, COL.paper);
+    for (const hn of it.p.holes) { const p = it.g.pts[hn]; if (!p) continue; x.beginPath(); x.arc(X(p.x), Y(p.y), Math.max(1.2, S.d / 2 * s), 0, TAU); x.strokeStyle = COL.ink; x.lineWidth = 1; x.stroke(); }
+    // dims between holes
+    x.fillStyle = COL.ink; x.textAlign = 'center';
+    const hs = it.p.holes.filter(h => it.g.pts[h]);
+    const pairs = it.p.tri ? (it.p.foot ? [[it.p.tri[0], it.p.tri[1]], [it.p.tri[1], it.p.foot], [it.p.foot, it.p.tri[0]]] : [[hs[0], hs[1]], [hs[1], hs[2]], [hs[2], hs[0]]]) : it.p.id === 'frame' ? [['B','O'], ['B',"B'"]] : [[hs[0], hs[1]]];
+    for (const [a, b] of pairs) {
+      const pa = it.g.pts[a], pb = it.g.pts[b]; if (!pa || !pb) continue;
+      const d = Math.hypot(pb.x - pa.x, pb.y - pa.y);
+      const tx = X((pa.x + pb.x) / 2), ty = Y((pa.y + pb.y) / 2);
+      const t = fmt(d, d < 100 ? 1 : 0); const tw = x.measureText(t).width + 4;
+      x.fillStyle = COL.paper; x.fillRect(tx - tw / 2, ty - 6, tw, 12); x.fillStyle = COL.ink; x.fillText(t, tx, ty);
+    }
+    x.textAlign = 'left'; x.fillStyle = hot ? COL.blue : COL.ink;
+    x.fillText(it.p.id === 'frame' ? 'frame' : it.p.id, X(0), Y(0) - 8);
+  }
+}
+
+// ---------- BUILD tables + export ----------
+const PRESETS = {
+  paper: {sb: 1.5, t: 0.6, d: 3.4, w: 10, gap: 0.6, label: 'Card or chipboard, brass brads'},
+  print: {sb: 2.0, t: 3, d: 3.3, w: 9, gap: 0.6, label: 'FDM plates, M3 screws and nylock nuts'},
+  ply:   {sb: null, t: 12, d: 8.5, w: 45, gap: 2, label: 'Birch ply, M8 shoulder bolts'}
+};
+document.querySelectorAll('[data-preset]').forEach(b => b.onclick = () => {
+  const p = PRESETS[b.dataset.preset]; S.preset = b.dataset.preset;
+  S.sb = p.sb || S.sigma; S.t = p.t; S.d = p.d; S.w = p.w; S.gap = p.gap;
+  document.querySelectorAll('[data-preset]').forEach(q => q.setAttribute('aria-pressed', String(q === b)));
+  buildCompute(); renderMat();
+});
+function fastener(gripMM, span) {
+  if (S.preset === 'paper') return `brad, legs ≥ ${Math.ceil(gripMM + 4)} mm`;
+  const big = S.d > 6;
+  const nut = big ? 6.5 : 2.4, wash = (span) * (big ? 1.6 : .5);
+  const L = Math.ceil((gripMM + wash + nut + (big ? 3 : 1)) / (big ? 5 : 2)) * (big ? 5 : 2);
+  return `${big ? 'M8' : 'M3'} × ${L} mm`;
+}
+function renderMat() {
+  const m = document.getElementById('matKV');
+  m.innerHTML = kvRow('Model scale', `<span id="nSb"></span> mm per unit`, S.preset === 'ply' ? 'Full size: same scale as the rig.' : `Hind leg is ${fmt((40 - A.minY) * S.sb, 0)} mm tall at this scale.`) +
+    kvRow('Plate thickness', `<span id="nT"></span> mm`) +
+    kvRow('Hole diameter', `<span id="nD"></span> mm`) +
+    kvRow('Plate width', `<span id="nW"></span> mm`, S.w < 2.4 * S.d ? '<span class="flag warn">Less than 2.4 × the hole: the eye may tear out.</span>' : 'At least 2.4 × the hole, so the eye around each pin holds.') +
+    kvRow('Material', PRESETS[S.preset].label);
+  const after = () => { buildCompute(); renderMat(); };
+  bindNum('nSb', () => S.sb, v => { S.sb = v; }, .02, .5, 25, 2, () => {});
+  bindNum('nT', () => S.t, v => { S.t = v; }, .02, .2, 25, 1, () => {});
+  bindNum('nD', () => S.d, v => { S.d = v; }, .02, 1, 14, 1, () => {});
+  bindNum('nW', () => S.w, v => { S.w = v; }, .05, 3, 80, 1, () => {});
+  for (const id of ['nSb','nT','nD','nW']) { const el = document.getElementById(id); el.addEventListener('pointerup', after); el.addEventListener('keyup', e => { if (e.key.startsWith('Arrow')) after(); }); }
+}
+function renderBuildTables() {
+  const B = BUILD, pb = document.getElementById('pins'), plb = document.getElementById('plates');
+  pb.innerHTML = '';
+  for (const pn of B.pins) {
+    const span = pn.hi - pn.lo, grip = (span + 1) * S.t;
+    const sw = TIMEA ? TIMEA.swing[pn.id.replace("'", '')] : 0;
+    const tr = document.createElement('tr'); tr.dataset.pin = pn.id;
+    tr.innerHTML = `<td class="key">${pn.id}</td><td>${pn.lo + 1}–${pn.hi + 1}</td><td>${fmt(grip, 1)} mm</td><td>${pn.axle ? 'crankshaft through frame' : fastener(grip, span)}</td><td>${sw > 300 ? '<span class="flag warn">full</span>' : sw.toFixed(0) + '°'}</td>`;
+    tr.onmouseenter = () => { S.hoverPin = pn.id; syncPinRows(); };
+    tr.onmouseleave = () => { S.hoverPin = null; syncPinRows(); };
+    pb.appendChild(tr);
+  }
+  plb.innerHTML = '';
+  B.parts.forEach((p, i) => {
+    const g = partLocal(p); const tr = document.createElement('tr'); tr.dataset.part = p.id;
+    tr.innerHTML = `<td>${p.name}</td><td>${B.layers[i] + 1}</td><td>${g ? fmt(Math.max(g.w, g.h), 0) + ' mm' : '–'}</td><td>${p.qty}</td>`;
+    tr.onmouseenter = () => { S.hoverPart = p.id; plb.querySelectorAll('tr').forEach(r => r.classList.toggle('hot', r === tr)); };
+    tr.onmouseleave = () => { S.hoverPart = null; tr.classList.remove('hot'); };
+    plb.appendChild(tr);
+  });
+  const st = document.getElementById('buildStatus'), out = [];
+  const maxPin = Math.max(...B.pins.map(p => p.hi - p.lo + 1));
+  out.push(`${B.nL} layers, ${fmt(B.nL * S.t, 1)} mm deep per side. Longest pin passes ${maxPin} plates.`);
+  const confCount = B.conf.reduce((s, r) => s + r.reduce((a, v) => a + (v === 1 ? 1 : 0), 0), 0) / 2;
+  out.push(`${confCount} plate pairs sweep across each other during a turn and are kept in different layers.`);
+  if (B.jam) out.push('<span class="flag bad">The linkage jams for part of the turn; layers were checked only where it moves.</span>');
+  if (!B.solved) out.push('<span class="flag bad">No clean layer order found. Narrow the plates or change bar lengths.</span>');
+  if (B.capped) out.push('<span class="flag warn">Search stopped early; this layer order may not be the shortest.</span>');
+  st.innerHTML = out.map(t => `<span>${t}</span>`).join('');
+}
+function syncPinRows() { document.querySelectorAll('#pins tr').forEach(r => r.classList.toggle('hot', r.dataset.pin === S.hoverPin)); }
+function hullPts(points) {
+  const P = points.slice().sort((a, b) => a.x - b.x || a.y - b.y);
+  const cr = (o, a, b) => (a.x - o.x)*(b.y - o.y) - (a.y - o.y)*(b.x - o.x);
+  const lo = [], up = [];
+  for (const p of P) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (let i = P.length - 1; i >= 0; i--) { const p = P[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+  up.pop(); lo.pop(); return lo.concat(up);
+}
+function circlePts(c, r, n = 24) { const o = []; for (let i = 0; i < n; i++) o.push({x: c.x + r * Math.cos(TAU * i / n), y: c.y + r * Math.sin(TAU * i / n)}); return o; }
+let EXPORT = {svg: '', scad: ''};
+function makeExport() {
+  const L = layoutSheet(Math.max(200, layoutSheet(1e9).W / 2.4)), r = S.w / 2, hr = S.d / 2;
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${fmt(L.W, 1)}mm" height="${fmt(L.H, 1)}mm" viewBox="0 0 ${fmt(L.W, 2)} ${fmt(L.H, 2)}">\n<!-- Centaur Rig plates, one side. Cut 2 of each (mirror legs use the same plates turned over). Scale ${S.sb} mm/unit, holes ${S.d} mm. -->\n`;
+  let scad = `// Centaur Rig plates. Scale ${S.sb} mm per Jansen unit. Thickness ${S.t} mm, holes ${S.d} mm, plate width ${S.w} mm.\nt=${S.t}; hole=${S.d}; w=${S.w};\n`;
+  for (const it of L.items) {
+    const P = it.g.pts, pr = it.p;
+    const pieces = pr.tri ? [pr.tri] : pr.segs;
+    svg += `<g id="${pr.id}" transform="translate(${fmt(it.ox, 2)} ${fmt(it.oy, 2)})" fill="none" stroke="#000" stroke-width="0.1">\n`;
+    for (const piece of pieces) {
+      const pts = []; for (const n of piece) pts.push(...circlePts(P[n], r, 32));
+      const h = hullPts(pts);
+      svg += `  <path d="M${h.map(p => fmt(p.x, 2) + ' ' + fmt(p.y, 2)).join(' L')} Z"/>\n`;
+    }
+    for (const hn of pr.holes) svg += `  <circle cx="${fmt(P[hn].x, 2)}" cy="${fmt(P[hn].y, 2)}" r="${fmt(hr, 2)}"/>\n`;
+    svg += `</g>\n`;
+    scad += `\nmodule ${pr.id}() { linear_extrude(t) difference() {\n  union() {\n`;
+    for (const piece of pieces) scad += `    hull() { ${piece.map(n => `translate([${fmt(P[n].x, 2)},${fmt(P[n].y, 2)}]) circle(d=w,$fn=48);`).join(' ')} }\n`;
+    scad += `  }\n${pr.holes.map(n => `  translate([${fmt(P[n].x, 2)},${fmt(P[n].y, 2)}]) circle(d=hole,$fn=32);`).join('\n')}\n} }\n`;
+  }
+  svg += '</svg>';
+  scad += `\n// lay out\n${L.items.map(it => `translate([${fmt(it.ox, 1)},${fmt(it.oy, 1)},0]) ${it.p.id}();`).join('\n')}\n`;
+  EXPORT = {svg, scad};
+  document.getElementById('out').value = scad;
+}
+function copyBtn(id, key) {
+  const b = document.getElementById(id);
+  b.onclick = async () => {
+    const ta = document.getElementById('out'); ta.value = EXPORT[key];
+    try { await navigator.clipboard.writeText(EXPORT[key]); b.classList.add('copied'); b.textContent = 'Copied'; }
+    catch (e) { ta.focus(); ta.select(); b.textContent = 'Selected, press copy'; }
+    setTimeout(() => { b.classList.remove('copied'); b.textContent = key === 'svg' ? 'Copy SVG' : 'Copy OpenSCAD'; }, 1600);
+  };
+}
+copyBtn('cpSVG', 'svg'); copyBtn('cpSCAD', 'scad');
+
+// ---------- play ----------
+const playBtn = document.getElementById('play');
+function setPlaying(on) { S.playing = on; playBtn.innerHTML = on ? '<span class="icon-pause"></span><span>Pause</span>' : '<span class="icon-play"></span><span>Play</span>'; playBtn.setAttribute('aria-label', on ? 'Pause' : 'Play'); }
+playBtn.onclick = () => setPlaying(!S.playing);
+const slowBtn = document.getElementById('slow');
+slowBtn.onclick = () => { S.slow = !S.slow; slowBtn.setAttribute('aria-pressed', String(S.slow)); };
+// scrub the rig by dragging
+rigC.addEventListener('pointerdown', e => { rigC.setPointerCapture(e.pointerId); S.scrub = {x: e.clientX, U: S.U}; setPlaying(false); });
+rigC.addEventListener('pointermove', e => { if (!S.scrub) return; S.U = S.scrub.U - (e.clientX - S.scrub.x) / rigC.clientWidth * 1.2; });
+rigC.addEventListener('pointerup', () => { S.scrub = null; });
+
+let last = performance.now();
+const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (S.playing) S.U += dt * (S.cadence / 60) * (S.slow ? .25 : 1);
+  drawRig(); drawSteps(); drawLegView(); drawAngles(); drawStack();
+  if (S.sheetDirty !== BUILD) { drawSheet(); S.sheetDirty = BUILD; }
+  document.getElementById('clock').textContent = `stride ${Math.floor(S.U)} · ${((((S.U % 1) + 1) % 1) * 100).toFixed(0).padStart(2, '0')}% · crank ${(((hindPhi(S.U, 0) * 180 / Math.PI) % 360 + 360) % 360).toFixed(0)}°`;
+  requestAnimationFrame(frame);
+}
+window.addEventListener('resize', () => { S.sheetDirty = null; });
+HM = humanModel(S.height);
+A = analyze(S.G);
+S.sigma = +(HM.advance / (S.kTurns * A.advance)).toFixed(2);
+recomputeAll();
+// start with a phase that keeps the mirrored leg clear of your shin
+document.getElementById('bestPhase').click();
+renderMat();
+setPlaying(!reduce);
+requestAnimationFrame(frame);
+})();
+</script>
