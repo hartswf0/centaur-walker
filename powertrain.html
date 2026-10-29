@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Velocipede Powertrain</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#e9e7e2;--panel:#f7f6f2;--paper:#f4f2ec;--ink:#17150f;--ink-2:#5a554b;--ink-3:#8d877b;--rule:#d0cabe;--accent:#2f55c9;--accent-ink:#fff;--hot:#e2591b;--ok:#15803d;--warn:#c2410c;
+  --red:#c73b32;--orange:#f2622e;--green:#2f9a4a;--steel:#9aa1a8;--brass:#c9a640;--belt:#1b1a17;
+  --f-body:'IBM Plex Sans',system-ui,sans-serif;--f-mono:'IBM Plex Mono',ui-monospace,monospace;--f-disp:'Bodoni Moda',Georgia,serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f0e0c;--panel:#171512;--paper:#1d1a16;--ink:#ece7dd;--ink-2:#a9a293;--ink-3:#736c60;--rule:#2d2924;--accent:#8fa8ff;--accent-ink:#0d1014;--hot:#ff8a4c;--ok:#4ade80;--warn:#fb923c;--belt:#e8e2d6;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f0e0c;--panel:#171512;--paper:#1d1a16;--ink:#ece7dd;--ink-2:#a9a293;--ink-3:#736c60;--rule:#2d2924;--accent:#8fa8ff;--accent-ink:#0d1014;--hot:#ff8a4c;--ok:#4ade80;--warn:#fb923c;--belt:#e8e2d6;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-body);display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+header{display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid var(--rule);background:var(--panel);min-width:0}
+h1{font:500 17px var(--f-disp);letter-spacing:.14em;text-transform:uppercase;margin:0;white-space:nowrap}
+.status{font:12px var(--f-mono);color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.status b{color:var(--hot)}.status b.ok{color:var(--ok)}
+header a{font:500 12px var(--f-body);color:var(--accent);text-decoration:none;white-space:nowrap}
+main{display:grid;grid-template-columns:1fr 400px;min-height:0}
+.view{position:relative;background:var(--paper);min-height:0;overflow:hidden}
+.view canvas{position:absolute;inset:0;width:100%;height:100%}
+aside{background:var(--panel);border-left:1px solid var(--rule);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;gap:4px;padding:8px 10px;flex-shrink:0;border-bottom:1px solid var(--rule)}
+.tabs button{flex:1;height:34px;border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);border-radius:8px;font:600 13px var(--f-body);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.pane{overflow:auto;flex:1;padding:4px 12px 16px}.pane[hidden]{display:none}
+h2{font:600 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:14px 2px 6px}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.nums div{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:6px 8px}.nums b{display:block;font:600 15px var(--f-mono)}.nums small{font-size:11px;color:var(--ink-2)}
+.nums div.bad{border-color:var(--hot)}.nums div.bad b{color:var(--hot)}.nums div.good{border-color:var(--ok)}
+.row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:4px 2px;border-bottom:1px solid var(--rule);font-size:13px}
+.row label{color:var(--ink)}.row small{color:var(--ink-3);display:block;font-size:11px}
+.row input[type=number]{width:74px;font:600 13px var(--f-mono);padding:4px 6px;border:1px solid var(--rule);border-radius:6px;background:var(--paper);color:var(--ink);text-align:right}
+.row select{font:13px var(--f-body);padding:4px;border:1px solid var(--rule);border-radius:6px;background:var(--paper);color:var(--ink)}
+.sl{display:flex;align-items:center;gap:10px;padding:8px 2px}.sl input{flex:1;accent-color:var(--accent)}.sl span{font:600 12px var(--f-mono);min-width:96px;text-align:right}
+.msg{margin:6px 0;padding:8px 10px;border-radius:8px;border:1px solid var(--rule);background:var(--paper);font-size:13px}.msg.bad{border-color:var(--hot)}.msg.bad b{color:var(--hot)}.msg.good{border-color:var(--ok)}
+.belt{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:baseline;padding:6px 2px;border-bottom:1px solid var(--rule);font-size:13px}.belt b{font:600 13px var(--f-mono)}.belt small{color:var(--ink-3)}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:8px 4px;border-bottom:1px solid var(--rule);cursor:pointer;font-size:13px}.chk input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--ok);flex-shrink:0}.chk b{font-weight:600}.chk.on span{color:var(--ink-3)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--ink-2);margin:6px 2px}.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+svg text{font-family:var(--f-body)}
+button.act{height:32px;border:1px solid var(--accent);background:var(--paper);color:var(--accent);border-radius:8px;font:600 12px var(--f-body);cursor:pointer;padding:0 10px}
+p.note{font-size:12px;color:var(--ink-2);margin:6px 2px}
+@media (max-width:760px){main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}aside{border-left:0;border-top:1px solid var(--rule)}header{padding:7px 10px}h1{font-size:13px;letter-spacing:.08em}header a{display:none}.status{font-size:11px}}
+</style></head>
+<body>
+<header><h1>Powertrain</h1><div class="status" id="status"></div><a href="index.html">All pages</a></header>
+<main>
+  <section class="view"><canvas id="cv"></canvas></section>
+  <aside>
+    <div class="tabs" role="tablist"><button data-t="train" aria-selected="true">Train</button><button data-t="axle">Top axle</button><button data-t="today">Today</button></div>
+    <div class="pane" id="p-train">
+      <div class="sl"><span style="text-align:left;min-width:0">Bike speed</span><input type="range" id="spd" min="1" max="12" step=".5" value="4"><span id="spdv"></span></div>
+      <div class="nums" id="nums"></div>
+      <div id="verdict"></div>
+      <h2>Belts (cut lengths)</h2><div id="belts"></div>
+      <h2>Your measurements, inches</h2>
+      <p class="note">Filled in from your photos. Measure and overwrite: everything above updates. Positions are from the rear end of the scooter deck: x is how far behind it, y is how far above the deck top.</p>
+      <div id="inputs"></div>
+      <h2>Target</h2><div id="inputs2"></div>
+    </div>
+    <div class="pane" id="p-axle" hidden>
+      <h2>Why the threaded rod unscrews itself</h2>
+      <p class="note">A nut that touches something stationary while the rod turns gets dragged backward relative to the rod. On one side of each part that drag unscrews the nut; on the other side it screws it tighter and binds. A single nut on a turning threaded rod always walks. Two nuts tightened hard against each other (a jam pair) cannot turn relative to the rod, so they ride with it.</p>
+      <svg id="stack" viewBox="0 0 380 300" width="100%"></svg>
+      <div class="legend"><span><i style="background:var(--hot)"></i>turns with the rod: locked</span><span><i style="background:var(--steel)"></i>stationary: must not be clamped</span></div>
+      <h2>Build the top axle like this</h2>
+      <div id="axlesteps"></div>
+    </div>
+    <div class="pane" id="p-today" hidden>
+      <h2>In order, for today</h2>
+      <div id="todo"></div>
+      <h2>Home Depot list for today</h2>
+      <div id="shop"></div>
+    </div>
+  </aside>
+</main>
+<script>
+(()=>{
+const $=id=>document.getElementById(id),css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim(),TAU=Math.PI*2,IN=.0254;
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+// ---------- the rig, in inches, from the photos (x = behind the deck's rear end, y = above the deck top) ----------
+const DEF={
+  tyreD:27.5,           // 700×38c outside diameter
+  redD:3.9,             // red scooter wheel on the tyre
+  redBeltD:3.9,         // where belt 1 runs on the red side (the tread, as the paracord does now)
+  redX:4.5,redY:-5.6,   // red wheel axle: about 7 in down the steel strap from the deck end
+  contact:40,           // where the red wheel touches the tyre, degrees behind the top of the tyre
+  cageD:1.75,           // paint-roller cage where both belts run
+  cageX:4.0,cageY:-1.0, // roller cage axis
+  greenD:2.0,           // green cap on the threaded rod
+  greenX:-12,greenY:8,  // top axle
+  topD:2.0,             // pulley actually used on the top axle (green cap now; 11.9 for a 5-gallon lid)
+  discD:3.5,            // brass disc (crank)
+  cross1:0,cross2:0,    // belts crossed (figure-8)?
+  stretch:25,           // elastic belt stretch, percent
+  target:36.9,          // road travel per crank turn the legs need (0.937 m in the velocipede model)
+};
+const S=Object.assign({},DEF,store.get('pt-rig',{}));let spd=4,tab='train',t0=performance.now(),angle={tyre:0,red:0,cage:0,top:0};
+const FIELDS=[
+ ['redD','Red wheel, on the tyre','diameter of the wheel that touches the tyre'],
+ ['redBeltD','Belt 1 on the red side','diameter where the belt rides (tread = same as above)'],
+ ['redX','Red axle, x',''],['redY','Red axle, y','negative = below the deck'],
+ ['cageD','Roller cage','diameter where the belts ride'],
+ ['cageX','Cage axis, x',''],['cageY','Cage axis, y',''],
+ ['topD','Top pulley','green cap ≈ 2; 5-gallon bucket lid ≈ 11.9'],
+ ['greenX','Top axle, x','negative = in front of the deck end'],['greenY','Top axle, y','height above the deck top'],
+ ['discD','Brass disc (crank)',''],
+ ['cross1','Belt 1 crossed (0 / 1)','figure-8 reverses direction'],['cross2','Belt 2 crossed (0 / 1)',''],
+ ['stretch','Elastic belt stretch, %','shock cord: 20–30 %'],
+ ['contact','Contact on tyre, degrees','behind the top of the tyre']];
+function inputs(){const mk=(arr,el)=>{el.innerHTML=arr.map(([k,l,h])=>`<div class="row"><label for="i-${k}">${l}${h?`<small>${h}</small>`:''}</label><input type="number" id="i-${k}" step="${['cross1','cross2'].includes(k)?1:.05}" value="${S[k]}"></div>`).join('');
+    el.querySelectorAll('input').forEach(inp=>inp.oninput=()=>{const k=inp.id.slice(2);const v=parseFloat(inp.value);if(!isNaN(v)){S[k]=v;store.set('pt-rig',S);}});};
+  mk(FIELDS,$('inputs'));mk([['target','Road per crank turn, in.','legs walking at road pace: 36.9 in. (0.937 m)']],$('inputs2'));
+  $('inputs2').insertAdjacentHTML('beforeend','<div style="display:flex;gap:8px;margin-top:8px"><button class="act" id="lid">Try: 5-gallon lid, belt 2 crossed</button><button class="act" id="reset">Reset to photo values</button></div>');
+  $('lid').onclick=()=>{S.topD=11.9;S.cross2=1;store.set('pt-rig',S);inputs();};$('reset').onclick=()=>{Object.assign(S,DEF);store.set('pt-rig',S);inputs();};}
+// ---------- the mathematics ----------
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function beltLen(C,D1,D2,crossed){return 2*C+Math.PI*(D1+D2)/2+(crossed?(D1+D2)**2:(D1-D2)**2)/(4*C);}
+function wrap(C,Dsmall,Dbig,crossed){const a=Math.asin(Math.min(1,(crossed?(Dsmall+Dbig):(Dbig-Dsmall))/(2*C)));return crossed?Math.PI+2*a:Math.PI-2*a;}
+function solve(){const v=spd*0.44704; // m/s
+  const red={x:S.redX,y:S.redY},cage={x:S.cageX,y:S.cageY},top={x:S.greenX,y:S.greenY};
+  const C1=dist(red,cage),C2=dist(cage,top);
+  // road per turn of each part
+  const roadRed=Math.PI*S.redD;                                  // in. of road per red-wheel turn
+  const cagePerRed=S.redBeltD/S.cageD, topPerCage=S.cageD/S.topD;
+  const topPerRed=cagePerRed*topPerCage, roadPerCrank=roadRed/topPerRed; // in.
+  const rpm=x=>v/(x*IN)*60;
+  const dirTyre=-1,dirRed=1,dirCage=dirRed*(S.cross1?-1:1),dirTop=dirCage*(S.cross2?-1:1);
+  const L1=beltLen(C1,S.redBeltD,S.cageD,!!S.cross1),L2=beltLen(C2,S.cageD,S.topD,!!S.cross2);
+  const w1=wrap(C1,Math.min(S.redBeltD,S.cageD),Math.max(S.redBeltD,S.cageD),!!S.cross1),w2=wrap(C2,Math.min(S.cageD,S.topD),Math.max(S.cageD,S.topD),!!S.cross2);
+  const needTop=S.target/(roadRed/(cagePerRed*S.cageD)); // top pulley diameter that hits the target
+  const clear=S.greenY-S.topD/2;                             // top pulley to deck
+  // forces: legs need ~3 N·m peak at the crank (engineering page); belt pull on the top pulley and the push at the tyre
+  const tau=3.0,beltT=tau/(S.topD/2*IN),tyreF=tau*TAU/(roadPerCrank*IN);
+  return {v,C1,C2,roadPerCrank,rpmRed:rpm(roadRed),rpmCage:rpm(roadRed/cagePerRed),rpmTop:rpm(roadPerCrank),hz:v/(roadPerCrank*IN),dirTyre,dirRed,dirCage,dirTop,L1,L2,w1,w2,needTop,clear,beltT,tyreF,factor:S.target/roadPerCrank,red,cage,top};}
+// ---------- panel ----------
+const fmt=(x,d=1)=>x.toFixed(d);
+function frac(x){let w=Math.floor(x+1e-9),r=Math.round((x-w)*8);if(r===8){w++;r=0;}if(!r)return `${w}`;let n=r,d=8;while(n%2===0){n/=2;d/=2;}return (w?w+'-':'')+n+'/'+d;}
+let lastSig='';
+function panel(R){const sig=JSON.stringify([S,spd]);if(sig===lastSig)return;lastSig=sig;
+  $('spdv').textContent=`${fmt(spd)} mph · ${fmt(spd*1.609)} km/h`;
+  const dirOK=R.dirTop===R.dirTyre,fast=R.factor>1.15,slow=R.factor<.87,hzBad=R.hz>2.2;
+  $('nums').innerHTML=`<div class="${fast||slow?'bad':'good'}"><b>${fmt(R.roadPerCrank)} in.</b><small>road per crank turn (need ${fmt(S.target)})</small></div><div class="${hzBad?'bad':'good'}"><b>${fmt(R.rpmTop,0)}</b><small>crank rpm at ${fmt(spd)} mph</small></div><div class="${dirOK?'good':'bad'}"><b>${dirOK?'same':'reverse'}</b><small>crank vs wheel direction</small></div>
+    <div><b>${fmt(R.rpmRed,0)}</b><small>red wheel rpm</small></div><div><b>${fmt(R.rpmCage,0)}</b><small>roller cage rpm</small></div><div><b>${fmt(R.hz,2)} Hz</b><small>leg cycles per second</small></div>`;
+  const msgs=[];
+  if(fast)msgs.push(`<div class="msg bad"><b>The crank turns ${fmt(R.factor,1)} × too fast.</b> Each crank turn covers ${fmt(R.roadPerCrank)} in. of road; the legs need ${fmt(S.target)} in. With all the small pulleys about the same size, road per crank turn is π × the top pulley. A top pulley of <b>${fmt(R.needTop,1)} in.</b> fixes it: a 5-gallon bucket lid is 11.9 in.</div>`);
+  if(slow)msgs.push(`<div class="msg bad"><b>The crank turns ${fmt(1/R.factor,1)} × too slow.</b> Use a ${fmt(R.needTop,1)} in. top pulley.</div>`);
+  if(!fast&&!slow)msgs.push(`<div class="msg good"><b>Ratio within ${fmt(Math.abs(R.factor-1)*100,0)} %</b> of what the legs need: the hooves move at road speed while they are down.</div>`);
+  if(!dirOK)msgs.push(`<div class="msg bad"><b>The crank turns backwards.</b> The red wheel reverses the tyre’s direction, and open belts keep it reversed, so the legs would walk backwards. Cross one belt in a figure-8 (belt 2 is the easier one).</div>`);
+  if(hzBad)msgs.push(`<div class="msg bad"><b>${fmt(R.hz,1)} leg cycles a second.</b> The linkage was checked to about 2.2 a second. At this ratio keep below ${fmt(2.2*R.roadPerCrank*IN/0.44704,1)} mph, or lift the red wheel off the tyre.</div>`);
+  if(R.clear<0.5)msgs.push(`<div class="msg bad"><b>The top pulley hits the deck</b> (${fmt(R.clear,1)} in. clearance). Raise the top axle or use a smaller pulley plus a bigger reduction elsewhere.</div>`);
+  if(R.w1<2.6||R.w2<2.6)msgs.push(`<div class="msg"><b>Short wrap on a small pulley</b> (${fmt(Math.min(R.w1,R.w2)*180/Math.PI,0)}°). Belts grip less below about 150°; crossing that belt raises the wrap above 180°.</div>`);
+  msgs.push(`<div class="msg">Driving the legs takes about 3 N·m at the crank (engineering page): ${fmt(R.beltT,0)} N of belt pull on a ${fmt(S.topD,1)} in. top pulley, and ${fmt(R.tyreF,0)} N of push at the tyre. Press the red wheel onto the tyre with at least ${fmt(R.tyreF/0.7/9.81,1)} kg (a bungee on the strap arm) so it does not slip.</div>`);
+  $('verdict').innerHTML=msgs.join('');
+  const b=(n,L,C,D1,D2,cr,w)=>`<div class="belt"><span>${n}</span><span>${fmt(D1,2)} → ${fmt(D2,2)} in. pulleys, ${fmt(C,1)} in. apart${cr?', crossed':''}<br><small>path ${fmt(L,1)} in. · wrap on the small pulley ${fmt(w*180/Math.PI,0)}°</small></span><b>${frac(L/(1+S.stretch/100))} in.</b></div>`;
+  $('belts').innerHTML=b('Belt 1',R.L1,R.C1,S.redBeltD,S.cageD,S.cross1,R.w1)+b('Belt 2',R.L2,R.C2,S.cageD,S.topD,S.cross2,R.w2)+`<p class="note">Cut length is the path shortened by ${S.stretch} % so the elastic cord stays tight. Join the ends: overlap 1 in., whip tightly with waxed thread or dental floss, then a drop of super glue. A knot works too but thumps over the small pulleys.</p>`;
+  const st=$('status'),bad=fast||slow||!dirOK;st.innerHTML=`${fmt(R.roadPerCrank)} in. per crank turn · need ${fmt(S.target)} · ${bad?'<b>'+(fast?fmt(R.factor,1)+'× too fast':slow?'too slow':'')+(!dirOK?((fast||slow)?' · ':'')+'turns backwards':'')+'</b>':'<b class=ok>ratio and direction OK</b>'}`;}
+// ---------- side view ----------
+const cv=$('cv'),g=cv.getContext('2d');
+function tangents(c1,r1,c2,r2,crossed){const dx=c2.x-c1.x,dy=c2.y-c1.y,d=Math.hypot(dx,dy),a=Math.atan2(dy,dx);const k=crossed?(r1+r2)/d:(r1-r2)/d;if(Math.abs(k)>=1)return null;const b=Math.acos(k);
+  const p=(c,r,ang)=>({x:c.x+r*Math.cos(ang),y:c.y+r*Math.sin(ang)});
+  return [[p(c1,r1,a+b),crossed?p(c2,r2,a+b+Math.PI):p(c2,r2,a+b)],[p(c1,r1,a-b),crossed?p(c2,r2,a-b+Math.PI):p(c2,r2,a-b)],a,b];}
+function draw(R,now){const dpr=Math.min(2,devicePixelRatio||1),W=cv.clientWidth,H=cv.clientHeight;if(cv.width!==Math.round(W*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
+  const ink=css('--ink'),ink2=css('--ink-2'),ink3=css('--ink-3'),rule=css('--rule'),hot=css('--hot'),acc=css('--accent'),mono=css('--f-mono'),body=css('--f-body');
+  // tyre centre from the red wheel contact
+  const ca=S.contact*Math.PI/180,Rt=S.tyreD/2,rr=S.redD/2;const tc={x:S.redX-(Rt+rr)*Math.sin(ca),y:S.redY-(Rt+rr)*Math.cos(ca)};
+  // frame: world inches -> screen. front of the bike to the right (screen x = -x)
+  const xs=[S.greenX-Math.max(S.discD,S.topD)/2-(W>560?14:4),S.redX+rr+1,S.cageX+S.cageD/2+(W>560?13:6),tc.x+Rt*.9,-24],ys=[S.greenY+S.topD/2+1.5,tc.y+Rt*.55,S.redY-rr-1];
+  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const pad=24,top=56,sc=Math.min((W-2*pad)/(maxX-minX),(H-top-pad)/(maxY-minY));const ox=W/2+((maxX+minX)/2)*sc,oy=top+(maxY)*sc+((H-top-pad)-(maxY-minY)*sc)/2;
+  const P=p=>({x:ox-p.x*sc,y:oy-p.y*sc});
+  const circle=(c,r,fill,stroke,lw=1.5)=>{const q=P(c);g.beginPath();g.arc(q.x,q.y,r*sc,0,TAU);if(fill){g.fillStyle=fill;g.fill();}if(stroke){g.strokeStyle=stroke;g.lineWidth=lw;g.stroke();}};
+  const line=(a,b,col,lw=2)=>{const p=P(a),q=P(b);g.strokeStyle=col;g.lineWidth=lw;g.beginPath();g.moveTo(p.x,p.y);g.lineTo(q.x,q.y);g.stroke();};
+  // tyre (clip to the visible arc)
+  g.save();g.beginPath();g.rect(0,0,W,H);g.clip();circle(tc,Rt,null,css('--ink'),Math.max(3,.75*sc));circle(tc,Rt-1.3,null,ink3,1);
+  for(let i=0;i<10;i++){const a=angle.tyre+i/10*TAU,p=P({x:tc.x+Math.cos(a)*(Rt-1.6),y:tc.y+Math.sin(a)*(Rt-1.6)}),q=P(tc);g.strokeStyle=rule;g.lineWidth=1;g.beginPath();g.moveTo(q.x,q.y);g.lineTo(p.x,p.y);g.stroke();}
+  {const a=angle.tyre,p=P({x:tc.x+Math.cos(a)*(Rt-.4),y:tc.y+Math.sin(a)*(Rt-.4)});g.fillStyle=hot;g.beginPath();g.arc(p.x,p.y,4,0,TAU);g.fill();}
+  g.restore();
+  // deck (scooter deck on the rack) and rack
+  {const a=P({x:-24,y:0}),b=P({x:.4,y:0});g.fillStyle=css('--steel');g.globalAlpha=.55;g.fillRect(a.x>b.x?b.x:a.x,a.y,Math.abs(a.x-b.x),Math.max(3,.6*sc));g.globalAlpha=1;g.strokeStyle=ink3;g.lineWidth=1;g.strokeRect(Math.min(a.x,b.x),a.y,Math.abs(a.x-b.x),Math.max(3,.6*sc));
+    g.fillStyle=ink3;g.font=`10px ${mono}`;g.textAlign='left';g.fillText('scooter deck on the rack',Math.min(a.x,b.x)+4,a.y-5);}
+  // strap arm holding the red wheels
+  line({x:0,y:0},{x:S.redX+(S.redX)*.25,y:S.redY+S.redY*.25},css('--steel'),Math.max(3,.5*sc));
+  // A-frame straps
+  line({x:S.greenX-4,y:0},{x:S.greenX,y:S.greenY},css('--steel'),Math.max(3,.45*sc));line({x:S.greenX+5,y:0},{x:S.greenX,y:S.greenY},css('--steel'),Math.max(3,.45*sc));
+  // paint roller frame wire
+  line({x:-1,y:.3},{x:S.cageX,y:S.cageY},ink3,2);
+  // belts
+  const belts=[[R.red,S.redBeltD/2,R.cage,S.cageD/2,!!S.cross1],[R.cage,S.cageD/2,R.top,S.topD/2,!!S.cross2]];
+  const beltCol=css('--belt');
+  for(const [c1,r1,c2,r2,cr] of belts){const T=tangents(c1,r1,c2,r2,cr);if(!T)continue;g.strokeStyle=beltCol;g.lineWidth=2.6;for(const [a,b] of [T[0],T[1]]){const p=P(a),q=P(b);g.beginPath();g.moveTo(p.x,p.y);g.lineTo(q.x,q.y);g.stroke();}
+    const arc=(c,r,a1,a2,through)=>{const q=P(c);// screen angles are mirrored in x and y
+      const s=t=>Math.atan2(-Math.sin(t),-Math.cos(t));let A=s(a1),B=s(a2),M=s(through);const norm=x=>((x%TAU)+TAU)%TAU;const inArc=(st,en,m)=>norm(m-st)<=norm(en-st);if(!inArc(A,B,M)){const t=A;A=B;B=t;}g.beginPath();g.arc(q.x,q.y,r*sc,A,B);g.stroke();};
+    const a=T[2],b=T[3];arc(c1,r1,a+b,a-b,a+Math.PI);arc(c2,r2,cr?a+b+Math.PI:a+b,cr?a-b+Math.PI:a-b,a);}
+  // pulleys
+  const spokes=(c,r,ang,col,n=3)=>{const q=P(c);for(let i=0;i<n;i++){const a=ang+i/n*TAU;g.strokeStyle=col;g.lineWidth=2;g.beginPath();g.moveTo(q.x,q.y);g.lineTo(q.x-Math.cos(a)*r*sc*.85,q.y-Math.sin(a)*r*sc*.85);g.stroke();}};
+  circle(R.red,S.redD/2,css('--red'),ink,1.5);circle(R.red,S.redD/2*.55,css('--paper'),ink3,1);spokes(R.red,S.redD/2*.55,angle.red,ink3,5);
+  circle(R.cage,S.cageD/2+.15,css('--orange'),ink,1.2);spokes(R.cage,S.cageD/2,angle.cage,css('--paper'),4);
+  if(S.topD>3){circle(R.top,S.topD/2,'rgba(242,242,236,.35)',ink,1.5);circle(R.top,S.topD/2-.35,null,ink3,1);spokes(R.top,S.topD/2,angle.top,ink3,6);}
+  circle(R.top,Math.min(S.greenD,S.topD>3?S.greenD:S.topD)/2,css('--green'),ink,1.2);spokes(R.top,S.greenD/2,angle.top,css('--paper'),3);
+  g.setLineDash([4,3]);circle(R.top,S.discD/2,null,css('--brass'),1.5);g.setLineDash([]);
+  // labels
+  const lab=(c,dx,dy,t,col)=>{const q=P(c);g.font=`600 11px ${body}`;g.fillStyle=col||ink;const tw=g.measureText(t).width;if(dx>0&&q.x+dx+tw>W-4)dx=-dx;if(dx<0&&q.x+dx-tw<4)dx=-dx;g.textAlign=dx<0?'right':'left';g.fillText(t,q.x+dx,q.y+dy);g.textAlign='left';};
+  lab(R.red,(S.redD/2)*sc+8,4,`red wheels ${frac(S.redD)} in. · ${R.rpmRed.toFixed(0)} rpm`);
+  lab(R.cage,-(S.cageD/2)*sc-8,-6,`roller cage ${frac(S.cageD)} in. · ${R.rpmCage.toFixed(0)} rpm`);
+  lab(R.top,(Math.max(S.topD,S.discD)/2)*sc+8,-4,`${S.topD>3?'top pulley '+frac(S.topD)+' in.':'green cap '+frac(S.topD)+' in.'} · crank ${R.rpmTop.toFixed(0)} rpm`,R.dirTop===R.dirTyre?ink:hot);
+  lab(R.top,(Math.max(S.topD,S.discD)/2)*sc+8,12,`brass disc ${frac(S.discD)} in. (dashed, outboard)`,ink3);
+  // direction arrows
+  const rot=(c,r,dir,col)=>{const q=P(c),rad=r*sc+7,a0=-Math.PI*.8,a1=-Math.PI*.2;g.strokeStyle=col;g.lineWidth=2;g.beginPath();g.arc(q.x,q.y,rad,a0,a1,false);g.stroke();
+    // screen arc runs clockwise on screen from a0 to a1; physical dir: -1 = clockwise as drawn (front right)
+    const end=dir<0?a1:a0,tang=dir<0?end+Math.PI/2:end-Math.PI/2,ex=q.x+rad*Math.cos(end),ey=q.y+rad*Math.sin(end);g.fillStyle=col;g.beginPath();g.moveTo(ex+Math.cos(tang)*7,ey+Math.sin(tang)*7);g.lineTo(ex+Math.cos(tang+2.5)*7,ey+Math.sin(tang+2.5)*7);g.lineTo(ex+Math.cos(tang-2.5)*7,ey+Math.sin(tang-2.5)*7);g.closePath();g.fill();};
+  // screen clockwise == physical clockwise when viewed with the front to the right
+  rot(R.red,S.redD/2,R.dirRed,ink2);rot(R.cage,S.cageD/2,R.dirCage,ink2);rot(R.top,Math.max(S.topD,S.discD)/2,R.dirTop,R.dirTop===R.dirTyre?css('--ok'):hot);
+  {const q=P({x:tc.x+Rt*.62,y:tc.y+Rt*.62});g.font=`600 11px ${body}`;g.fillStyle=ink2;g.fillText('rear tyre 700×38',q.x-40,q.y);}
+  // dimensions between axles
+  const dim=(a,b,t)=>{const p=P(a),q=P(b);g.strokeStyle=acc;g.setLineDash([3,3]);g.lineWidth=1;g.beginPath();g.moveTo(p.x,p.y);g.lineTo(q.x,q.y);g.stroke();g.setLineDash([]);const m={x:(p.x+q.x)/2,y:(p.y+q.y)/2};g.font=`600 10px ${mono}`;const tw=g.measureText(t).width;g.fillStyle=css('--paper');g.fillRect(m.x-tw/2-3,m.y-8,tw+6,14);g.fillStyle=acc;g.textAlign='center';g.fillText(t,m.x,m.y+3);g.textAlign='left';};
+  dim(R.red,R.cage,`${R.C1.toFixed(1)} in.`);dim(R.cage,R.top,`${R.C2.toFixed(1)} in.`);
+  // heading
+  g.fillStyle=ink;g.font=`500 ${W>560?24:18}px ${css('--f-disp')}`;g.fillText('TYRE → RED → CAGE → TOP AXLE',16,32);g.font=`12px ${body}`;g.fillStyle=ink2;g.fillText(`side view from the right, front of the bike to the right · ${spd.toFixed(1)} mph`,17,49);}
+// ---------- top axle stack diagram ----------
+function stack(){const s=$('stack'),hot=css('--hot'),steel=css('--steel'),ink=css('--ink'),ink2=css('--ink-2'),green=css('--green'),brass=css('--brass');
+  const y=150,parts=[];let x=40;const add=(w,h,col,label,kind)=>{parts.push({x,w,h,col,label,kind});x+=w;};
+  const jam=l=>{add(7,26,hot,'','turn');add(7,26,hot,l,'turn');};
+  const strap=()=>{add(4,38,steel,'','stat');add(7,70,steel,'strap + sleeve','stat');add(4,38,steel,'','stat');};
+  add(8,96,brass,'brass disc','turn');jam('jam pair');add(10,0,null);strap();add(4,0,null);jam('collar');add(34,0,null);
+  jam('jam pair');add(4,48,hot,'','turn');add(52,62,green,'green cap','turn');add(4,48,hot,'','turn');jam('jam pair');add(34,0,null);
+  jam('collar');add(4,0,null);strap();add(4,0,null);jam('collar');
+  let h=`<line x1="4" y1="${y}" x2="${x+24}" y2="${y}" stroke="${ink}" stroke-width="5" stroke-dasharray="2 2"/><text x="${x+8}" y="${y-8}" font-size="11" fill="${ink2}">rod</text>`;
+  let li=0;for(const p of parts){if(!p.col)continue;h+=`<rect x="${p.x}" y="${y-p.h/2}" width="${p.w}" height="${p.h}" rx="1.5" fill="${p.col}" stroke="${ink}" stroke-width=".8"/>`;
+    if(p.label){const up=li%2===0,lvl=Math.floor(li/2)%2,ty=up?y-60-lvl*22:y+66+lvl*22;const cx=p.x+p.w/2;h+=`<line x1="${cx}" y1="${up?y-p.h/2-2:y+p.h/2+2}" x2="${cx}" y2="${up?ty+4:ty-12}" stroke="${ink2}" stroke-width=".7"/><text x="${cx}" y="${ty}" font-size="11" text-anchor="middle" fill="${ink}">${p.label}</text>`;li++;}}
+  h+=`<text x="16" y="20" font-size="11" fill="${ink2}">outboard</text><text x="${x}" y="20" font-size="11" text-anchor="end" fill="${ink2}">inboard</text>`;
+  h+=`<text x="16" y="290" font-size="11" fill="${ink2}">Each strap: washer, strap, washer, then a collar a paper-thickness away.</text>`;
+  s.setAttribute('viewBox',`0 0 ${x+40} 300`);s.innerHTML=h;}
+const AXLE=[
+ '<b>Every part that turns gets a jam pair on each side.</b> Fender washer, nut, then a second nut. Hold the first nut with one wrench and tighten the second against it hard. Blue thread locker (Loctite 242) on the threads under each pair.',
+ '<b>The green cap and the brass disc are clamped between two jam pairs</b> with fender washers, so they cannot spin on the rod. If the cap is soft rubber, glue it to its washers with construction adhesive or super glue as well.',
+ '<b>Nothing clamps a strap.</b> Each strap gets a plain washer on each side, then a jam-pair collar outside it, leaving a paper-thickness gap. The collars stop the rod walking sideways; the strap only carries the load.',
+ '<b>Sleeve the rod where it passes a strap.</b> Threads chewing on a sheet-metal hole make the slop. Slide a 1/2 in. long piece of vinyl tubing (ID = rod size) over the rod at each strap, or wrap the threads there with 3–4 turns of electrical tape until they fill the hole. Grease it.',
+ '<b>Make the strap holes the same height.</b> Sight along the rod: if it is not square to both straps it binds once per turn. Shim a strap foot with washers until the rod spins with a flick of the finger.',
+ '<b>Check:</b> spin the rod by hand both ways twenty times. No nut moves (mark each with a paint pen across nut and rod), and the end play stays under 1/32 in.'];
+const TODO=[
+ ['Mark every nut on the top rod with a paint pen line across nut and thread.','You will see at a glance which one walks.'],
+ ['Rebuild the top axle as in the Top axle tab: jam pairs, thread locker, collars, sleeves.','This is what stops it coming apart.'],
+ ['Tie the two red scooter wheels together.','Each has its own bearings, so they spin independently on the bolt. If the tyre turns one and the belt rides on the other, nothing is driven. Zip-tie or bolt through the hub spokes of both so they turn as one.'],
+ ['Make grooves for the belts.','On the roller cage, wrap 2 in. of electrical tape where each belt runs so the cord cannot drop between the wires, with a zip tie each side as a flange. Same on the green cap or lid: two zip ties make a channel.'],
+ ['Fix the ratio before connecting the legs.','Enter your measured diameters in the Train tab. With the photo values the crank turns about 6 × too fast; a 5-gallon bucket lid on the top axle as the big pulley brings it to the target.'],
+ ['Fix the direction.','The red wheel reverses the tyre. Cross belt 2 in a figure-8 so the crank turns the same way as the bike wheel.'],
+ ['Cut the belts from 1/4 in. shock cord to the lengths in the Train tab, and join them.','Overlap 1 in., whip with waxed thread or floss, super glue. Elastic cord keeps itself tight and slips before anything breaks.'],
+ ['Press the red wheels onto the tyre with a bungee on the strap arm.','About 3 kg of pull, shown in the Train tab.'],
+ ['Test with the bike on a stand or upside down.','Turn the pedals by hand: count crank turns for 10 wheel turns. It should be about 10 × 86.4 / 36.9 = 23 crank turns. Then ride slowly before the legs go on.']];
+const SHOP=[['1/4 in. bungee shock cord, 10 ft','belts'],['Blue thread locker (Loctite 242)','top axle'],['Nuts to match the rod: 12 more, and 6 fender washers','jam pairs'],['Clear vinyl tubing, ID = rod size, 1 ft','strap sleeves'],['5-gallon bucket lid (or a whole bucket for its lid)','top pulley'],['Zip ties, 8 in.','belt flanges, red wheels'],['Electrical tape','belt tracks'],['Super glue','belt joints']];
+function lists(){const done=store.get('pt-todo',{});$('todo').innerHTML=TODO.map(([a,b],i)=>`<label class="chk${done[i]?' on':''}"><input type="checkbox" data-i="${i}" ${done[i]?'checked':''}><span><b>${i+1}. ${a}</b><br>${b}</span></label>`).join('');
+  $('todo').querySelectorAll('input').forEach(c=>c.onchange=()=>{done[c.dataset.i]=c.checked;store.set('pt-todo',done);c.closest('.chk').classList.toggle('on',c.checked);});
+  $('shop').innerHTML=SHOP.map(([a,b])=>`<div class="belt"><span>·</span><span>${a}</span><small>${b}</small></div>`).join('');
+  $('axlesteps').innerHTML=AXLE.map((t,i)=>`<div class="msg">${i+1}. ${t}</div>`).join('');}
+// ---------- UI ----------
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;document.querySelectorAll('.tabs button').forEach(q=>q.setAttribute('aria-selected',q===b));['train','axle','today'].forEach(k=>$('p-'+k).hidden=k!==tab);if(tab==='axle')stack();});
+$('spd').oninput=e=>{spd=+e.target.value;};
+inputs();lists();stack();
+let last=performance.now();
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;const R=solve();panel(R);
+  // animate at a tenth of real speed so the parts can be followed
+  const k=.1,w=x=>R.v/(x*IN/2)*k;// physical angles here run clockwise on screen as they increase, so a clockwise part (dir -1) adds
+  angle.tyre+=w(S.tyreD)*dt;angle.red-=w(S.redD)*dt*R.dirRed;angle.cage-=w(S.redD)*(S.redBeltD/S.cageD)*dt*R.dirCage;angle.top-=w(S.redD)*(S.redBeltD/S.cageD)*(S.cageD/S.topD)*dt*R.dirTop;
+  draw(R,now);requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',stack);
+})();
+</script>
+</body></html>
