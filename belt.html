@@ -45,6 +45,10 @@ input[type=number]{width:64px;font:600 12.5px var(--f-mono);padding:3px 5px;bord
 details{margin:8px 0}summary{cursor:pointer;font:600 12px var(--f-body);color:var(--ink-2)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:12px;color:var(--ink-2)}.grid2 label{display:flex;justify-content:space-between;align-items:center;gap:6px}
 p.note{font-size:12px;color:var(--ink-2);margin:6px 2px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0}.tbl td,.tbl th{border-bottom:1px solid var(--rule);padding:4px 3px;text-align:left;vertical-align:top}.tbl th{font:600 10.5px var(--f-mono);color:var(--ink-3)}
+.stepnav{display:flex;gap:8px;align-items:center;margin:6px 0}.stepnav .st{flex:1}.stepnav small{display:block;font:500 11px var(--f-mono);color:var(--ink-3)}
+.card ol{padding-left:18px;margin:4px 0}.card li{margin:4px 0;font-size:13px}
+.slist button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--rule);background:none;padding:6px 2px;font:13px var(--f-body);color:var(--ink-2);cursor:pointer}.slist button[aria-current="true"]{color:var(--ink);font-weight:700}
 .k{display:inline-block;width:14px;height:4px;border-radius:2px;vertical-align:middle;margin:0 3px 0 0}
 @media (max-width:760px){main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}aside{border-left:0;border-top:1px solid var(--rule)}header{padding:7px 10px}h1{font-size:13px;letter-spacing:.08em}header a{display:none}.status{font-size:11px}.seg button,.btn{height:30px;font-size:12px;padding:0 8px}}
 </style></head>
@@ -73,13 +77,15 @@ const f1=x=>Math.abs(x)<10?x.toFixed(1):x.toFixed(0);
 // inches; x forward from the deck's rear end, y up from the deck top, z across the bike (+ = rider's right)
 const BUILT={red:{x:1,y:-9},cage:{x:-3,y:-1},rod:{x:14.5,y:7.9},tyreD:27.5,tread:3.74,groove:3.2,gap:5,cord:4,
   capD:2.25,wireD:1.75,tapeD:1.9,capL:-4.4,capR:5.9,greenD:2.0,greenZ:.3,brassD:3.5,brassZ:-12,lidD:11.3,lidZ:1,
-  b1:'capL',b2cage:'wires',b2z:1,b2top:'green',cross1:false,cross2:false,T01:10,T02:10,push:15,
+  b1:'capL',b2cage:'wires',b2z:1,b2top:'green',cross1:false,cross2:false,T01:10,T02:10,push:15,cord1:'para',cord2:'para',
   mph:3,hoof:'pine',load:'legs',Tman:1,mu:{groove:.6,cap:.2,wires:.15,tape:.4,green:.2,brass:.15,lid:.3,tyre:.6}};
-const PRESETS={built:{},inline:{b1:'tape1',b2cage:'tape2',b2z:1,cross2:true},lid:{b1:'tape1',b2cage:'tape2',b2z:1,b2top:'lid',cross2:true,hoof:'coro',T01:20,T02:22,push:30}};
+const PRESETS={built:{},inline:{b1:'tape1',b2cage:'tape2',b2z:1,cross2:true,cord1:'shock8',cord2:'shock4'},lid:{b1:'tape1',b2cage:'tape2',b2z:1,b2top:'lid',cross2:true,hoof:'coro',T01:20,T02:22,push:30,cord1:'shock8',cord2:'shock4'}};
 const clone=o=>JSON.parse(JSON.stringify(o));
 let P=Object.assign(clone(BUILT),store.get('beltlab',{}));P.mu=Object.assign(clone(BUILT.mu),P.mu||{});
 let preset=store.get('beltlab-preset','built');
 const save=()=>{store.set('beltlab',P);store.set('beltlab-preset',preset);};
+// cords you can buy at Home Depot: diameter in mm, and stretch stiffness EA in N (pull that would double its length); EA values are estimates, measure yours
+const CORDS={para:{n:'Paracord 550 (as built)',d:4,EA:8000,join:'para'},shock8:{n:'1/8 in. shock cord',d:3.2,EA:60,join:'shock'},shock4:{n:'1/4 in. shock cord',d:6.35,EA:150,join:'shock'}};
 const LEGS={pine:{tg:.51,kd:.0943,n:'Pine block hooves'},coro:{tg:.36,kd:.0338,n:'Coroplast box hooves'}};
 // where each belt touches the cage, by choice
 const CAGE1={capL:{n:'Left end cap (as built)',z:()=>P.capL,d:()=>P.capD,s:'cap'},tape1:{n:'Tape track on the centre line',z:()=>0,d:()=>P.tapeD,s:'tape'},wires1:{n:'Bare wires on the centre line',z:()=>0,d:()=>P.wireD,s:'wires'},capR:{n:'Right end cap',z:()=>P.capR,d:()=>P.capD,s:'cap'}};
@@ -118,6 +124,7 @@ function solve(){const tc=tyreC(),c1=CAGE1[P.b1],c2=CAGE2[P.b2cage],tp=TOPS[P.b2
   const OB=[{n:'deck',x0:2.6,x1:17.3,y0:-1,y1:0,z0:-1.8,z1:1.8},{n:'left prong of the deck',x0:0,x1:2.6,y0:-1,y1:0,z0:-1.8,z1:-.95},{n:'right prong of the deck',x0:0,x1:2.6,y0:-1,y1:0,z0:.95,z1:1.8},{n:'roller handle on the deck',x0:4,x1:10.5,y0:0,y1:1.2,z0:-.6,z1:.6},{n:'lower tie rod of the A-frame',x0:12.7,x1:12.95,y0:5.85,y1:6.1,z0:-1.9,z1:1.9},
     {n:'left rack rail',x0:-1.5,x1:18,y0:-1.3,y1:-.8,z0:-2.3,z1:-1.9},{n:'right rack rail',x0:-1.5,x1:18,y0:-1.3,y1:-.8,z0:1.9,z1:2.3},{n:'basket floor',x0:0,x1:14.3,y0:-1.45,y1:-1.25,z0:-7.75,z1:7.75}];
   const hits=[];for(const [bn,b] of [['Belt 1',b1],['Belt 2',b2]]){if(!b)continue;for(const k of ['sA','sB']){const [p0,p1]=b.g[k],z0=b.d.z,z1=b.dn.z;for(let i=1;i<40;i++){const t=i/40,x=p0.x+(p1.x-p0.x)*t,y=p0.y+(p1.y-p0.y)*t,z=z0+(z1-z0)*t;for(const o of OB)if(x>o.x0&&x<o.x1&&y>o.y0-.08&&y<o.y1+.08&&z>o.z0&&z<o.z1){if(!hits.some(h=>h.n===o.n&&h.b===bn))hits.push({b:bn,n:o.n,x,y,z});}}}}
+  const cd1=CORDS[P.cord1];if(cd1.d>P.gap+.4)hits.push({b:'Belt 1',n:'gap between the red wheels: the cord is thicker than the gap',x:P.red.x,y:P.red.y-P.groove/2,z:0});
   return {tc,red,cageA,cageB,top,sW,sRed,sCage,sTop,legsFwd,N1,N2,N3,N,Nt:Math.PI*P.tyreD/39.4,rpm,Tc,Tlegs,dT1,dT2,Tcage,Tred,Ftyre,tyre,b1,b2,first,parts,hits,OB};}
 function selInfo(){const s=S;const b=SEL==='b1'?s.b1:SEL==='b2'?s.b2:null;if(b)return [`tight ${f1(b.T1)} N   slack ${f1(b.T2)} N`,`wrap ${deg(b.g.th1)}° on ${b.d.s}, ${deg(b.g.th2)}° on ${b.dn.s}`,`${b.slip?'slipping':Math.round(100/b.margin)+'% of its grip used'}`];
   if(SEL==='red')return [`turns ${f1(s.N1)}× the wheel`,`${f1(s.rpm.red)} rpm`,`belt 1 wraps ${s.b1?deg(s.b1.g.th1):'–'}°`];
@@ -196,7 +203,7 @@ function build(){scene.remove(rig);rig.traverse(o=>{if(o.geometry)o.geometry.dis
   // collisions
   for(const h of s.hits){const m=new T.MeshBasicMaterial({color:srgb(css('--hot'))}),k=.35;for(const sg of [-1,1])rig.add(cylAB(W({x:h.x-k,y:h.y-k*sg},h.z),W({x:h.x+k,y:h.y+k*sg},h.z),.05*IN,m,6));}
   rig.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});}
-function beltMesh(b,key){const tc=srgb(css('--tight')),sc=srgb(css('--slack')),pale=srgb(css('--paper'));const colOf=Tn=>lerpC(sc,tc,(Tn-b.T2)/Math.max(.01,b.T1-b.T2)),radOf=Tn=>(.045+.075*Tn/Math.max(b.T1,1))*IN*(SEL===key?1.25:1);
+function beltMesh(b,key){const tc=srgb(css('--tight')),sc=srgb(css('--slack')),pale=srgb(css('--paper'));const colOf=Tn=>lerpC(sc,tc,(Tn-b.T2)/Math.max(.01,b.T1-b.T2)),radOf=Tn=>CORDS[key==='b1'?P.cord1:P.cord2].d/50.8*(.75+.5*Tn/Math.max(b.T1,1))*IN*(SEL===key?1.25:1);
   const zD=b.d.z,zN=b.dn.z,g=new T.Group();
   const seg=(pts,Tn,idle)=>{const m=new T.MeshStandardMaterial({color:idle?lerpC(colOf(Tn),pale,.55):colOf(Tn),roughness:.6,emissive:new T.Color(0),transparent:!!idle,opacity:idle?.7:1});const o=pts.length===2?cylAB(pts[0],pts[1],radOf(Tn),m,8):tube(pts,radOf(Tn),m,pts.length*3);g.add(o);return o;};
   const [tD,tN]=b.g[b.tk],[sD,sN]=b.g[b.sk];seg([W(tN,zN),W(tD,zD)],b.T1);seg([W(sD,zD),W(sN,zN)],b.T2);
@@ -248,10 +255,14 @@ function overlay(){const d=Math.min(2,devicePixelRatio||1);og.setTransform(1,0,0
 // ===================== panel =====================
 function meter(key,name,need,cap,unit){const used=need/cap,pc=Math.min(1,used),col=used>1?css('--hot'):used>.7?css('--warn'):css('--ok');
   return `<div class="meter" data-sel="${key}" title="tap to look at it"><span>${name}</span><div class="track"><div class="fill" style="width:${(pc*100).toFixed(1)}%;background:${col}"></div></div><b style="color:${col}">${used>1?'slips':Math.round(used*100)+'%'}</b></div>`;}
-function panel(){const s=S,b1=s.b1,b2=s.b2;if(!b1||!b2){$('pane').innerHTML='<p class="note">These positions make a belt impossible (pulleys overlap). Reset.</p>';return;}
+let TAB=store.get('beltlab-tab','test'),STEP=store.get('beltlab-step',0);
+function panel(){$('pane').innerHTML=`<div class="seg" style="margin:8px 0 4px" role="tablist"><button data-tab="test" aria-pressed="${TAB==='test'}">Test the grip</button><button data-tab="make" aria-pressed="${TAB==='make'}">Make and mount the belts</button></div><div id="pin"></div>`;
+  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{TAB=b.dataset.tab;store.set('beltlab-tab',TAB);if(TAB==='make')goStep(STEP);else panel();});
+  if(TAB==='make')panelMake();else panelTest();}
+function panelTest(){const s=S,b1=s.b1,b2=s.b2;if(!b1||!b2){$('pin').innerHTML='<p class="note">These positions make a belt impossible (pulleys overlap). Reset.</p>';return;}
   const sel=k=>SEL===k?' sel':'';
   const lim=s.Tc*s.first[2];
-  $('pane').innerHTML=`
+  $('pin').innerHTML=`
   <h2>Test it<span>loads at ${P.mph} mph</span></h2>
   <div class="card">
    <div class="row"><span>Riding speed</span><b id="mphv">${P.mph} mph</b></div><input type="range" id="mph" min="1" max="10" step=".5" value="${P.mph}" aria-label="Riding speed">
@@ -270,6 +281,7 @@ function panel(){const s=S,b1=s.b1,b2=s.b2;if(!b1||!b2){$('pane').innerHTML='<p 
   <div class="card${sel('b1')}" data-card="b1">
    <p class="route">Rides in the gap between the two red wheels, runs ${P.cross1?'crossed':'open'} up and back to the cage, wraps ${CAGE1[P.b1].n.toLowerCase().replace(' (as built)','')}.</p>
    <div class="row"><span>On the cage</span><select id="b1">${Object.entries(CAGE1).map(([k,v])=>`<option value="${k}" ${P.b1===k?'selected':''}>${v.n}</option>`).join('')}</select></div>
+   <div class="row"><span>Cord</span><select id="c1">${Object.entries(CORDS).map(([k,v])=>`<option value="${k}" ${P.cord1===k?'selected':''}>${v.n}</option>`).join('')}</select></div>
    <div class="row"><span>Crossed</span><input type="checkbox" id="x1" ${P.cross1?'checked':''}></div>
    <div class="row"><span>Tension when tied</span><b id="t1v">${P.T01} N</b></div><input type="range" id="t01" min="2" max="60" step="1" value="${P.T01}">
    <div class="row"><span>Wrap: groove / cage</span><b>${deg(b1.g.th1)}° / ${deg(b1.g.th2)}°</b></div>
@@ -282,6 +294,7 @@ function panel(){const s=S,b1=s.b1,b2=s.b2;if(!b1||!b2){$('pane').innerHTML='<p 
    <p class="route">Wraps the cage ${CAGE2[P.b2cage].n.toLowerCase().replace(' (as built)','')} ${fr(Math.abs(P.b2z),8)} in. ${P.b2z>=0?'right':'left'} of centre, runs ${P.cross2?'crossed (a figure 8)':'open'} forward over the deck to the ${TOPS[P.b2top].n.toLowerCase().replace(' (as built)','')}.</p>
    <div class="row"><span>On the cage</span><select id="b2c">${Object.entries(CAGE2).map(([k,v])=>`<option value="${k}" ${P.b2cage===k?'selected':''}>${v.n}</option>`).join('')}</select></div>
    <div class="row"><span>Top pulley</span><select id="b2t">${Object.entries(TOPS).map(([k,v])=>`<option value="${k}" ${P.b2top===k?'selected':''}>${v.n}</option>`).join('')}</select></div>
+   <div class="row"><span>Cord</span><select id="c2">${Object.entries(CORDS).map(([k,v])=>`<option value="${k}" ${P.cord2===k?'selected':''}>${v.n}</option>`).join('')}</select></div>
    <div class="row"><span>Crossed</span><input type="checkbox" id="x2" ${P.cross2?'checked':''}></div>
    <div class="row"><span>Tension when tied</span><b id="t2v">${P.T02} N</b></div><input type="range" id="t02" min="2" max="60" step="1" value="${P.T02}">
    <div class="row"><span>Wrap: cage / top</span><b>${deg(b2.g.th1)}° / ${deg(b2.g.th2)}°</b></div>
@@ -313,11 +326,40 @@ function panel(){const s=S,b1=s.b1,b2=s.b2;if(!b1||!b2){$('pane').innerHTML='<p 
   on('t02','oninput',e=>{P.T02=+e.target.value;$('t2v').textContent=P.T02+' N';update(true);});on('t02','onchange',()=>panel());
   on('push','oninput',e=>{P.push=+e.target.value;$('pv').textContent=P.push+' N';update(true);});on('push','onchange',()=>panel());
   on('b1','onchange',e=>{P.b1=e.target.value;preset='';update();});on('b2c','onchange',e=>{P.b2cage=e.target.value;preset='';update();});on('b2t','onchange',e=>{P.b2top=e.target.value;preset='';update();fitTarget();});
+  on('c1','onchange',e=>{P.cord1=e.target.value;preset='';update();});on('c2','onchange',e=>{P.cord2=e.target.value;preset='';update();});
   on('x1','onchange',e=>{P.cross1=e.target.checked;preset='';update();});on('x2','onchange',e=>{P.cross2=e.target.checked;preset='';update();});
   document.querySelectorAll('[data-mu]').forEach(i=>i.onchange=()=>{P.mu[i.dataset.mu]=+i.value;update();});document.querySelectorAll('[data-k]').forEach(i=>i.onchange=()=>{P[i.dataset.k]=+i.value;update();});
   document.querySelectorAll('[data-sel]').forEach(m=>m.onclick=()=>{SEL=m.dataset.sel;fitTarget();update();});
   document.querySelectorAll('[data-p]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===preset));}
-function update(light){S=solve();save();build();const s=S;
+// ===================== make and mount =====================
+function cutPlan(b,cordKey,T0){const c=CORDS[cordKey],elastic=c.EA<1000,path=b.len,cut=elastic?path/(1+T0/c.EA):path,extra=elastic?1:3;return {c,elastic,path,cut:cut+extra,stretch:elastic?(path/(cut)-1)*100:0,lossPerMM:c.EA/(path*25.4)};}
+function steps(){const s=S,b1=s.b1,b2=s.b2,k1=cutPlan(b1,P.cord1,P.T01),k2=cutPlan(b2,P.cord2,P.T02),c1=CORDS[P.cord1],c2=CORDS[P.cord2],gap=P.gap;
+  const on1=CAGE1[P.b1].n.toLowerCase().replace(' (as built)',''),on2=CAGE2[P.b2cage].n.toLowerCase().replace(' (as built)',''),top=TOPS[P.b2top].n.toLowerCase().replace(' (as built)','');
+  const join=(c,cut)=>c.join==='para'?`<li>Pull about 3 in. of the white core strands out of each end and cut them off, so the two cores will just meet.</li><li>Push one hollow end 1-1/2 in. inside the other (a bobby pin or a bent wire pulls it through).</li><li>Stitch through both layers three times with #18 nylon mason’s line and a needle, knot, then melt the sheath ends with a lighter so they cannot fray.</li><li>The joint ends up about one cord thick and 1-1/2 in. long; it bumps once per turn on the small pulleys, which is fine.</li>`:`<li>Before joining, slide on 1-1/2 in. of 3/8 in. heat-shrink tube.</li><li>Overlap the ends 1 in. Wrap them tight with 15 turns of #18 nylon mason’s line, tie off, add a drop of super glue.</li><li>Slide the heat-shrink over the joint and shrink it with a lighter held below, moving. The joint is smooth and runs over the pulleys without a bump.</li>`;
+  const cordRow=(k,c,kp,b)=>`<tr><td>${c.n}</td><td class="mono">${c.d} mm</td><td class="mono">${c.d<=gap+.4?'yes':'no'}</td><td class="mono">${f1(c.EA/(kp.path*25.4))} N</td></tr>`;
+  return [
+  {t:'What the belts are made of',sel:null,cam:'q',b:`<p>Each belt is one closed loop of round cord. Three cords fit this rig; all are at Home Depot.</p>
+   <table class="tbl"><tr><th>Cord</th><th>Thick</th><th>Fits the ${gap} mm red-wheel gap</th><th>Pull lost per 1 mm the frame flexes</th></tr>${Object.entries(CORDS).map(([k,c])=>cordRow(k,c,{path:b1.len},b1)).join('')}</table>
+   <p>Paracord barely stretches. If the A-frame or the roller wire bends 1 mm, a paracord loop loses about ${f1(CORDS.para.EA/(b1.len*25.4))} N, which is all of its pull, and it slips. That is the slop. Shock cord is rubber strands in a woven sheath: it stays stretched and keeps pulling when things flex.</p>
+   <p><b>Belt 1</b> (red wheels to cage): it must sit in the ${gap} mm gap between the red wheels, so <b>paracord</b> or <b>1/8 in. shock cord</b>. 1/4 in. shock cord is too thick. Now set to: ${c1.n}.<br><b>Belt 2</b> (cage to top pulley): <b>1/4 in. shock cord</b> grips best and keeps its pull. Now set to: ${c2.n}.</p>
+   <div class="row"><span>Belt 1 cord</span><select id="mc1">${Object.entries(CORDS).map(([k,v])=>`<option value="${k}" ${P.cord1===k?'selected':''}>${v.n}</option>`).join('')}</select></div>
+   <div class="row"><span>Belt 2 cord</span><select id="mc2">${Object.entries(CORDS).map(([k,v])=>`<option value="${k}" ${P.cord2===k?'selected':''}>${v.n}</option>`).join('')}</select></div>`},
+  {t:'Measure the route with string',sel:null,cam:'side',b:`<ol><li>Unhook belts that are on now.</li><li>Run a piece of string along each route exactly as in the model, snug, and pinch where it meets itself.</li><li>Belt 1 route: in the red-wheel gap, round the side toward the tyre, up to the ${on1}, round its back. The model says <b>${fr(b1.len,8)} in.</b></li><li>Belt 2 route: round the cage ${on2}, forward through the slot in the rear of the deck, round the ${top}${P.cross2?', crossing once in the middle':''}. The model says <b>${fr(b2.len,8)} in.</b></li><li>If your string differs by more than 1/2 in., a position in the model is off: drag that pulley in the model until the length matches.</li></ol>`},
+  {t:'Cut the cord',sel:null,cam:'q',b:`<table class="tbl"><tr><th></th><th>Belt 1</th><th>Belt 2</th></tr><tr><td>Cord</td><td>${c1.n}</td><td>${c2.n}</td></tr><tr><td>Route length</td><td class="mono">${fr(k1.path,8)} in.</td><td class="mono">${fr(k2.path,8)} in.</td></tr>
+   <tr><td>Pull when fitted</td><td class="mono">${P.T01} N</td><td class="mono">${P.T02} N</td></tr><tr><td>Stretch when fitted</td><td class="mono">${k1.elastic?k1.stretch.toFixed(0)+'%':'none'}</td><td class="mono">${k2.elastic?k2.stretch.toFixed(0)+'%':'none'}</td></tr><tr><td><b>Cut</b> (includes the joint)</td><td class="mono"><b>${fr(k1.cut,8)} in.</b></td><td class="mono"><b>${fr(k2.cut,8)} in.</b></td></tr></table>
+   <p class="note">Shock cord: cut shorter than the route so it stretches on and pulls; the extra 1 in. is the joint overlap. Paracord: cut the route length plus 3 in. for the splice, then pull it as tight as you can by hand before stitching. Shock cord stiffness varies by brand: hang 1 kg on a 10 in. piece; if it stretches more than 1-1/2 in., cut ${fr(1,4)} in. shorter than shown.</p>`},
+  {t:'Belt 1 into the red-wheel gap',sel:'b1',cam:'gap',b:`<ol><li>Unhook the red-wheel bungee and swing the wheels off the tyre.</li><li>Lay the cord into the gap between the two wheels from above and let it drop round the side toward the tyre. It sits ${((P.tread-P.groove)/2*25.4).toFixed(0)} mm in from the tread, so it never touches the tyre.</li><li>Bring both ends up toward the cage. Swing the wheels back onto the tyre and rehook the bungee.</li></ol><p class="note">In the close-up, the cord between the two red wheels is belt 1.</p>`},
+  {t:'Belt 1 round the cage, then join it',sel:'b1',cam:'cage',b:`<ol><li>Take both ends round the back of the ${on1}${P.cross1?', crossing once on the way up':''}. ${P.b1==='capL'?'This is where it sits now, 4-3/8 in. to the left of the red wheels, so it runs off line and climbs off. Better: the tape track on the centre line (Test tab, Belt 1, On the cage).':'It runs straight up from the red wheels, so it stays on.'}</li><li>Pull the ends to meet on the strand between the pulleys, not on a pulley.</li>${join(c1,k1.cut)}</ol>`},
+  {t:'Belt 2 round the cage and the top pulley',sel:'b2',cam:'topp',b:`<ol><li>Loop the cord round the cage ${on2}, ${fr(Math.abs(P.b2z),8)} in. ${P.b2z>=0?'right':'left'} of the centre line.</li><li>Run both strands forward through the slot in the rear of the Razor deck (where its back wheel was) and up over the top of the deck.</li><li>Over the ${top}.${P.b2top==='lid'?' Slip the loop over the end of the rod before the brass disc, then into the V between the two lids.':P.b2top==='brass'?' The brass disc is 12 in. out to the left, so this belt would run far off line.':' Slip the loop over the right-hand end of the rod.'}</li>${P.cross2?'<li>Cross the two strands once, in the middle of the run (a figure 8). The cross is what makes the top pulley turn clockwise, so the legs walk forward.</li>':'<li>Open loop: the top pulley will turn anticlockwise, and the legs walk backward. Cross it (Test tab, Belt 2, Crossed).</li>'}<li>Join it on the long upper strand:</li>${join(c2,k2.cut)}</ol>`},
+  {t:'Keep the belts on their tracks',sel:'cage',cam:'cage',b:`<ol><li>On each tape track, wrap three extra turns of tape at each edge, 3/4 in. apart: two low ridges the cord cannot climb.</li><li>${P.b2top==='green'?'The green cap has no rim: put a rubber band round each edge of it as a flange.':P.b2top==='lid'?'The V between the lids keeps the cord centred by itself.':'The brass disc edge is thin: the cord will not stay on it.'}</li><li>Sight along each belt from above. It should leave one pulley heading straight for the next. Belt 1 is ${b1.fleet.toFixed(1)}° off now, belt 2 ${b2.fleet.toFixed(1)}°; keep both under 3°.</li></ol>`},
+  {t:'Tension, then test',sel:null,cam:'q',b:`<ol><li>Hang a 200 g phone on the middle of the long strand. Belt 1 should sag <b>${fr(b1.sag,16)} in.</b>, belt 2 <b>${fr(b2.sag,16)} in.</b> More sag: shorten. Less: lengthen.</li><li>Chalk a line across cord and rim at each of the four contacts. Hold the crank back lightly with a finger and turn the wheel 5 times. A line that splits marks a slipping contact.</li><li>Count: 10 wheel turns should give <b>${(s.N*10).toFixed(1)}</b> turns of the top pulley, ${s.legsFwd?'clockwise seen from the right':'<b>anticlockwise</b>, which walks the legs backward'}.</li></ol><p class="note">The Test tab shows what each contact can carry with these cords and tensions.</p>`}];}
+function goStep(i){const st=steps();STEP=(i+st.length)%st.length;store.set('beltlab-step',STEP);const x=st[STEP];SEL=x.sel;press(x.cam);goCam((x.sel&&SELCAM[x.sel]&&!VIEWS[x.cam]?SELCAM[x.sel]:VIEWS[x.cam])());update();}
+function panelMake(){const st=steps(),x=st[STEP]||st[0];
+  $('pin').innerHTML=`<div class="stepnav"><button class="btn" id="sp" aria-label="Previous step">Back</button><div class="st"><b>${x.t}</b><small>step ${STEP+1} of ${st.length}</small></div><button class="btn" id="sn" aria-pressed="true">Next</button></div><div class="card">${x.b}</div>
+   <div class="slist">${st.map((q,k)=>`<button data-step="${k}" aria-current="${k===STEP}">${k+1}. ${q.t}</button>`).join('')}</div>`;
+  $('sp').onclick=()=>goStep(STEP-1);$('sn').onclick=()=>goStep(STEP+1);document.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>goStep(+b.dataset.step));
+  const m1=$('mc1'),m2=$('mc2');if(m1)m1.onchange=e=>{P.cord1=e.target.value;preset='';update();};if(m2)m2.onchange=e=>{P.cord2=e.target.value;preset='';update();};}
+function update(light){S=solve();save();build();const s=S;document.querySelectorAll('[data-p]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===preset));
   $('status').innerHTML=`${s.N.toFixed(2)} crank turns per wheel turn · legs ${s.legsFwd?'forward':'<b>backward</b>'} · ${s.first[2]<1?`<b>${s.first[1].toLowerCase()} slips</b>`:`<b class=ok>grips</b>, ${s.first[1].toLowerCase()} first`}${s.hits.length?` · <b>${s.hits.length} hit${s.hits.length>1?'s':''}</b>`:''}`;
   if(!light)panel();else{const m=document.querySelector('.meters');if(m)m.innerHTML=meter('tyre','Tyre',s.Ftyre,s.tyre.cap)+meter('b1','Belt 1',s.b1?s.b1.dT:0,s.b1?s.b1.cap:1)+meter('b2','Belt 2',s.b2?s.b2.dT:0,s.b2?s.b2.cap:1);}}
 document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{SEL=null;setView(b.dataset.v);update();});
