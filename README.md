@@ -6,6 +6,10 @@ Horse hindquarters on two Jansen-linkage legs that pin to your hip belt or your 
 
 **Live site:** https://hartswf0.github.io/centaur-walker/ (after GitHub Pages is turned on, see below)
 
+## Workbench
+
+[index.html](index.html) is the workbench: every working page in one place, in the order the power flows and the build goes. Whole picture, Belts, Top axle (the linked assembly from version 32), Redesign, Powertrain, the original v14 leg, Build book, Templates. Pages stay loaded when you switch, and the Whole picture and Belts share one set of as-built measurements, so a change in one shows in the other. Every earlier version is listed in [archive.html](archive.html).
+
 ## Current pages
 
 | Page | What it is |
