@@ -8,7 +8,7 @@ Horse hindquarters on two Jansen-linkage legs that pin to your hip belt or your 
 
 ## Workbench
 
-[index.html](index.html) is the workbench: every working page in one place, in the order the power flows and the build goes. Whole picture, Belts, Top axle (the linked assembly from version 32), Redesign, Powertrain, the original v14 leg, Build book, Templates. Pages stay loaded when you switch, and the Whole picture and Belts share one set of as-built measurements, so a change in one shows in the other. Every earlier version is listed in [archive.html](archive.html).
+[index.html](index.html) is the workbench: every working page in one place. It opens on [velocipede.html](velocipede.html): the original Centaur Velocipede (v14) with a third mode, As built, that puts the drive on the bike today (red wheels, roller cage, two cords, green cap) on the same bike, with the same legs hanging from the green cap's rod and turning at the speed and in the direction that drive gives them; its Drive, Test, Build and Parts tabs carry the seven-link chain and fixes, the grip test, and how to make and mount the belts. Then Belts, Top axle (the linked assembly from version 32), Redesign, Powertrain, Build book, Templates, Overview. Pages stay loaded when you switch, and the Whole picture and Belts share one set of as-built measurements, so a change in one shows in the other. Every earlier version is listed in [archive.html](archive.html).
 
 ## Current pages
 
@@ -67,6 +67,7 @@ Every version made along the way is kept in [`versions/`](versions/), in order:
 | [Rig 3D v2](versions/34-rig3d-v2.html) | Real parts: Razor A deck and wheels, Simpson straps, roller frame, the coroplast-and-pine leg, the axle fix. |
 | [Drive module v3](versions/35-drive-module-v3.html) | The drive as one lift-off module: plywood cheeks and platform, lid pulley, both legs on clevis pins, build steps, collision checks. |
 | [Belt lab, 2D](versions/36-belt-lab-2d.html) | First belt lab: the as-built cords in flat side, top and section views. |
+| [Velocipede as built](versions/37-velocipede-as-built.html) | The original v14 page with an As built mode: the real drive on the same bike, driving the same legs. |
 
 ## Centaur Rig line
 

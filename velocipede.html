@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<title>Centaur Velocipede</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#e8e5df;--panel:#f6f4f0;--view:#d9d4cb;--ink:#17150f;--ink-2:#5a554b;--ink-3:#8d877b;--rule:#d0cabe;--rule-2:#e4e0d8;--accent:#2f55c9;--accent-ink:#fff;--ok:#15803d;--warn:#c2410c;
+  --f-display:"Bodoni Moda",Didot,Georgia,serif;--f-body:"IBM Plex Sans",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f0e0c;--panel:#171512;--view:#1d1a16;--ink:#ece7dd;--ink-2:#a9a293;--ink-3:#736c60;--rule:#2d2924;--rule-2:#221f1b;--accent:#8fa8ff;--accent-ink:#0d1014;--ok:#4ade80;--warn:#fb923c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f0e0c;--panel:#171512;--view:#1d1a16;--ink:#ece7dd;--ink-2:#a9a293;--ink-3:#736c60;--rule:#2d2924;--rule-2:#221f1b;--accent:#8fa8ff;--accent-ink:#0d1014;--ok:#4ade80;--warn:#fb923c;color-scheme:dark}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.4 var(--f-body);overflow:hidden}
+.ws{height:100%;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(250px,50%) auto auto minmax(0,1fr);grid-template-areas:"head" "view" "trans" "tabs" "insp";padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+@media (min-width:900px){.ws{grid-template-columns:minmax(0,1fr) 410px;grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"head head" "view side" "trans side"}.side{grid-area:side;display:grid;grid-template-rows:auto minmax(0,1fr);border-left:1px solid var(--rule);min-height:0}.tabs,.insp{grid-area:auto!important}}
+@media (max-width:899px){.side{display:contents}}
+header{grid-area:head;display:flex;align-items:center;gap:10px;padding:6px 12px;background:var(--panel);border-bottom:1px solid var(--rule);min-width:0}
+h1{margin:0;font:500 15px var(--f-display);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}
+@media (max-width:560px){h1{display:none}}
+.hstat{flex:1;min-width:0;font:500 11px var(--f-mono);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini{font:600 11px var(--f-body);border:1px solid var(--rule);background:var(--panel);color:var(--ink);border-radius:5px;min-height:30px;min-width:32px;padding:4px 8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.mini[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.mode{display:inline-flex;border:1px solid var(--ink);border-radius:7px;overflow:hidden;flex-shrink:0}
+.mode button{font:600 12.5px var(--f-body);border:0;background:transparent;color:var(--ink);padding:6px 12px;min-height:34px;cursor:pointer;display:inline-flex;gap:7px;align-items:center}
+.mode button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.mode i{display:inline-block;width:14px;height:10px;border:1.6px solid currentColor;border-radius:50%}
+.mode i.pack{border-radius:3px;width:10px;height:13px}
+.view{grid-area:view;position:relative;background:var(--view);overflow:hidden;min-height:0}
+.view canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.view canvas[hidden]{display:none}
+.vbar{position:absolute;top:8px;left:8px;right:8px;display:flex;flex-wrap:wrap;gap:6px;justify-content:space-between;pointer-events:none}.vbar>*{pointer-events:auto}
+.vseg{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--panel)}
+.vseg button{font:600 11px var(--f-body);border:0;background:transparent;color:var(--ink);padding:5px 9px;min-height:30px;cursor:pointer}
+.vseg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.vstat{position:absolute;left:8px;right:8px;bottom:6px;font:500 10.5px var(--f-mono);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.trans{grid-area:trans;display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--panel);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.scrub{flex:1;height:28px;touch-action:none;cursor:pointer;min-width:0}
+.play{width:40px;height:36px;border-radius:7px;border:0;background:var(--accent);color:var(--accent-ink);cursor:pointer;display:grid;place-items:center}
+.ic{display:inline-block;position:relative;width:12px;height:12px}
+.ic.play-i{width:0;height:0;border-left:11px solid currentColor;border-top:6px solid transparent;border-bottom:6px solid transparent}
+.ic.pause-i::before,.ic.pause-i::after{content:"";position:absolute;top:0;width:4px;height:12px;background:currentColor}.ic.pause-i::before{left:1px}.ic.pause-i::after{right:1px}
+.cad{display:flex;align-items:center;gap:6px;font:500 11px var(--f-mono);color:var(--ink-2)}.cad input{width:96px;accent-color:var(--accent)}
+.tabs{grid-area:tabs;display:flex;background:var(--panel);border-bottom:1px solid var(--rule)}
+.tabs button{flex:1;font:600 12.5px var(--f-body);border:0;border-bottom:2px solid transparent;background:transparent;color:var(--ink-2);padding:9px 4px;min-height:40px;cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.insp{grid-area:insp;overflow:auto;background:var(--panel);padding:12px 14px calc(18px + env(safe-area-inset-bottom,0px));min-height:0}
+.insp section{display:flex;flex-direction:column;gap:10px}
+h2{margin:0;font:600 16px var(--f-body)}
+p{margin:0;max-width:66ch}.muted{color:var(--ink-2);font-size:12.5px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}.tw{overflow-x:auto}
+th,td{text-align:left;padding:4px 6px;border-bottom:1px solid var(--rule-2);vertical-align:top}
+th{font-weight:600;color:var(--ink-2);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+td.n{font-family:var(--f-mono);text-align:right;white-space:nowrap}td.m{font-family:var(--f-mono);white-space:nowrap}
+td.pass{color:var(--ok);font-weight:600}td.fail{color:var(--warn);font-weight:600}
+.tag{display:inline-block;font:600 9.5px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;padding:1px 4px;border-radius:3px;border:1px solid currentColor}
+.tag.buy{color:var(--accent)}.tag.salvage{color:var(--ok)}.tag.have{color:#8a6d3b}
+ol.steps{list-style:none;margin:0;padding:0}
+ol.steps li{display:grid;grid-template-columns:26px 1fr;gap:8px;padding:8px 4px;border-bottom:1px solid var(--rule-2);cursor:pointer}
+ol.steps li.ph{display:block;cursor:default;border:0;font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding:12px 4px 2px}
+ol.steps li .no{font:500 11px var(--f-mono);color:var(--ink-3);text-align:right;padding-top:2px}
+ol.steps li b{font-weight:600;display:block}
+ol.steps li span.d{font-size:12.5px;color:var(--ink-2)}
+ol.steps li.cur{background:var(--rule-2)}
+ol.steps li.off{opacity:.45}
+ol.steps li .num{font-family:var(--f-mono);color:var(--ink)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13px;margin:0}.kv dt{color:var(--ink-2)}.kv dd{margin:0;font:500 12.5px var(--f-mono)}
+.sl{display:grid;grid-template-columns:minmax(8.5em,auto) 1fr auto;gap:8px;align-items:center;font-size:13px;color:var(--ink-2)}.sl input{width:100%;accent-color:var(--accent)}.sl select{width:100%;min-width:0;font:inherit;font-size:12.5px;padding:3px}
+.val{font:500 12px var(--f-mono);color:var(--ink);min-width:7ch;text-align:right}
+.big{font:500 22px var(--f-mono);letter-spacing:-.01em}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cell{border:1px solid var(--rule);border-radius:6px;padding:8px 10px;background:var(--bg)}.cell small{display:block;color:var(--ink-2);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.btn{font:600 13px var(--f-body);border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);padding:7px 12px;border-radius:6px;cursor:pointer;min-height:36px}
+.btn.ghost{background:transparent;color:var(--accent)}.btn:disabled{opacity:.4;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.spk{position:relative;width:16px;height:12px;display:inline-block}.spk::before{content:"";position:absolute;left:0;top:3px;width:4px;height:6px;background:currentColor}.spk::after{content:"";position:absolute;left:3px;top:0;border-right:6px solid currentColor;border-top:6px solid transparent;border-bottom:6px solid transparent}.spk i{position:absolute;left:10px;top:2px;width:6px;height:8px;border:2px solid currentColor;border-left:0;border-radius:0 8px 8px 0;opacity:.25}[aria-pressed="true"] .spk i{opacity:1}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.loading{position:absolute;inset:0;display:grid;place-items:center;font:500 12px var(--f-mono);color:var(--ink-2)}
+:root{--hot:#d6421b;--tight:#e2591b;--slack:#2f7bd9;--paper:var(--panel);--red:#c23a30;--orange:#f2622e;--green:#2f9a4a;--brass:#b8963e;--metal:#9aa1a8}
+.mode i.built{display:inline-block;width:10px;height:10px;border:2px solid currentColor;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.ab-chain{display:flex;align-items:stretch;margin:6px 0 8px}.ab-node{flex:1 1 0;min-width:0;overflow:hidden;border:1px solid var(--rule);background:var(--panel);border-radius:6px;padding:5px 5px 8px;text-align:left;cursor:pointer;position:relative;color:var(--ink)}
+.ab-node span{display:block;font:600 10.5px var(--f-body);color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ab-node b{display:block;font:500 11px var(--f-mono);white-space:nowrap}
+.ab-node i{position:absolute;left:5px;right:5px;bottom:3px;height:3px;border-radius:2px;background:var(--ok)}.ab-node.warn i{background:#b7791f}.ab-node.bad i{background:var(--hot)}.ab-node.bad b{color:var(--hot)}.ab-node[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.ab-arrow{flex:0 0 5px;align-self:center;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:5px solid var(--ink-3);margin:0 2px}
+.ab-detail p{margin:4px 0}.ab-fixes{display:grid;gap:6px}.ab-fix{display:flex;gap:10px;align-items:center;text-align:left;border:1px solid var(--rule);background:var(--panel);border-radius:6px;padding:8px 10px;font:500 13px var(--f-body);color:var(--ink);cursor:pointer}
+.ab-fix .box{flex:0 0 15px;height:15px;border:1.5px solid var(--ink-3);border-radius:3px;position:relative}.ab-fix[aria-pressed="true"] .box{background:var(--ok);border-color:var(--ok)}.ab-fix[aria-pressed="true"] .box::after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid var(--panel);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.ab-row{display:flex;gap:6px;margin:10px 0}.ab-note{font-size:12px;color:var(--ink-2)}.ab-meters{display:grid;gap:7px;margin:8px 0}.ab-meter{display:grid;grid-template-columns:58px 1fr 56px;gap:8px;align-items:center;font-size:12px}.ab-meter .t{height:11px;border-radius:6px;background:var(--rule);position:relative;overflow:hidden}.ab-meter .f{position:absolute;inset:0 auto 0 0;border-radius:6px}.ab-meter b{font:600 12px var(--f-mono);text-align:right}
+.ab-tbl,.tbl{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0}.ab-tbl td,.ab-tbl th,.tbl td,.tbl th{border-bottom:1px solid var(--rule);padding:4px 3px;text-align:left;vertical-align:top}.ab-tbl th,.tbl th{font:600 10.5px var(--f-mono);color:var(--ink-3)}
+.ab-stepnav{display:flex;gap:8px;align-items:center;margin:4px 0 8px}.ab-stepnav div{flex:1}.ab-stepnav small{display:block;font:500 11px var(--f-mono);color:var(--ink-3)}.ab-card{border:1px solid var(--rule);border-radius:8px;padding:8px 10px;background:var(--panel)}.ab-card ol,.ab-ol{padding-left:18px;margin:4px 0}.ab-card li,.ab-ol li{margin:4px 0}
+.ab-list button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--rule);background:none;padding:6px 2px;font:13px var(--f-body);color:var(--ink-2);cursor:pointer}.ab-list button[aria-current="true"]{color:var(--ink);font-weight:700}
+.ab-card .row{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;font-size:12.5px;margin:5px 0}.ab-card select{font:600 12px var(--f-body);padding:3px 5px;border:1px solid var(--rule);border-radius:5px;background:var(--panel);color:var(--ink)}.mono{font-family:var(--f-mono)}.note{font-size:12px;color:var(--ink-2)}
+</style>
+<div class="ws">
+<header><h1>Centaur Velocipede</h1><div class="mode" role="group" aria-label="Mode"><button data-m="bike" aria-pressed="true"><i></i>Bicycle</button><button data-m="pack" aria-pressed="false"><i class="pack"></i>Backpack</button><button data-m="built" aria-pressed="false"><i class="built"></i>As built</button></div><div class="hstat" id="hstat"></div><button class="mini" id="snd" type="button" aria-pressed="false" aria-label="Sound"><span class="spk"><i></i></span></button></header>
+<div class="view" id="view">
+  <canvas id="c3" aria-label="3D model. Drag to orbit, pinch to zoom, tap a part to name it."></canvas>
+  <canvas id="c2" hidden aria-label="Drawing"></canvas>
+  <div class="loading" id="loading">Loading 3D…</div>
+  <div class="vbar"><div class="vseg" role="group" aria-label="View"><button data-v="3d" aria-pressed="true">3D</button><button data-v="elev" aria-pressed="false">Side</button><button data-v="plate" aria-pressed="false">Plate</button><button data-v="leg" aria-pressed="false">Leg</button><button data-v="evo" aria-pressed="false">Evolve</button><button data-v="test" aria-pressed="false">Test</button></div><div class="vseg" role="group" aria-label="Body"><button data-b="centaur" aria-pressed="true">Centaur</button><button data-b="trojan" aria-pressed="false">Trojan</button><button id="xray" aria-pressed="false">Bare</button><button id="fit">Fit</button></div></div>
+  <div class="vstat" id="vstat"></div>
+</div>
+<div class="trans"><button class="play" id="play" type="button" aria-label="Pause"><span class="ic pause-i" id="pi"></span></button><canvas class="scrub" id="scrub" aria-label="Phase of one leg cycle. Drag to scrub."></canvas><label class="cad"><input id="spd" type="range" min="0.5" max="7" step="0.05" value="1.9" aria-label="Ground speed"><span id="spdv"></span></label></div>
+<div class="side">
+  <div class="tabs" role="tablist"><button role="tab" data-t="build" aria-selected="true">Build</button><button role="tab" data-t="parts" aria-selected="false">Parts</button><button role="tab" data-t="drive" aria-selected="false">Drive</button><button role="tab" data-t="evolve" aria-selected="false">Evolve</button><button role="tab" data-t="test" aria-selected="false">Test</button><button role="tab" data-t="joints" aria-selected="false">Joints</button></div>
+  <div class="insp" id="insp"></div>
+</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(()=>{
+const T=window.THREE,TAU=Math.PI*2,$=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const V=(x,y)=>({x,y}),sub=(a,b)=>V(a.x-b.x,a.y-b.y),add=(a,b)=>V(a.x+b.x,a.y+b.y),len=v=>Math.hypot(v.x,v.y);
+const mm=m=>(m*1000).toFixed(0)+' mm';
+
+/* ===== constraints ===== */
+const PLAT=.356,HALF=.178,PLATY=.80,CLR=.025; // 14 × 14 in platform, 800 mm up on the rack or the pack shelf
+/* ===== the leg: Jansen topology, link lengths evolved to fit the platform (mm) ===== */
+const JANSEN={a:38,b:41.5,c:39.3,d:40.1,e:55.8,f:39.4,g:36.7,h:65.7,i:49,j:50,k:61.9,l:7.8,m:15};
+const CHAMP={m:62,a:202,l:89,b:342,c:281,d:277,e:596,f:327,g:206,h:359,i:518,j:226,k:426,oh:97};
+const CHAMP_HIST=[497.6,42.83,25.21,17.43,16.22,16.22,15.85,15.85,15.85,15.85,14.26,14.26,14.26,14.26,14.26,14.26,14.26,14.26,14.26,14.26,14.26,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.93,13.58,13.58,13.58,13.58,13.58,13.58,13.58,13.58,13.55,13.55,13.42,13.42,13.38,13.38,13.35,13.35,13.3,13.3,13.3,13.3,13.17,13.17,13.17,13.17,13.03,12.93,12.93,12.93,12.93,12.93,12.9,12.9,12.9,12.9,12.9,12.9,12.9,12.9,12.9,12.9,12.9,12.9,12.9,12.9,12.9,12.9,12.84,12.84,12.84,12.84,12.84,12.84,12.84,12.84,12.84,12.84,12.84,12.84,12.84,12.77,12.77,12.77,12.76,12.76,12.76,12.76,12.76,12.76,12.76,12.76,12.76,12.76,12.76,12.76,12.68,12.68,12.66,12.66,12.66,12.66,12.66,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54,12.54];
+function circ(p,r1,q,r2,side,margin){const dx=q.x-p.x,dy=q.y-p.y,d=Math.hypot(dx,dy);if(d<1e-9)return null;const a=(r1*r1-r2*r2+d*d)/(2*d),hh=r1*r1-a*a;if(hh<(margin?(margin*Math.min(r1,r2))**2:0))return null;const h=Math.sqrt(hh),mx=p.x+a*dx/d,my=p.y+a*dy/d;return V(mx-side*h*dy/d,my+side*h*dx/d);}
+function lk(J,th,mg){const O=V(0,0),B=V(-J.a,-J.l),C=V(J.m*Math.cos(th),J.m*Math.sin(th));const D=circ(B,J.b,C,J.j,1,mg);if(!D)return null;const E=circ(B,J.c,C,J.k,-1,mg);if(!E)return null;const F=circ(B,J.d,D,J.e,1,mg);if(!F)return null;const G=circ(F,J.f,E,J.g,-1,mg);if(!G)return null;const H=circ(G,J.h,E,J.i,-1,mg);if(!H)return null;return {O,B,C,D,E,F,G,H};}
+const NS=360;let J=Object.assign({},CHAMP),PU,YMIN,YMAXH,CONTACT,TD,LO,DUTY,DROP,OH,LX;
+function setLinkage(nj){J=Object.assign({},nj);OH=J.oh/1000;PU=[];for(let k=0;k<NS;k++)PU.push(lk(J,k/NS*TAU));YMIN=Math.min(...PU.map(p=>p.H.y));YMAXH=Math.max(...PU.map(p=>p.H.y));
+  CONTACT=PU.map(p=>p.H.y<YMIN+10);TD=0;LO=0;for(let k=0;k<NS;k++){if(CONTACT[k]&&!CONTACT[(k+1)%NS])TD=k;if(CONTACT[k]&&!CONTACT[(k-1+NS)%NS])LO=k;}
+  DUTY=CONTACT.filter(Boolean).length/NS;DROP=-YMIN/1000;const xs=PU.flatMap(p=>Object.values(p).map(q=>q.x)),ys=PU.flatMap(p=>Object.values(p).map(q=>q.y));LX={min:Math.min(...xs)/1000,max:Math.max(...xs)/1000,ymax:Math.max(...ys)/1000,hx:Math.max(...PU.map(p=>p.H.x))/1000};}
+setLinkage(CHAMP);
+const thetaAt=ph=>TD/NS*TAU-TAU*ph; // phase 0 = left hind touchdown; the crank turns clockwise seen from the right
+const onGround=ph=>CONTACT[((Math.round(TD-NS*ph)%NS)+NS)%NS];
+const BODIES=[{id:'crank',name:'Crank arm',j:['O','C']},{id:'j',name:'Upper rod',j:['C','D']},{id:'k',name:'Lower rod',j:['C','E']},{id:'t1',name:'Hip plate',j:['B','D','F']},{id:'c',name:'Thigh rocker',j:['B','E']},{id:'f',name:'Gaskin rod',j:['F','G']},{id:'t2',name:'Shank plate',j:['G','E','H']}];
+const LINKS=[['O','C','m'],['C','D','j'],['C','E','k'],['B','D','b'],['B','F','d'],['D','F','e'],['B','E','c'],['F','G','f'],['G','E','g'],['G','H','h'],['E','H','i']];
+const JOINTS=['B','C','D','E','F','G'];
+const legL=ph=>{const u=lk(J,thetaAt(ph)),o={};for(const k in u)o[k]=V(u[k].x/1000,u[k].y/1000);return o;}; // relative to O, metres
+
+/* ===== the bicycle: State Bicycle Co. 4130 All-Road, Medium, 700 × 38c ===== */
+const BK={R:.349,BB:V(0,.274),RA:V(-.4437,.349),FA:V(.6104,.349),STt:V(-.145,.763),HTt:V(.3715,.8765),HTb:V(.424,.720),saddle:V(-.2045,.9645),rackX:[-.62,-.24],C:2.16,ring:42,cogs:[11,13,15,17,19,21,24,28,32,36,42]};
+const MODES={bike:{name:'Bicycle',PC:-.50,vmin:1,vmax:3,v:1.9},pack:{name:'Backpack',PC:null,vmin:.5,vmax:1.9,v:1.3}};
+const S={cfg:{link:'ply6',piv:'nylon',body:'laths',hoof:'eva',shaft:'dflat',frame:'alu3',mount:'hip',timing:'road'},tools:{},budget:300,prio:{eng:2,price:1,might:1,looks:2},body:'centaur',mode:'bike',built:true,v:1.3,cog:24,ph:0,dist:0,playing:true,view:'3d',tab:'build',step:-1,sound:false,bare:false,pull:.17};
+
+/* ===================== AS BUILT: the drive on the bike today, from the photos, added to this page =====================
+   Same bike, same legs. The red wheels on the tyre, the roller cage, the two cords and the green cap replace the designed roller and chain;
+   the legs hang from the green cap's rod. Inches inside this block; the scene is in metres. */
+const AB=(()=>{const TAU=Math.PI*2,IN=.0254,css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+  const fr=(x,den=16)=>{const s=x<0?'−':'';x=Math.abs(x);let w=Math.floor(x+1e-9),r=Math.round((x-w)*den);if(r===den){w++;r=0;}if(!r)return s+w;let n=r,d=den;while(n%2===0){n/=2;d/=2;}return s+(w?w+'-':'')+n+'/'+d;};
+  const f1=x=>Math.abs(x)<10?x.toFixed(1):x.toFixed(0);
+  // the deck sits on this page's rack; the tyre is this page's rear wheel
+  const DTV=(PLATY+.018)/IN,TYC=BK.RA.y/IN-DTV,RAX=BK.RA.x;
+  const T=window.THREE,srgb=c=>new T.Color(c.trim()).convertSRGBToLinear();let scene=null,S=null,SEL=null;const ang={belt1:0,belt2:0};
+// ===================== the rig as built, read from the photos =====================
+// inches; x forward from the deck's rear end, y up from the deck top, z across the bike (+ = rider's right)
+const BUILT={red:{x:1,y:-9},cage:{x:-3,y:-1},rod:{x:14.5,y:7.9},tyreD:27.5,tread:3.74,groove:3.2,gap:5,cord:4,
+  capD:2.25,wireD:1.75,tapeD:1.9,capL:-4.4,capR:5.9,greenD:2.0,greenZ:.3,brassD:3.5,brassZ:-12,lidD:11.3,lidZ:1,
+  b1:'capL',b2cage:'wires',b2z:1,b2top:'green',cross1:false,cross2:false,T01:10,T02:10,push:15,cord1:'para',cord2:'para',
+  mph:3,hoof:'pine',load:'legs',Tman:1,mu:{groove:.6,cap:.2,wires:.15,tape:.4,green:.2,brass:.15,lid:.3,tyre:.6}};
+const PRESETS={built:{},inline:{b1:'tape1',b2cage:'tape2',b2z:1,cross2:true,cord1:'shock8',cord2:'shock4'},lid:{b1:'tape1',b2cage:'tape2',b2z:1,b2top:'lid',cross2:true,hoof:'coro',T01:20,T02:22,push:30,cord1:'shock8',cord2:'shock4'}};
+const clone=o=>JSON.parse(JSON.stringify(o));
+let P=Object.assign(clone(BUILT),store.get('centaur-asbuilt',{}));P.mu=Object.assign(clone(BUILT.mu),P.mu||{});
+let preset='built';
+const save=()=>{store.set('centaur-asbuilt',P);store.set('whole-preset',preset);};
+// cords you can buy at Home Depot: diameter in mm, and stretch stiffness EA in N (pull that would double its length); EA values are estimates, measure yours
+const CORDS={para:{n:'Paracord 550 (as built)',d:4,EA:8000,join:'para'},shock8:{n:'1/8 in. shock cord',d:3.2,EA:60,join:'shock'},shock4:{n:'1/4 in. shock cord',d:6.35,EA:150,join:'shock'}};
+const LEGS={pine:{tg:.51,kd:.0943,n:'Pine block hooves'},coro:{tg:.36,kd:.0338,n:'Coroplast box hooves'}};
+// where each belt touches the cage, by choice
+const CAGE1={capL:{n:'Left end cap (as built)',z:()=>P.capL,d:()=>P.capD,s:'cap'},tape1:{n:'Tape track on the centre line',z:()=>0,d:()=>P.tapeD,s:'tape'},wires1:{n:'Bare wires on the centre line',z:()=>0,d:()=>P.wireD,s:'wires'},capR:{n:'Right end cap',z:()=>P.capR,d:()=>P.capD,s:'cap'}};
+const CAGE2={wires:{n:'Bare wires (as built)',d:()=>P.wireD,s:'wires'},tape2:{n:'Tape track',d:()=>P.tapeD,s:'tape'}};
+const TOPS={green:{n:'Green cap (as built)',d:()=>P.greenD,z:()=>P.greenZ,s:'green'},brass:{n:'Brass disc, outboard',d:()=>P.brassD,z:()=>P.brassZ,s:'brass'},lid:{n:'Two bucket lids, cord in the V',d:()=>P.lidD,z:()=>P.lidZ,s:'lid'}};
+const SURF={groove:'cord pinched between the two urethane wheels',cap:'smooth polypropylene end cap, no groove',wires:'six round zinc wires',tape:'vinyl electrical tape, built up into a track',green:'smooth plastic cap, no flanges',brass:'thin brass edge',lid:'V between two lid rims'};
+// ===================== geometry =====================
+function beltGeom(c1,r1,c2,r2,cr){const dx=c2.x-c1.x,dy=c2.y-c1.y,dd=Math.hypot(dx,dy),a=Math.atan2(dy,dx),kk=cr?(r1+r2)/dd:(r1-r2)/dd;if(Math.abs(kk)>=1)return null;const b=Math.acos(kk);
+  const P1=t=>({x:c1.x+r1*Math.cos(t),y:c1.y+r1*Math.sin(t)}),P2=t=>({x:c2.x+r2*Math.cos(t),y:c2.y+r2*Math.sin(t)});
+  const tA1=a+b,tB1=a-b,tA2=cr?a+b+Math.PI:a+b,tB2=cr?a-b+Math.PI:a-b;
+  const arc=(c,r,t0,t1)=>{const n=Math.max(12,Math.ceil(Math.abs(t1-t0)/.06)),p=[];for(let i=0;i<=n;i++){const t=t0+(t1-t0)*i/n;p.push({x:c.x+r*Math.cos(t),y:c.y+r*Math.sin(t)});}return p;};
+  return {sA:[P1(tA1),P2(tA2)],sB:[P1(tB1),P2(tB2)],arc1:arc(c1,r1,tA1,tB1+TAU),arc2:cr?arc(c2,r2,tA2,tB2+TAU):arc(c2,r2,tB2,tA2),th1:TAU-2*b,th2:cr?TAU-2*b:2*b};}
+const plen=p=>p.reduce((s,q,i)=>i?s+Math.hypot(q.x-p[i-1].x,q.y-p[i-1].y):0,0);
+function tightKey(g,c,w){for(const k of ['sA','sB']){const s=g[k],pd=s[0],pn=s[1],r={x:pd.x-c.x,y:pd.y-c.y},v={x:-w*r.y,y:w*r.x};if(v.x*(pd.x-pn.x)+v.y*(pd.y-pn.y)>0)return k;}return 'sA';}
+function tyreC(){const R=P.tyreD/2+P.tread/2,dy=P.red.y-(TYC);return {x:P.red.x+Math.sqrt(Math.max(.1,R*R-dy*dy)),y:TYC};}
+// ===================== the model: one function, everything derived =====================
+function solve(){const tc=tyreC(),c1=CAGE1[P.b1],c2=CAGE2[P.b2cage],tp=TOPS[P.b2top];
+  const red={x:P.red.x,y:P.red.y,z:0,r:P.groove/2,mu:P.mu.groove,s:'groove'},cageA={x:P.cage.x,y:P.cage.y,z:c1.z(),r:c1.d()/2,mu:P.mu[c1.s],s:c1.s},cageB={x:P.cage.x,y:P.cage.y,z:P.b2z,r:c2.d()/2,mu:P.mu[c2.s],s:c2.s},top={x:P.rod.x,y:P.rod.y,z:tp.z(),r:tp.d()/2,mu:P.mu[tp.s],s:tp.s};
+  // turning directions seen from the right side, + = anticlockwise
+  const sW=-1,sRed=1,sCage=P.cross1?-sRed:sRed,sTop=P.cross2?-sCage:sCage,legsFwd=sTop===-1;
+  const N1=P.tyreD/P.tread,N2=P.groove/(2*cageA.r),N3=(2*cageB.r)/(2*top.r),N=N1*N2*N3;
+  const wr=P.mph*17.6/(Math.PI*P.tyreD),rpm={wheel:wr*60,red:wr*N1*60,cage:wr*N1*N2*60,top:wr*N*60};
+  const L=LEGS[P.hoof],w=rpm.top/60*TAU,Tlegs=L.tg+L.kd*w*w,Tc=P.load==='legs'?Tlegs:P.Tman;
+  const mk=(d,dn,cr,T0,dT,wd)=>{const g=beltGeom(d,d.r,dn,dn.r,cr);if(!g)return null;const tk=tightKey(g,d,wd),sk=tk==='sA'?'sB':'sA';
+    const e1=Math.exp(d.mu*g.th1),e2=Math.exp(dn.mu*g.th2),e=Math.min(e1,e2),cap=2*T0*(e-1)/(e+1),slip=dT>cap;
+    const dTa=Math.min(dT,cap),T1=T0+dTa/2,T2=Math.max(.01,T0-dTa/2),phi1=Math.min(g.th1,Math.log(T1/T2)/d.mu),phi2=Math.min(g.th2,Math.log(T1/T2)/dn.mu);
+    // the order the cord travels: tight strand onto the driver, round the driver, slack strand, round the driven pulley
+    const arcD=tk==='sA'?g.arc1:[...g.arc1].reverse(),arcN=(cr?(tk==='sA'?[...g.arc2].reverse():g.arc2):(tk==='sA'?g.arc2:[...g.arc2].reverse()));
+    const span=Math.hypot(g.sA[1].x-g.sA[0].x,g.sA[1].y-g.sA[0].y),fleet=Math.atan(Math.abs(dn.z-d.z)/span)*180/Math.PI;
+    return {g,tk,sk,d,dn,cr,T0,dT,cap,slip,margin:cap/dT,T1,T2,phi1,phi2,e1,e2,arcD,arcN,span,fleet,len:plen(g.arc1)+plen(g.arc2)+2*span,sag:2*span/(4*T0)};};
+  const dT2=Tc/(top.r*IN),Tcage=dT2*cageB.r*IN,dT1=Tcage/(cageA.r*IN),Tred=dT1*red.r*IN,Ftyre=Tred/(P.tread/2*IN),capT=P.mu.tyre*P.push;
+  const b1=mk(red,cageA,P.cross1,P.T01,dT1,sRed),b2=mk(cageB,top,P.cross2,P.T02,dT2,sCage);
+  const tyre={need:Ftyre,cap:capT,margin:capT/Ftyre,slip:Ftyre>capT};
+  const parts=[['tyre','Tyre',tyre.margin],['b1','Belt 1',b1?b1.margin:0],['b2','Belt 2',b2?b2.margin:0]];const first=parts.reduce((a,b)=>b[2]<a[2]?b:a);
+  // what the cord hits
+  const OB=[{n:'deck',x0:2.6,x1:17.3,y0:-1,y1:0,z0:-1.8,z1:1.8},{n:'left prong of the deck',x0:0,x1:2.6,y0:-1,y1:0,z0:-1.8,z1:-.95},{n:'right prong of the deck',x0:0,x1:2.6,y0:-1,y1:0,z0:.95,z1:1.8},{n:'roller handle on the deck',x0:4,x1:10.5,y0:0,y1:1.2,z0:-.6,z1:.6},{n:'lower tie rod of the A-frame',x0:12.7,x1:12.95,y0:5.85,y1:6.1,z0:-1.9,z1:1.9},
+    {n:'left rack rail',x0:-1.5,x1:18,y0:-1.3,y1:-.8,z0:-2.3,z1:-1.9},{n:'right rack rail',x0:-1.5,x1:18,y0:-1.3,y1:-.8,z0:1.9,z1:2.3},{n:'basket floor',x0:0,x1:14.3,y0:-1.45,y1:-1.25,z0:-7.75,z1:7.75}];
+  const hits=[];for(const [bn,b] of [['Belt 1',b1],['Belt 2',b2]]){if(!b)continue;for(const k of ['sA','sB']){const [p0,p1]=b.g[k],z0=b.d.z,z1=b.dn.z;for(let i=1;i<40;i++){const t=i/40,x=p0.x+(p1.x-p0.x)*t,y=p0.y+(p1.y-p0.y)*t,z=z0+(z1-z0)*t;for(const o of OB)if(x>o.x0&&x<o.x1&&y>o.y0-.08&&y<o.y1+.08&&z>o.z0&&z<o.z1){if(!hits.some(h=>h.n===o.n&&h.b===bn))hits.push({b:bn,n:o.n,x,y,z});}}}}
+  const cd1=CORDS[P.cord1];if(cd1.d>P.gap+.4)hits.push({b:'Belt 1',n:'gap between the red wheels: the cord is thicker than the gap',x:P.red.x,y:P.red.y-P.groove/2,z:0});
+  return {tc,red,cageA,cageB,top,sW,sRed,sCage,sTop,legsFwd,N1,N2,N3,N,Nt:Math.PI*P.tyreD/39.4,rpm,Tc,Tlegs,dT1,dT2,Tcage,Tred,Ftyre,tyre,b1,b2,first,parts,hits,OB};}
+function selInfo(){const s=S;if(SEL==='legs')return null;const b=SEL==='b1'?s.b1:SEL==='b2'?s.b2:null;if(b)return [`tight ${f1(b.T1)} N   slack ${f1(b.T2)} N`,`wrap ${deg(b.g.th1)}° on ${b.d.s}, ${deg(b.g.th2)}° on ${b.dn.s}`,`${b.slip?'slipping':Math.round(100/b.margin)+'% of its grip used'}`];
+  if(SEL==='red')return [`turns ${f1(s.N1)}× the wheel`,`${f1(s.rpm.red)} rpm`,`belt 1 wraps ${s.b1?deg(s.b1.g.th1):'–'}°`];
+  if(SEL==='cage')return [`${f1(s.rpm.cage)} rpm`,`belt 1 on ${CAGE1[P.b1].n.toLowerCase()}`,`belt 2 on ${CAGE2[P.b2cage].n.toLowerCase()}`];
+  if(SEL==='top')return [`${f1(s.rpm.top)} rpm, ${s.sTop<0?'clockwise':'anticlockwise'} seen from the right`,`legs ${s.legsFwd?'walk forward':'walk backward'}`,`load ${s.Tc.toFixed(2)} N·m`];
+  if(SEL==='tyre')return [`drag needed ${f1(s.Ftyre)} N`,`grip ${f1(s.tyre.cap)} N (push ${P.push} N × ${P.mu.tyre})`,s.tyre.slip?'slipping':Math.round(100/s.tyre.margin)+'% of grip used'];return null;}
+const deg=r=>(r*180/Math.PI).toFixed(0);
+const mat=(c,o={})=>new T.MeshStandardMaterial(Object.assign({color:srgb(c),roughness:.6},o));
+const v3=(x,y,z)=>new T.Vector3(x,y,z),DT=DTV,W=(p,z=0)=>v3(p.x*IN,(p.y+DT)*IN,z*IN);  // the deck top is 33 in. off the floor
+const box=(cx,cy,cz,sx,sy,sz,m)=>{const o=new T.Mesh(new T.BoxGeometry(sx*IN,sy*IN,sz*IN),m);o.position.copy(W({x:cx,y:cy},cz));return o;};
+const cylAB=(a,b,r,m,seg=12)=>{const d=new T.Vector3().subVectors(b,a),L=d.length(),o=new T.Mesh(new T.CylinderGeometry(r,r,Math.max(1e-5,L),seg),m);o.position.copy(a).addScaledVector(d,.5);o.quaternion.setFromUnitVectors(v3(0,1,0),d.normalize());return o;};
+const discZ=(r,t,m,seg=40,open=false)=>{const o=new T.Mesh(new T.CylinderGeometry(r*IN,r*IN,t*IN,seg,1,open),m);o.rotation.x=Math.PI/2;return o;};
+const tube=(pts,r,m,seg)=>new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts,false,'catmullrom',.2),seg||pts.length*6,r,8,false),m);
+function strap(a,b,n,m){const d=new T.Vector3().subVectors(b,a),L=d.length(),o=new T.Mesh(new T.BoxGeometry(1.25*IN,L,.036*IN),m||mat('#b9bec3',{metalness:.6,roughness:.42}));const y=d.clone().normalize(),z=n.clone().normalize(),x=new T.Vector3().crossVectors(y,z).normalize();z.crossVectors(x,y);o.quaternion.setFromRotationMatrix(new T.Matrix4().makeBasis(x,y,z));o.position.copy(a).addScaledVector(d,.5);o.castShadow=true;return o;}
+function arrowArc(c,z,r,dir,start=.5,span=1.6){const g=new T.Group(),m=new T.MeshBasicMaterial({color:srgb(css('--green'))});const pts=[];for(let i=0;i<=20;i++){const t=start+dir*span*i/20;pts.push(v3(Math.cos(t)*r*IN,Math.sin(t)*r*IN,0));}
+  g.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),30,.0016,6),m));const te=start+dir*span,cone=new T.Mesh(new T.ConeGeometry(.0055,.016,10),m);cone.position.set(Math.cos(te)*r*IN,Math.sin(te)*r*IN,0);cone.quaternion.setFromUnitVectors(v3(0,1,0),v3(-Math.sin(te)*dir,Math.cos(te)*dir,0));g.add(cone);g.position.copy(W(c,z));return g;}
+let rig=new T.Group();const G={},PICK=[],PULSE=[],BEADS=[];
+const pick=(o,sel)=>{o.traverse(m=>{if(m.isMesh){m.userData.sel=sel;PICK.push(m);}});return o;};
+const lerpC=(a,b,t)=>a.clone().lerp(b,Math.max(0,Math.min(1,t)));
+function build(){scene.remove(rig);rig.traverse(o=>{if(o.geometry)o.geometry.dispose();});rig=new T.Group();scene.add(rig);rig.position.x=RAX-S.tc.x*IN;PICK.length=0;PULSE.length=0;BEADS.length=0;const s=S,metal=mat('#c3c8cd',{metalness:.55,roughness:.35}),black=mat('#26241f',{roughness:.8});
+  // basket on the rack
+  {const pts=[],y=-1.35,hw=7.75,top=-.2;for(let k=0;k<=10;k++){const z=-hw+2*hw*k/10;pts.push(W({x:0,y},z),W({x:14.3,y},z));}for(let k=0;k<=7;k++){const x=14.3*k/7;pts.push(W({x,y},-hw),W({x,y},hw));}
+    for(const [x,z] of [[0,-hw],[0,hw],[14.3,-hw],[14.3,hw]])pts.push(W({x,y},z),W({x,y:top},z));for(const z of [-hw,hw])pts.push(W({x:0,y:top},z),W({x:14.3,y:top},z));for(const x of [0,14.3])pts.push(W({x,y:top},-hw),W({x,y:top},hw));
+    rig.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(pts),new T.LineBasicMaterial({color:srgb('#2a2824')})));}
+  // Razor A deck, rear fork slot open
+  {const al=mat('#cfd4d8',{metalness:.55,roughness:.3});rig.add(box(9.95,-.07,0,14.7,.14,3.6,al));for(const sg of [-1,1]){rig.add(box(1.3,-.07,sg*1.375,2.6,.14,.85,al));rig.add(box(8.65,-.5,sg*1.74,17.3,.95,.12,al));}}
+  // A-frame: LSTA12 behind, LSTA9 in front, both sides; lower #8-32 tie rod
+  {const r=P.rod;for(const z of [-1.86,1.86]){rig.add(strap(W({x:r.x-7.2,y:0},z),W({x:r.x+.5,y:r.y+.9},z),v3(0,0,1)));rig.add(strap(W({x:Math.min(17.1,r.x+2.6),y:0},z),W({x:r.x-.3,y:r.y+.9},z),v3(0,0,1)));}
+    rig.add(cylAB(W({x:12.82,y:5.97},-2.3),W({x:12.82,y:5.97},2.3),.082*IN,mat('#d3d7db',{metalness:.6,roughness:.35}),8));}
+  // roller handle on the deck, its wire to the cage
+  {const o=mat(css('--orange'),{roughness:.5});const h=new T.Mesh(new T.CylinderGeometry(.55*IN,.6*IN,6.5*IN,16),o);h.rotation.z=Math.PI/2;h.position.copy(W({x:7.25,y:.6}));rig.add(h);
+    rig.add(tube([W({x:4,y:.6}),W({x:1.5,y:.5},-.2),W({x:-.2,y:.1},-.6),W({x:P.cage.x+1.6,y:P.cage.y+.2},P.capL-.9),W({x:P.cage.x,y:P.cage.y},P.capL-1.1),W({x:P.cage.x,y:P.cage.y},P.capL-.2)],.125*IN,mat('#d3d7db',{metalness:.6,roughness:.35}),60));}
+  // red wheels on their LSTA9 arms hanging from the rack
+  {const g=new T.Group();g.position.copy(W(P.red));const half=P.gap/25.4/2+.472,red=mat(css('--red'),{roughness:.45}),hub=mat('#9a9a96');
+    for(const z of [-half,half]){const w=discZ(P.tread/2,24/25.4,red,48);w.position.z=z*IN;g.add(w);const hb=discZ(P.tread/2*.58,24.4/25.4,hub,20);hb.position.z=z*IN;g.add(hb);for(let i=0;i<8;i++){const a=i/8*TAU,sp=new T.Mesh(new T.BoxGeometry(.18*IN,P.tread*.2*IN,.3*IN),hub);sp.position.set(Math.cos(a)*P.tread*.3*IN,Math.sin(a)*P.tread*.3*IN,z*IN);sp.rotation.z=a+Math.PI/2;g.add(sp);}}
+    rig.add(pick(g,'red'));G.red=g;rig.add(cylAB(W(P.red,-1.6),W(P.red,1.6),.125*IN,mat('#d3d7db',{metalness:.6}),10));
+    for(const z of [-1.45,1.45]){const a=W({x:.4,y:-1.3},z),b=W(P.red,z),d=new T.Vector3().subVectors(b,a);rig.add(strap(a,a.clone().addScaledVector(d,1.15),v3(0,0,1)));}}
+  // roller cage across the bike
+  {const g=new T.Group();g.position.copy(W(P.cage));const len=P.capR-P.capL,mid=(P.capR+P.capL)/2,o=mat(css('--orange'),{roughness:.5}),zn=mat('#d3d7db',{metalness:.6,roughness:.35});
+    for(let i=0;i<6;i++){const a=i/6*TAU,b=new T.Mesh(new T.CylinderGeometry(1.3/25.4*IN,1.3/25.4*IN,len*IN,6),zn);b.rotation.x=Math.PI/2;b.position.set(Math.cos(a)*P.wireD/2*IN,Math.sin(a)*P.wireD/2*IN,mid*IN);g.add(b);}
+    for(const z of [P.capL,P.capR]){const c=discZ(P.capD/2,.9,o,28);c.position.z=z*IN;g.add(c);}
+    if(P.b1==='tape1'||P.b1==='wires1'){if(P.b1==='tape1'){const t=discZ(P.tapeD/2,.75,mat('#1b1b1b',{roughness:.4}),32);t.position.z=0;g.add(t);}}
+    if(P.b2cage==='tape2'){const t=discZ(P.tapeD/2,.75,mat('#1b1b1b',{roughness:.4}),32);t.position.z=P.b2z*IN;g.add(t);}
+    const mkr=new T.Mesh(new T.BoxGeometry(.08*IN,.3*IN,(len-.2)*IN),mat(css('--hot')));mkr.position.set(0,P.wireD/2*IN,mid*IN);g.add(mkr);
+    rig.add(pick(g,'cage'));G.cage=g;}
+  // top rod with green cap, brass disc, and the lid when chosen
+  {const g=new T.Group();g.position.copy(W(P.rod));const zn=mat('#d3d7db',{metalness:.6,roughness:.35});const rod=new T.Mesh(new T.CylinderGeometry(.082*IN,.082*IN,18.8*IN,10),zn);rod.rotation.x=Math.PI/2;rod.position.z=-3.2*IN;g.add(rod);
+    const gc=discZ(P.greenD/2,1.2,mat(css('--green'),{roughness:.5,side:T.DoubleSide}),36,true);gc.position.z=P.greenZ*IN;g.add(gc);const back=discZ(P.greenD/2,.06,mat(css('--green')),36);back.position.z=(P.greenZ+.6)*IN;g.add(back);const sp=discZ(.35,1.1,mat('#eeeeea'),16);sp.position.z=P.greenZ*IN;g.add(sp);
+    const br=discZ(P.brassD/2,.06,mat(css('--brass'),{metalness:.7,roughness:.3}),48);br.position.z=P.brassZ*IN;g.add(br);
+    for(const z of [-2.05,-1.65,1.65,2.05,P.brassZ+.15]){const n=new T.Mesh(new T.CylinderGeometry(.17*IN,.17*IN,.13*IN,6),zn);n.rotation.x=Math.PI/2;n.position.z=z*IN;g.add(n);}
+    if(P.b2top==='lid'){for(const sg of [-1,1]){const l=new T.Mesh(new T.CylinderGeometry((P.lidD/2+.15)*IN,(P.lidD/2+.45)*IN,.4*IN,64),mat('#f0802e',{roughness:.5}));l.rotation.x=sg*Math.PI/2;l.position.z=(P.lidZ+sg*.2)*IN;g.add(l);}}
+    const mk=new T.Mesh(new T.BoxGeometry(.1*IN,.5*IN,.1*IN),mat(css('--hot')));mk.position.set(0,(P.b2top==='lid'?P.lidD/2:P.greenD/2)*IN,(P.b2top==='lid'?P.lidZ+.5:P.greenZ-.65)*IN);g.add(mk);
+    rig.add(pick(g,'top'));G.top=g;}
+  // belts: strands run between the pulleys' own planes, so a belt off line shows as a slanted cord
+  for(const [key,b] of [['b1',s.b1],['b2',s.b2]])if(b)beltMesh(b,key);
+  // tyre contact
+  {const n={x:P.red.x-s.tc.x,y:P.red.y-s.tc.y},l=Math.hypot(n.x,n.y),C={x:P.red.x-n.x/l*P.tread/2,y:P.red.y-n.y/l*P.tread/2};const c=new T.Mesh(new T.SphereGeometry(.2*IN,16,12),new T.MeshBasicMaterial({color:srgb(s.tyre.slip?css('--hot'):css('--red'))}));c.position.copy(W(C,0));rig.add(c);if(s.tyre.slip)PULSE.push(c);G.contact=C;}
+  // turning arrows
+  rig.add(arrowArc(P.red,1.6,P.tread/2+.45,s.sRed));rig.add(arrowArc(P.cage,P.capR+.6,P.capD/2+.45,s.sCage));rig.add(arrowArc(P.rod,2.4,(P.b2top==='lid'?P.lidD/2:P.greenD/2)+.5,s.sTop));
+  // collisions
+  for(const h of s.hits){const m=new T.MeshBasicMaterial({color:srgb(css('--hot'))}),k=.35;for(const sg of [-1,1])rig.add(cylAB(W({x:h.x-k,y:h.y-k*sg},h.z),W({x:h.x+k,y:h.y+k*sg},h.z),.05*IN,m,6));}
+  rig.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});}
+function beltMesh(b,key){const tc=srgb(css('--tight')),sc=srgb(css('--slack')),pale=srgb(css('--paper'));const colOf=Tn=>lerpC(sc,tc,(Tn-b.T2)/Math.max(.01,b.T1-b.T2)),radOf=Tn=>CORDS[key==='b1'?P.cord1:P.cord2].d/50.8*(.75+.5*Tn/Math.max(b.T1,1))*IN*(SEL===key?1.25:1);
+  const zD=b.d.z,zN=b.dn.z,g=new T.Group();
+  const seg=(pts,Tn,idle)=>{const m=new T.MeshStandardMaterial({color:idle?lerpC(colOf(Tn),pale,.55):colOf(Tn),roughness:.6,emissive:new T.Color(0),transparent:!!idle,opacity:idle?.7:1});const o=pts.length===2?cylAB(pts[0],pts[1],radOf(Tn),m,8):tube(pts,radOf(Tn),m,pts.length*3);g.add(o);return o;};
+  const [tD,tN]=b.g[b.tk],[sD,sN]=b.g[b.sk];seg([W(tN,zN),W(tD,zD)],b.T1);seg([W(sD,zD),W(sN,zN)],b.T2);
+  const arcT=(arc,z,th,phi,mu,Tin,Tout,driver)=>{const L=plen(arc),n=arc.length,out=[];let acc=0,chunk=[arc[0]],T0=Tin,idle0=true;const flush=(Tc,idle)=>{if(chunk.length>1)out.push(seg(chunk.map(p=>W(p,z)),Tc,idle));chunk=[chunk[chunk.length-1]];};
+    for(let i=1;i<n;i++){acc+=Math.hypot(arc[i].x-arc[i-1].x,arc[i].y-arc[i-1].y);const f=acc/L*th,idle=f<th-phi;const Tv=idle?Tin:(driver?Tin*Math.exp(-mu*(f-(th-phi))):Tin*Math.exp(mu*(f-(th-phi))));chunk.push(arc[i]);if(chunk.length>=5||idle!==idle0||i===n-1){flush(Math.max(b.T2,Math.min(b.T1,Tv)),idle0);idle0=idle;}}
+    if(phi>=th-1e-6&&b.slip)for(const o of out)PULSE.push(o);};
+  arcT(b.arcD,zD,b.g.th1,b.phi1,b.d.mu,b.T1,b.T2,true);arcT(b.arcN,zN,b.g.th2,b.phi2,b.dn.mu,b.T2,b.T1,false);
+  pick(g,key);rig.add(g);
+  // beads ride the cord so its travel can be followed
+  const path=[];const add=(pts,z0,z1)=>{pts.forEach((p,i)=>{const t=pts.length>1?i/(pts.length-1):0;path.push(W(p,z0+(z1-z0)*t));});};
+  add([tN,tD],zN,zD);add(b.arcD,zD,zD);add([sD,sN],zD,zN);add(b.arcN,zN,zN);const cum=[0];for(let i=1;i<path.length;i++)cum.push(cum[i-1]+path[i].distanceTo(path[i-1]));
+  const bm=new T.MeshBasicMaterial({color:srgb(css('--paper'))});const beads=[];for(let i=0;i<12;i++){const s=new T.Mesh(new T.SphereGeometry(radOf(b.T1)*1.15,8,6),bm);rig.add(s);beads.push(s);}BEADS.push({key,path,cum,beads});
+  // a ring on the cage marks where the belt touches it; drag it sideways
+  const onCage=key==='b1'?b.dn:b.d;const ring=new T.Mesh(new T.TorusGeometry((onCage.r+.18)*IN,.05*IN,6,32),new T.MeshBasicMaterial({color:srgb(css('--accent'))}));ring.position.copy(W(P.cage,onCage.z));rig.add(ring);ring.userData.sel='z'+key;PICK.push(ring);}
+function placeBeads(){for(const B of BEADS){const L=B.cum[B.cum.length-1];if(!L)continue;B.beads.forEach((s,i)=>{let d=((ang[B.key==='b1'?'belt1':'belt2']*IN+i*L/B.beads.length)%L+L)%L;let k=1;while(k<B.cum.length-1&&B.cum[k]<d)k++;const t=(d-B.cum[k-1])/Math.max(1e-9,B.cum[k]-B.cum[k-1]);s.position.copy(B.path[k-1]).lerp(B.path[k],t);});}}
+const FIXES=[{k:'track',n:'Belt 1 onto a tape track on the bike’s centre line',on:()=>P.b1==='tape1',set:v=>{P.b1=v?'tape1':'capL';}},
+ {k:'cross',n:'Cross belt 2 once (a figure 8)',on:()=>P.cross2,set:v=>{P.cross2=v;}},
+ {k:'lid',n:'Two bucket lids as the top pulley; belt 2 on a tape track',on:()=>P.b2top==='lid',set:v=>{P.b2top=v?'lid':'green';P.b2cage=v?'tape2':'wires';}},
+ {k:'shock',n:'Shock cord instead of paracord, fitted tighter',on:()=>P.cord1!=='para',set:v=>{P.cord1=v?'shock8':'para';P.cord2=v?'shock4':'para';P.T01=v?20:10;P.T02=v?22:10;}},
+ {k:'push',n:'Stronger bungee pressing the red wheels on the tyre',on:()=>P.push>=30,set:v=>{P.push=v?30:15;}},
+ {k:'hoof',n:'Coroplast box hooves instead of pine blocks',on:()=>P.hoof==='coro',set:v=>{P.hoof=v?'coro':'pine';}}];
+function nodes(){const s=S,b1=s.b1,b2=s.b2,gapHit=s.hits.some(h=>h.b==='Belt 1'&&h.n.startsWith('gap')),b2hit=s.hits.filter(h=>h.b==='Belt 2');
+  const pct=b=>b.slip?'slips':Math.round(100/b.margin)+'%';
+  return [{k:'tyre',n:'Tyre',v:`${f1(s.rpm.wheel)} rpm`,st:s.tyre.slip?'bad':s.tyre.margin<1.4?'warn':'ok',d:[`The tyre has to drag the red wheels round with ${f1(s.Ftyre)} N.`,`They can grip ${f1(s.tyre.cap)} N, pressed on with ${P.push} N.`,s.tyre.slip?'Not enough: they skid on the tyre.':'Enough.'],fx:['push','hoof']},
+   {k:'red',n:'Red wheels',v:`${f1(s.rpm.red)} rpm`,st:gapHit?'bad':'ok',d:[`They turn ${s.N1.toFixed(2)} times per wheel turn.`,`Belt 1 sits in the ${P.gap} mm gap between them. ${CORDS[P.cord1].n} is ${CORDS[P.cord1].d} mm thick${gapHit?': too thick':''}.`],fx:['shock']},
+   {k:'b1',n:'Belt 1',v:pct(b1),st:b1.slip||b1.fleet>3?'bad':b1.margin<1.4?'warn':'ok',d:[`Red wheels to the cage ${CAGE1[P.b1].n.toLowerCase().replace(' (as built)','')}.`,`${b1.fleet>3?`Runs ${b1.fleet.toFixed(0)}° off line, so it climbs off.`:'Runs straight.'}`,b1.slip?`Slips: the load needs ${f1(b1.dT)} N of pull difference across it; it can hold ${f1(b1.cap)} N.`:`Grips: uses ${Math.round(100/b1.margin)}% of what it can hold.`],fx:['track','shock']},
+   {k:'cage',n:'Cage',v:`${f1(s.rpm.cage)} rpm`,st:'ok',d:[`Turns ${(s.N1*s.N2).toFixed(1)} times per wheel turn.`,`Belt 1 on ${CAGE1[P.b1].n.toLowerCase().replace(' (as built)','')}; belt 2 on ${CAGE2[P.b2cage].n.toLowerCase().replace(' (as built)','')}.`],fx:['track','lid']},
+   {k:'b2',n:'Belt 2',v:pct(b2),st:b2.slip?'bad':b2hit.length?'warn':b2.margin<1.4?'warn':'ok',d:[`Cage to the ${TOPS[P.b2top].n.toLowerCase().replace(' (as built)','')}, ${P.cross2?'crossed':'open'}.`,b2.slip?`Slips: the load needs ${f1(b2.dT)} N of pull difference across it; it can hold ${f1(b2.cap)} N.`:`Grips: uses ${Math.round(100/b2.margin)}% of what it can hold.`,...b2hit.map(h=>`Rubs the ${h.n}.`)],fx:['lid','cross','shock']},
+   {k:'top',n:'Top',v:`${f1(s.rpm.top)} rpm`,st:s.legsFwd?'ok':'bad',d:[`Turns ${s.legsFwd?'clockwise':'anticlockwise'} seen from the right; the legs need clockwise.`,`Must deliver ${s.Tc.toFixed(s.Tc<10?2:0)} N·m to swing the legs.`],fx:['cross','lid']},
+   {k:'legs',n:'Legs',v:s.legsFwd?'forward':'backward',st:!s.legsFwd||Math.abs(s.N/s.Nt-1)>.5?'bad':Math.abs(s.N/s.Nt-1)>.15?'warn':'ok',d:[`They walk ${s.legsFwd?'forward':'backward'}.`,`Crank turns per wheel turn ${s.N.toFixed(2)}; ${s.Nt.toFixed(2)} keeps them in step with the road (${(s.N/s.Nt).toFixed(1)}×).`,`${LEGS[P.hoof].n}.`],fx:['lid','hoof','cross']}];}
+function cutPlan(b,cordKey,T0){const c=CORDS[cordKey],elastic=c.EA<1000,path=b.len,cut=elastic?path/(1+T0/c.EA):path,extra=elastic?1:3;return {c,elastic,path,cut:cut+extra,stretch:elastic?(path/(cut)-1)*100:0,lossPerMM:c.EA/(path*25.4)};}
+function steps(){const s=S,b1=s.b1,b2=s.b2,k1=cutPlan(b1,P.cord1,P.T01),k2=cutPlan(b2,P.cord2,P.T02),c1=CORDS[P.cord1],c2=CORDS[P.cord2],gap=P.gap;
+  const on1=CAGE1[P.b1].n.toLowerCase().replace(' (as built)',''),on2=CAGE2[P.b2cage].n.toLowerCase().replace(' (as built)',''),top=TOPS[P.b2top].n.toLowerCase().replace(' (as built)','');
+  const join=(c,cut)=>c.join==='para'?`<li>Pull about 3 in. of the white core strands out of each end and cut them off, so the two cores will just meet.</li><li>Push one hollow end 1-1/2 in. inside the other (a bobby pin or a bent wire pulls it through).</li><li>Stitch through both layers three times with #18 nylon mason’s line and a needle, knot, then melt the sheath ends with a lighter so they cannot fray.</li><li>The joint ends up about one cord thick and 1-1/2 in. long; it bumps once per turn on the small pulleys, which is fine.</li>`:`<li>Before joining, slide on 1-1/2 in. of 3/8 in. heat-shrink tube.</li><li>Overlap the ends 1 in. Wrap them tight with 15 turns of #18 nylon mason’s line, tie off, add a drop of super glue.</li><li>Slide the heat-shrink over the joint and shrink it with a lighter held below, moving. The joint is smooth and runs over the pulleys without a bump.</li>`;
+  const cordRow=(k,c,kp,b)=>`<tr><td>${c.n}</td><td class="mono">${c.d} mm</td><td class="mono">${c.d<=gap+.4?'yes':'no'}</td><td class="mono">${f1(c.EA/(kp.path*25.4))} N</td></tr>`;
+  return [
+  {t:'What the belts are made of',sel:null,cam:'q',b:`<p>Each belt is one closed loop of round cord. Three cords fit this rig; all are at Home Depot.</p>
+   <table class="tbl"><tr><th>Cord</th><th>Thick</th><th>Fits the ${gap} mm red-wheel gap</th><th>Pull lost per 1 mm the frame flexes</th></tr>${Object.entries(CORDS).map(([k,c])=>cordRow(k,c,{path:b1.len},b1)).join('')}</table>
+   <p>Paracord barely stretches. If the A-frame or the roller wire bends 1 mm, a paracord loop loses about ${f1(CORDS.para.EA/(b1.len*25.4))} N, which is all of its pull, and it slips. That is the slop. Shock cord is rubber strands in a woven sheath: it stays stretched and keeps pulling when things flex.</p>
+   <p><b>Belt 1</b> (red wheels to cage): it must sit in the ${gap} mm gap between the red wheels, so <b>paracord</b> or <b>1/8 in. shock cord</b>. 1/4 in. shock cord is too thick. Now set to: ${c1.n}.<br><b>Belt 2</b> (cage to top pulley): <b>1/4 in. shock cord</b> grips best and keeps its pull. Now set to: ${c2.n}.</p>
+   <div class="row"><span>Belt 1 cord</span><select id="mc1">${Object.entries(CORDS).map(([k,v])=>`<option value="${k}" ${P.cord1===k?'selected':''}>${v.n}</option>`).join('')}</select></div>
+   <div class="row"><span>Belt 2 cord</span><select id="mc2">${Object.entries(CORDS).map(([k,v])=>`<option value="${k}" ${P.cord2===k?'selected':''}>${v.n}</option>`).join('')}</select></div>`},
+  {t:'Measure the route with string',sel:null,cam:'side',b:`<ol><li>Unhook belts that are on now.</li><li>Run a piece of string along each route exactly as in the model, snug, and pinch where it meets itself.</li><li>Belt 1 route: in the red-wheel gap, round the side toward the tyre, up to the ${on1}, round its back. The model says <b>${fr(b1.len,8)} in.</b></li><li>Belt 2 route: round the cage ${on2}, forward through the slot in the rear of the deck, round the ${top}${P.cross2?', crossing once in the middle':''}. The model says <b>${fr(b2.len,8)} in.</b></li><li>If your string differs by more than 1/2 in., a position in the model is off: drag that pulley in the model until the length matches.</li></ol>`},
+  {t:'Cut the cord',sel:null,cam:'q',b:`<table class="tbl"><tr><th></th><th>Belt 1</th><th>Belt 2</th></tr><tr><td>Cord</td><td>${c1.n}</td><td>${c2.n}</td></tr><tr><td>Route length</td><td class="mono">${fr(k1.path,8)} in.</td><td class="mono">${fr(k2.path,8)} in.</td></tr>
+   <tr><td>Pull when fitted</td><td class="mono">${P.T01} N</td><td class="mono">${P.T02} N</td></tr><tr><td>Stretch when fitted</td><td class="mono">${k1.elastic?k1.stretch.toFixed(0)+'%':'none'}</td><td class="mono">${k2.elastic?k2.stretch.toFixed(0)+'%':'none'}</td></tr><tr><td><b>Cut</b> (includes the joint)</td><td class="mono"><b>${fr(k1.cut,8)} in.</b></td><td class="mono"><b>${fr(k2.cut,8)} in.</b></td></tr></table>
+   <p class="note">Shock cord: cut shorter than the route so it stretches on and pulls; the extra 1 in. is the joint overlap. Paracord: cut the route length plus 3 in. for the splice, then pull it as tight as you can by hand before stitching. Shock cord stiffness varies by brand: hang 1 kg on a 10 in. piece; if it stretches more than 1-1/2 in., cut ${fr(1,4)} in. shorter than shown.</p>`},
+  {t:'Belt 1 into the red-wheel gap',sel:'b1',cam:'gap',b:`<ol><li>Unhook the red-wheel bungee and swing the wheels off the tyre.</li><li>Lay the cord into the gap between the two wheels from above and let it drop round the side toward the tyre. It sits ${((P.tread-P.groove)/2*25.4).toFixed(0)} mm in from the tread, so it never touches the tyre.</li><li>Bring both ends up toward the cage. Swing the wheels back onto the tyre and rehook the bungee.</li></ol><p class="note">In the close-up, the cord between the two red wheels is belt 1.</p>`},
+  {t:'Belt 1 round the cage, then join it',sel:'b1',cam:'cage',b:`<ol><li>Take both ends round the back of the ${on1}${P.cross1?', crossing once on the way up':''}. ${P.b1==='capL'?'This is where it sits now, 4-3/8 in. to the left of the red wheels, so it runs off line and climbs off. Better: the tape track on the centre line (Test tab, Belt 1, On the cage).':'It runs straight up from the red wheels, so it stays on.'}</li><li>Pull the ends to meet on the strand between the pulleys, not on a pulley.</li>${join(c1,k1.cut)}</ol>`},
+  {t:'Belt 2 round the cage and the top pulley',sel:'b2',cam:'topp',b:`<ol><li>Loop the cord round the cage ${on2}, ${fr(Math.abs(P.b2z),8)} in. ${P.b2z>=0?'right':'left'} of the centre line.</li><li>Run both strands forward through the slot in the rear of the Razor deck (where its back wheel was) and up over the top of the deck.</li><li>Over the ${top}.${P.b2top==='lid'?' Slip the loop over the end of the rod before the brass disc, then into the V between the two lids.':P.b2top==='brass'?' The brass disc is 12 in. out to the left, so this belt would run far off line.':' Slip the loop over the right-hand end of the rod.'}</li>${P.cross2?'<li>Cross the two strands once, in the middle of the run (a figure 8). The cross is what makes the top pulley turn clockwise, so the legs walk forward.</li>':'<li>Open loop: the top pulley will turn anticlockwise, and the legs walk backward. Cross it (Drive tab, fixes).</li>'}<li>Join it on the long upper strand:</li>${join(c2,k2.cut)}</ol>`},
+  {t:'Keep the belts on their tracks',sel:'cage',cam:'cage',b:`<ol><li>On each tape track, wrap three extra turns of tape at each edge, 3/4 in. apart: two low ridges the cord cannot climb.</li><li>${P.b2top==='green'?'The green cap has no rim: put a rubber band round each edge of it as a flange.':P.b2top==='lid'?'The V between the lids keeps the cord centred by itself.':'The brass disc edge is thin: the cord will not stay on it.'}</li><li>Sight along each belt from above. It should leave one pulley heading straight for the next. Belt 1 is ${b1.fleet.toFixed(1)}° off now, belt 2 ${b2.fleet.toFixed(1)}°; keep both under 3°.</li></ol>`},
+  {t:'Tension, then test',sel:null,cam:'q',b:`<ol><li>Hang a 200 g phone on the middle of the long strand. Belt 1 should sag <b>${fr(b1.sag,16)} in.</b>, belt 2 <b>${fr(b2.sag,16)} in.</b> More sag: shorten. Less: lengthen.</li><li>Chalk a line across cord and rim at each of the four contacts. Hold the crank back lightly with a finger and turn the wheel 5 times. A line that splits marks a slipping contact.</li><li>Count: 10 wheel turns should give <b>${(s.N*10).toFixed(1)}</b> turns of the top pulley, ${s.legsFwd?'clockwise seen from the right':'<b>anticlockwise</b>, which walks the legs backward'}.</li></ol>`}];}
+  function recompute(v){if(v)P.mph=+(v*2.237).toFixed(2);S=solve();save();return S;}
+  function attach(sc){scene=sc;if(!S)recompute();build();}
+  function rodWorld(){if(!S)recompute();return V(RAX+(P.rod.x-S.tc.x)*IN,(P.rod.y+DTV)*IN);}
+  // legs turn at the top pulley's speed and direction; a slipping contact slows everything after it
+  function phaseRate(v){if(!S)recompute();const s=S;if(!s.b1||!s.b2)return 0;const slip=(s.tyre.slip?s.tyre.margin:1)*(s.b1.slip?s.b1.margin:1)*(s.b2.slip?s.b2.margin:1);return v/(Math.PI*P.tyreD*IN)*s.N*slip*(s.legsFwd?1:-1);}
+  function pose(dist,crank){if(!S||!G.red)return;const s=S,wr=dist/(P.tyreD/2*IN),slip1=s.tyre.slip?s.tyre.margin:1,redA=wr*s.N1*slip1;G.red.rotation.z=s.sRed*redA;ang.belt1=redA*s.red.r;
+    const cageA=ang.belt1/s.cageA.r*(s.b1.slip?s.b1.margin:1);G.cage.rotation.z=s.sCage*cageA;ang.belt2=cageA*s.cageB.r;G.top.rotation.z=crank;placeBeads();
+    const pz=.5+.5*Math.sin(performance.now()/130);for(const o of PULSE)o.traverse?o.traverse(m=>{if(m.material&&m.material.emissive)m.material.emissive.setRGB(.9*pz,.15*pz,.05*pz);}):0;}
+  // ---- side panel tabs ----
+  let STEP=store.get('ab-step',0);
+  function meter(name,need,cap){const used=need/cap,col=used>1?'var(--hot)':used>.7?'var(--warn)':'var(--ok)';return `<div class="ab-meter"><span>${name}</span><div class="t"><div class="f" style="width:${Math.min(100,used*100).toFixed(1)}%;background:${col}"></div></div><b style="color:${col}">${used>1?'slips':Math.round(used*100)+'%'}</b></div>`;}
+  function chain(){const N=nodes();return `<div class="ab-chain">${N.map((n,i)=>`<button class="ab-node ${n.st}" data-ab-k="${n.k}" aria-pressed="${SEL===n.k}"><span>${n.n}</span><b>${n.v}</b><i></i></button>${i<N.length-1?'<span class="ab-arrow" aria-hidden="true"></span>':''}`).join('')}</div>`;}
+  function html(tab){const s=S;if(!s.b1||!s.b2)return '<section><p>These positions make a belt impossible. Reset.</p></section>';const N=nodes(),sel=N.find(n=>n.k===SEL),bad=N.filter(n=>n.st==='bad');
+    if(tab==='drive'){const show=sel||{d:bad.length?[`${bad.length} of 7 links fail: ${bad.map(n=>n.n.toLowerCase()).join(', ')}.`,'Tap a link for what is wrong with it.']:['Every link works.'],fx:FIXES.map(f=>f.k)};
+      return `<section><h3>The drive as built, tyre to legs</h3>${chain()}<div class="ab-detail">${sel?`<b>${sel.n}</b>`:''}${show.d.map(t=>`<p>${t}</p>`).join('')}</div>
+        <h3>Fixes${sel?' for this link':''}</h3><div class="ab-fixes">${FIXES.filter(f=>show.fx.includes(f.k)).map(f=>`<button class="ab-fix" data-ab-f="${f.k}" aria-pressed="${f.on()}"><span class="box"></span>${f.n}</button>`).join('')}</div>
+        <div class="ab-row"><button class="mini" data-ab-act="none">As built</button><button class="mini" data-ab-act="all">All fixes</button></div>
+        <p class="ab-note">In the 3D view the cords are coloured by pull, blue slack to orange tight; a contact that slips pulses red. The legs turn as fast, and in the direction, the drive turns them. Speed is the slider under the view.</p></section>`;}
+    if(tab==='test')return `<section><h3>What each contact can carry</h3><div class="ab-meters">${meter('Tyre',s.Ftyre,s.tyre.cap)}${meter('Belt 1',s.b1.dT,s.b1.cap)}${meter('Belt 2',s.b2.dT,s.b2.cap)}</div>
+        <p>${s.first[2]<1?`<b>${s.first[1]} slips first.</b> It can carry ${(s.Tc*s.first[2]).toFixed(2)} N·m at the top; the legs need ${s.Tc.toFixed(2)} N·m at ${P.mph} mph.`:`Everything grips; ${s.first[1].toLowerCase()} lets go first, at ${(s.Tc*s.first[2]).toFixed(2)} N·m.`}</p>
+        <table class="ab-tbl"><tr><th></th><th>Belt 1</th><th>Belt 2</th></tr><tr><td>Cord</td><td>${CORDS[P.cord1].n}</td><td>${CORDS[P.cord2].n}</td></tr><tr><td>Wrap</td><td>${(s.b1.g.th1*57.3).toFixed(0)}° / ${(s.b1.g.th2*57.3).toFixed(0)}°</td><td>${(s.b2.g.th1*57.3).toFixed(0)}° / ${(s.b2.g.th2*57.3).toFixed(0)}°</td></tr>
+        <tr><td>Tight / slack</td><td>${f1(s.b1.T1)} / ${f1(s.b1.T2)} N</td><td>${f1(s.b2.T1)} / ${f1(s.b2.T2)} N</td></tr><tr><td>Off line</td><td>${s.b1.fleet.toFixed(1)}°</td><td>${s.b2.fleet.toFixed(1)}°</td></tr><tr><td>Phone sag test</td><td>${fr(s.b1.sag,16)} in.</td><td>${fr(s.b2.sag,16)} in.</td></tr></table>
+        <h3>Bench tests</h3><ol class="ab-ol"><li>Chalk a line across cord and rim at each contact; hold the crank back lightly and turn the wheel 5 times. A split line is a slipping contact.</li><li>10 wheel turns should give ${(s.N*10).toFixed(1)} turns of the top pulley, ${s.legsFwd?'clockwise from the right':'anticlockwise from the right, which walks the legs backward'}.</li><li>Hang a 200 g phone mid-span: sag as in the table.</li></ol></section>`;
+    if(tab==='build'){const st=steps(),x=st[STEP]||st[0];return `<section><div class="ab-stepnav"><button class="mini" data-ab-step="${STEP-1}">Back</button><div><b>${x.t}</b><small>belts, step ${STEP+1} of ${st.length}</small></div><button class="mini" data-ab-step="${STEP+1}">Next</button></div><div class="ab-card">${x.b}</div>
+        <div class="ab-list">${st.map((q,k)=>`<button data-ab-step="${k}" aria-current="${k===STEP}">${k+1}. ${q.t}</button>`).join('')}</div></section>`;}
+    if(tab==='parts'){const rows=[['Paracord 550 (have)','belts as built'],['1/8 in. shock cord, 6 ft','belt 1'],['1/4 in. shock cord, 8 ft','belt 2'],['3/8 in. heat-shrink tube','shock-cord joints'],['#18 nylon mason’s line','whipping joints'],['Electrical tape','tracks on the cage'],['5-gallon bucket lids ×2, #10-24 bolts ×4, two 4 in. ply discs','lid pulley'],['10 in. bungee ×2','red wheels onto the tyre'],['Coroplast sheet','hoof boxes']];
+      return `<section><h3>Parts for the drive as built and its fixes</h3><table class="ab-tbl">${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table><p class="ab-note">Everything at Home Depot. The leg parts are in Bicycle mode.</p></section>`;}
+    return '';}
+  function wire(el,changed){el.querySelectorAll('[data-ab-k]').forEach(b=>b.onclick=()=>{SEL=SEL===b.dataset.abK?null:b.dataset.abK;changed(false);});
+    el.querySelectorAll('[data-ab-f]').forEach(b=>b.onclick=()=>{const f=FIXES.find(q=>q.k===b.dataset.abF);f.set(!f.on());changed(true);});
+    el.querySelectorAll('[data-ab-act]').forEach(b=>b.onclick=()=>{if(b.dataset.abAct==='none'){const m=P.mph;P=clone(BUILT);P.mph=m;}else FIXES.forEach(f=>f.set(true));changed(true);});
+    el.querySelectorAll('[data-ab-step]').forEach(b=>b.onclick=()=>{const n=steps().length;STEP=((+b.dataset.abStep)%n+n)%n;store.set('ab-step',STEP);const st=steps()[STEP];SEL=st.sel;changed(false);});
+    const m1=el.querySelector('#mc1'),m2=el.querySelector('#mc2');if(m1)m1.onchange=e=>{P.cord1=e.target.value;changed(true);};if(m2)m2.onchange=e=>{P.cord2=e.target.value;changed(true);};}
+  function status(){const s=S,N=nodes(),bad=N.filter(n=>n.st==='bad').length;return `as built · ${s.N.toFixed(2)} crank turns per wheel turn · legs ${s.legsFwd?'forward':'backward'} · ${bad?bad+' of 7 links fail':'all links work'}`;}
+  addEventListener('storage',e=>{if(e.key!=='centaur-asbuilt'||!e.newValue)return;try{const n=JSON.parse(e.newValue);P=Object.assign(clone(BUILT),n);P.mu=Object.assign(clone(BUILT.mu),n.mu||{});S=solve();if(window.__abChanged)window.__abChanged(true);}catch(_){}});
+  return {recompute,attach,rodWorld,phaseRate,pose,html,wire,status,get S(){return S;}};})();
+
+function geom(){const m=MODES[S.mode];let PC=m.PC;if(S.built&&S.mode==='bike'){const O=AB.rodWorld();return {PC:O.x-J.a/2000,O,B:add(O,V(-J.a/1000,-J.l/1000))};}if(S.mode==='pack')PC=-.42-LX.hx-J.a/2000; // pack: hooves stay behind your heels
+  const O=V(PC+J.a/2000,PLATY+OH);return {PC,O,B:add(O,V(-J.a/1000,-J.l/1000))};}
+const WASH=.0016,PLATE_Z=.10,LAYER0=.108,RAIL_Z=.075;let PLY=.006,PITCH=PLY+WASH,BARW=.030;
+const layerZ=L=>LAYER0+(L-1)*PITCH;
+const ROLL={r:.026,gear:[12,36]}; // 52 mm urethane roller on the tyre, 12:36 spur gears (module 1)
+
+/* ===== derived numbers ===== */
+let K={};
+function derive(){const dx=(PU[TD].H.x-PU[LO].H.x)/1000,adv=dx/DUTY,g=geom();
+  let best=null;for(let a=9;a<=15;a++)for(let b=12;b<=40;b++){const e=Math.abs(2*Math.PI*ROLL.r*ROLL.gear[1]/ROLL.gear[0]*b/a-adv);if(!best||e<best.e-1e-7)best={a,b,e};}
+  const advB=2*Math.PI*ROLL.r*3*best.b/best.a;let slip=0;for(let k=TD;k!==LO;k=(k-1+NS)%NS){const k2=(k-1+NS)%NS;slip+=Math.abs((PU[k2].H.x-PU[k].H.x)/1000+adv/NS);}
+  const Sh=strideH(S.mode==='pack'?S.v:MODES.pack.v),spool=2*S.pull*adv/Sh/Math.PI; // one stride gives two pulls; spool sized so legs advance one stride per stride
+  const advG=S.mode==='bike'?advB:adv;
+  const inter=V(-.40,.745),chain=(cd,t1,t2,p)=>{let n=2*cd/p+(t1+t2)/2+p*(t2-t1)**2/(4*Math.PI**2*cd);n=Math.ceil(n);if(n%2)n++;return n;};
+  K={perStep:Sh/(2*adv),adv,dx,advB,advG,TS:best.a,TJ:best.b,slip,f:S.v/advG,cad:S.v/(BK.C*BK.ring/S.cog)*60,lift:(YMAXH-YMIN)/1000,...g,clear:g.O.y-DROP,spool,Sh,inter,chainR:chain(len(sub(g.O,inter)),best.a,best.b,.00635)};}
+
+/* ===== the horse body: plank side panels outboard of the legs, inside the footprint ===== */
+let HULLZ=.147;const HEADP=[[-0.11,0.02],[-0.07,0.1],[0.03,0.12],[0.12,0.07],[0.33,-0.1],[0.37,-0.17],[0.33,-0.22],[0.22,-0.2],[0.06,-0.12],[-0.04,-0.11],[-0.11,-0.05]];
+function hullPts(){const F=K.PC+HALF,Rr=K.PC-HALF,top=K.O.y+LX.ymax+.085,bel=PLATY-.085;
+  return {F,Rr,top,bel,pts:[V(F,bel+.01),V(F+.005,top-.09),V(F-.015,top-.02),V(F-.06,top),V(K.PC,top+.004),V(Rr+.05,top+.016),V(Rr-.02,top+.005),V(Rr-.08,top-.04),V(Rr-.13,top-.13),V(Rr-.155,PLATY+.02),V(Rr-.14,bel-.05),V(Rr-.08,bel-.06),V(Rr+.01,bel-.02),V(K.PC,bel-.025),V(F-.06,bel-.01)]};}
+function hullTop(h,x){const t=h.pts.slice(2,8);if(x>=t[0].x)return t[0].y;for(let i=0;i<t.length-1;i++){const a=t[i],b=t[i+1];if(x<=a.x&&x>=b.x)return a.y+(b.y-a.y)*(a.x-x)/(a.x-b.x);}return t[t.length-1].y;}
+function waist(){const P=S.mode==='bike'?V(-.2,1.03):V(0,.98),Sh=S.mode==='bike'?V(.13,1.42):V(.03,1.45),d=sub(Sh,P),l=len(d),u=V(d.x/l,d.y/l);return {C:add(P,V(u.x*l*.3,u.y*l*.3)),n:V(-u.y,u.x),rb:.13,rz:.16};}
+/* ===== evolution (in the page): same fitness as the run that produced CHAMP ===== */
+const KEYS=['m','a','l','b','c','d','e','f','g','h','i','j','k','oh'],RANGE={m:[60,200],a:[120,320],l:[-60,120],oh:[50,260]};for(const k of 'bcdefghijk')RANGE[k]=[60,950];
+function fitness(Jx){const N=96,P=[];for(let n=0;n<N;n++){const p=lk(Jx,-n/N*TAU,.12);if(!p)return {c:1e9};P.push(p);}
+  const ys=P.map(p=>p.H.y),ymin=Math.min(...ys),ymax=Math.max(...ys);let c=Math.abs(ymin-(-(800+Jx.oh)+25))/8;
+  const con=P.map(p=>p.H.y<ymin+10);let start=-1;for(let n=0;n<N;n++)if(con[n]&&!con[(n-1+N)%N]){start=n;break;}if(start<0)return {c:1e8};
+  let run=0;while(con[(start+run)%N]&&run<N)run++;if(run<con.filter(Boolean).length)c+=20;
+  const xs=[];for(let r=0;r<run;r++)xs.push(P[(start+r)%N].H.x);const dx=xs[xs.length-1]-xs[0];if(dx>=0)c+=50;
+  const adv=Math.abs(dx)/Math.max(.05,run/N);c+=Math.abs(adv-1400)/60;const step=Math.abs(dx)/Math.max(1,run-1);let slip=0;for(let r=1;r<xs.length;r++)slip+=Math.abs(-(xs[r]-xs[r-1])-step);c+=slip/15;
+  c+=Math.max(0,.45-run/N)*40;const lift=ymax-ymin;c+=Math.max(0,110-lift)/8+Math.max(0,lift-350)/20;
+  const xc=-Jx.a/2;let over=0,hockFront=0,tall=0,back=0;for(const p of P){if(p.G.x>p.H.x+40)hockFront++;for(const k in p){const q=p[k];if(q.y>-Jx.oh)over+=Math.max(0,Math.abs(q.x-xc)-(178-15));tall+=Math.max(0,q.y-320);back+=Math.max(0,(xc-178-200)-q.x);}}
+  c+=over/40+hockFront/N*15+tall/200+Math.max(0,(Jx.m+25)-Jx.oh)/5+back/60;const hx=Math.max(...P.map(p=>p.H.x));c+=Math.max(0,hx-(110-Jx.a/2))/15;
+  return {c,adv,slip,d:run/N,lift,over,hx,oh:Jx.oh,m:Jx.m};}
+const EV={running:false,pop:[],gen:0,hist:CHAMP_HIST.slice(),best:{J:CHAMP,...fitness(CHAMP)},src:'champion'};
+const clampJ=Jx=>{for(const k of KEYS){const [lo,hi]=RANGE[k];Jx[k]=Math.round(Math.max(lo,Math.min(hi,Jx[k])));}return Jx;};
+function evSeed(){const sc=6+Math.random()*3,Jx={};for(const k in JANSEN)Jx[k]=JANSEN[k]*sc*(.85+Math.random()*.3);Jx.oh=80+Math.random()*140;return clampJ(Jx);}
+function evStart(){EV.pop=[];for(let i=0;i<160;i++){const Jx=evSeed();EV.pop.push({J:Jx,...fitness(Jx)});}EV.gen=0;EV.hist=[];EV.running=true;EV.src='new run';}
+function evStep(){const pop=EV.pop;pop.sort((a,b)=>a.c-b.c);EV.hist.push(pop[0].c);if(!EV.best||pop[0].c<EV.best.c||EV.src==='new run'&&EV.gen===0)EV.best={...pop[0]};if(pop[0].c<EV.best.c)EV.best={...pop[0]};
+  const next=pop.slice(0,16),r=EV.gen<300?.12:EV.gen<700?.06:.025;while(next.length<160){const t=()=>{const a=pop[Math.floor(Math.random()*64)],b=pop[Math.floor(Math.random()*64)];return a.c<b.c?a:b;};const p1=t(),p2=t(),Kx={};for(const k of KEYS)Kx[k]=Math.random()<.5?p1.J[k]:p2.J[k];for(const k of KEYS)if(Math.random()<.35)Kx[k]*=1+r*(Math.random()*2-1);clampJ(Kx);next.push({J:Kx,...fitness(Kx)});}
+  EV.pop=next;EV.gen++;if(EV.gen>=1000)EV.running=false;}
+
+/* ===== layer plan (parts, bolt columns, shaft end) ===== */
+function segDist(a,b,c,d){const f=(p,q,r)=>{const l2=(r.x-q.x)**2+(r.y-q.y)**2;let t=l2?((p.x-q.x)*(r.x-q.x)+(p.y-q.y)*(r.y-q.y))/l2:0;t=Math.max(0,Math.min(1,t));return Math.hypot(p.x-q.x-t*(r.x-q.x),p.y-q.y-t*(r.y-q.y));};
+  const o=(p,q,r)=>Math.sign((q.x-p.x)*(r.y-p.y)-(q.y-p.y)*(r.x-p.x));if(o(a,b,c)*o(a,b,d)<0&&o(c,d,a)*o(c,d,b)<0)return 0;return Math.min(f(a,c,d),f(b,c,d),f(c,a,b),f(d,a,b));}
+const bodyEdges=b=>b.j.length===2?[[b.j[0],b.j[1]]]:[[b.j[0],b.j[1]],[b.j[1],b.j[2]],[b.j[2],b.j[0]]];
+let LAYERS={},JSTACK={};
+function planLayers(){LAYERS={};JSTACK={};const n=BODIES.length,conf=[...Array(n)].map(()=>Array(n).fill(false)),gap=BARW*1000+6;
+  for(let a=0;a<n;a++)for(let b=a+1;b<n;b++){const A=BODIES[a],Bb=BODIES[b];if(A.j.some(x=>Bb.j.includes(x))){conf[a][b]=conf[b][a]=true;continue;}
+    for(let k=0;k<NS&&!conf[a][b];k+=5){const P=PU[k];for(const [p,q] of bodyEdges(A))for(const [r,t] of bodyEdges(Bb))if(segDist(P[p],P[q],P[r],P[t])<gap)conf[a][b]=conf[b][a]=true;}}
+  const COLJ=[...JOINTS,'O'],near=BODIES.map(b=>{const o={},r=BARW*500+12;for(const Jn of COLJ){o[Jn]=false;for(let k=0;k<NS&&!o[Jn];k+=3){const P=PU[k];for(const [p,q] of bodyEdges(b))if(segDist(P[Jn],P[Jn],P[p],P[q])<r){o[Jn]=true;break;}}}return o;});
+  let best=null;for(let kc=2;kc<=7&&!best;kc++){const asg=Array(n).fill(0);
+    const rec=i=>{if(i===n){for(const Jn of COLJ){const ls=BODIES.map((b,bi)=>b.j.includes(Jn)?asg[bi]:null).filter(x=>x!==null);const lo=Jn==='B'?1:Math.min(...ls),hi=Math.max(...ls);for(let bi=0;bi<n;bi++)if(!BODIES[bi].j.includes(Jn)&&near[bi][Jn]&&asg[bi]>=lo&&asg[bi]<=hi)return;}
+        let cost=0;for(const Jn of JOINTS){const ls=BODIES.map((b,bi)=>b.j.includes(Jn)?asg[bi]:null).filter(x=>x!==null);const lo=Jn==='B'?1:Math.min(...ls),hi=Math.max(...ls);cost+=hi-lo+1-ls.length;}if(!best||cost<best.cost)best={cost,asg:asg.slice()};return;}
+      for(let L=1;L<=kc;L++){if(i===0&&L!==1)continue;let ok=true;for(let p=0;p<i;p++)if(conf[i][p]&&asg[p]===L){ok=false;break;}if(ok){asg[i]=L;rec(i+1);}}};rec(0);}
+  BODIES.forEach((b,i)=>LAYERS[b.id]=best.asg[i]);LAYERS.n=Math.max(...best.asg);const SH=[10,12,16,20,25,30,35,40,45,50,55,60,70,80];
+  for(const Jn of JOINTS){const bs=BODIES.filter(b=>b.j.includes(Jn)).map(b=>({b,L:LAYERS[b.id]}));const ls=bs.map(x=>x.L);const lo=Jn==='B'?1:Math.min(...ls),hi=Math.max(...ls);const span=hi-lo+1,stack=span*PLY+(span-1)*WASH+(Jn==='B'?WASH:0);JSTACK[Jn]={bodies:bs,lo,hi,spacers:span-ls.length,stack,shoulder:SH.find(x=>x/1000>=stack-.0005)||80};}}
+planLayers();
+
+/* ===== human motion ===== */
+function twoBone(h,t,L1,L2,bend){const d=sub(t,h),dl=Math.min(len(d),L1+L2-1e-4),a=Math.atan2(d.y,d.x),al=Math.acos(Math.max(-1,Math.min(1,(L1*L1+dl*dl-L2*L2)/(2*L1*dl))));return V(h.x+Math.cos(a+bend*al)*L1,h.y+Math.sin(a+bend*al)*L1);}
+function strideH(v){return .72*v+.45;}
+function riderBike(){const pedPh=S.dist/(BK.C*BK.ring/S.cog);const psiR=-TAU*pedPh+Math.PI/2,legs=[];const hip=V(-.19,1.04);
+  for(const [psi,side] of [[psiR+Math.PI,-1],[psiR,1]]){const pd=V(.17*Math.cos(psi),BK.BB.y+.17*Math.sin(psi)),ank=V(pd.x-.035,pd.y+.07),kn=twoBone(hip,ank,.47,.47,1);legs.push({side,hip,kn,ank,toe:V(pd.x+.09,pd.y+.01),pd});}
+  const sh=V(.15,1.42),hand=V(.50,.93),el=twoBone(sh,hand,.31,.29,-1);return {legs,hip,sh,el,hand,head:V(.24,1.58),psiR,pelvis:V(-.2,1.03)};}
+function walker(){const Sh=strideH(S.v),p0=S.dist/Sh,legs=[];const bob=.02*Math.cos(TAU*2*p0);const hip=V(0,.95+bob);
+  for(const [off,side] of [[0,-1],[.5,1]]){const p=((p0+off)%1+1)%1;let x,y;if(p<.62){const u=p/.62;x=Sh*(.31-.62*u);y=.08;}else{const u=(p-.62)/.38,s=u*u*(3-2*u);x=Sh*(-.31+.62*s);y=.08+.11*Math.sin(Math.PI*u);}
+    const ank=V(x,y),kn=twoBone(hip,ank,.45,.45,1),th=V(hip.x+(kn.x-hip.x)*.5,hip.y+(kn.y-hip.y)*.5);const dth=sub(kn,hip),l=len(dth);legs.push({side,hip,kn,ank,toe:V(x+.15,Math.max(.02,y-.06)),strap:V(th.x+dth.y/l*-.07,th.y-dth.x/l*-.07)});}
+  const sh=V(.03,1.45+bob),sw=Math.sin(TAU*p0)*.18;return {legs,hip,sh,arms:[-1,1].map(sd=>{const hand=V(.05+sd*sw,.82+bob);return {side:sd,el:twoBone(sh,hand,.3,.28,1),hand};}),head:V(.05,1.64+bob)};}
+
+/* ===== sound ===== */
+const AU={};function audio(){if(AU.c){if(AU.c.state==='suspended')AU.c.resume();return AU.c;}try{const c=new (window.AudioContext||window.webkitAudioContext)();const o=c.createGain();o.gain.value=.7;o.connect(c.destination);const nb=c.createBuffer(1,c.sampleRate,c.sampleRate),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;Object.assign(AU,{c,o,nb});return c;}catch(e){return null;}}
+function knock(f,dur,g){if(!S.sound)return;const c=audio();if(!c)return;const t=c.currentTime,s=c.createBufferSource(),bp=c.createBiquadFilter(),gn=c.createGain();s.buffer=AU.nb;bp.type='bandpass';bp.frequency.value=f;bp.Q.value=3;gn.gain.setValueAtTime(g,t);gn.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(bp);bp.connect(gn);gn.connect(AU.o);s.start(t);s.stop(t+dur+.02);try{navigator.vibrate&&navigator.vibrate(8);}catch(e){}}
+
+/* ===== 3D ===== */
+const c3=$('c3'),c2=$('c2');let R3=null,RENDERER=null;
+const C={};let MONO='monospace',BODY='sans-serif';function readC(){for(const k of ['view','panel','ink','ink-2','ink-3','rule','accent','ok','warn'])C[k]=css('--'+k);MONO=css('--f-mono');BODY=css('--f-body');}readC();
+function build3D(){
+  if(!RENDERER){RENDERER=new T.WebGLRenderer({canvas:c3,antialias:true});RENDERER.setPixelRatio(Math.min(2,devicePixelRatio||1));RENDERER.shadowMap.enabled=true;RENDERER.shadowMap.type=T.PCFSoftShadowMap;RENDERER.outputEncoding=T.sRGBEncoding;RENDERER.toneMapping=T.ACESFilmicToneMapping;RENDERER.toneMappingExposure=1.1;}
+  const renderer=RENDERER,scene=new T.Scene(),camera=new T.PerspectiveCamera(32,1,.05,40);scene.background=new T.Color(C.view||'#d9d4cb').convertSRGBToLinear();
+  scene.add(new T.HemisphereLight(0xfff4e0,0x6b5a44,.7));const sun=new T.DirectionalLight(0xffffff,1.0);sun.position.set(1.2,3,2.4);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-2.2,right:2.2,top:2.2,bottom:-1,near:.5,far:8});sun.shadow.bias=-.0005;scene.add(sun);
+  const rim=new T.DirectionalLight(0xc8d6ff,.3);rim.position.set(-2,1.5,-1.5);scene.add(rim);
+  const srgb=c=>new T.Color(c).convertSRGBToLinear();
+  const tex=(w,h,draw)=>{const cv=document.createElement('canvas');cv.width=w;cv.height=h;draw(cv.getContext('2d'),w,h);const t=new T.CanvasTexture(cv);t.encoding=T.sRGBEncoding;t.anisotropy=8;t.wrapS=T.RepeatWrapping;return t;};
+  const wallT=tex(2048,512,(g,w,h)=>{g.fillStyle='#16130f';g.fillRect(0,0,w,h);const px=w/4;for(let i=0;i<=40;i++){const x=i*px/10;g.strokeStyle=i%5?'rgba(235,225,200,.35)':'rgba(235,225,200,.8)';g.lineWidth=i%5?2:4;g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
+    for(let j=0;j<=20;j++){const y=h-j*h/20;g.strokeStyle=j%5?'rgba(235,225,200,.25)':'rgba(235,225,200,.7)';g.lineWidth=j%5?2:4;g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}g.fillStyle='rgba(235,225,200,.85)';g.font='bold 34px monospace';for(let i=0;i<8;i++)g.fillText(String(i+1),i*px/2+10,46);});
+  const wall=new T.Mesh(new T.PlaneGeometry(4,2),new T.MeshStandardMaterial({map:wallT,roughness:.95}));wall.position.set(-.1,1,-1.0);wall.receiveShadow=true;scene.add(wall);
+  const floorT=tex(1024,1024,(g,w,h)=>{g.fillStyle='#8c7a63';g.fillRect(0,0,w,h);for(let i=0;i<4000;i++){g.fillStyle=`rgba(${60+Math.random()*60},${50+Math.random()*40},${30+Math.random()*30},.25)`;g.fillRect(Math.random()*w,Math.random()*h,2,2);}g.strokeStyle='rgba(240,230,210,.55)';g.lineWidth=3;for(let i=0;i<=10;i++){g.beginPath();g.moveTo(i*w/10,0);g.lineTo(i*w/10,h);g.stroke();}});
+  floorT.wrapT=T.RepeatWrapping;floorT.repeat.set(4,4);const floor=new T.Mesh(new T.PlaneGeometry(4,4),new T.MeshStandardMaterial({map:floorT,roughness:.95}));floor.rotation.x=-Math.PI/2;floor.position.set(-.1,0,.8);floor.receiveShadow=true;scene.add(floor);
+  const woodT=tex(512,128,(g,w,h)=>{g.fillStyle='#c79f68';g.fillRect(0,0,w,h);for(let i=0;i<60;i++){g.strokeStyle=`rgba(${110+Math.random()*40},${70+Math.random()*30},30,${.12+Math.random()*.18})`;g.lineWidth=1+Math.random()*2;g.beginPath();const y=Math.random()*h;g.moveTo(0,y);for(let x=0;x<=w;x+=32)g.lineTo(x,y+Math.sin(x/60+i)*3);g.stroke();}
+    for(let i=0;i<14;i++){g.fillStyle=`rgba(90,55,20,${.08+Math.random()*.1})`;g.beginPath();g.ellipse(Math.random()*w,Math.random()*h,20+Math.random()*60,6+Math.random()*12,0,0,TAU);g.fill();}});woodT.wrapT=T.RepeatWrapping;
+  const MT={wood:()=>new T.MeshStandardMaterial({map:woodT,roughness:.62}),bone:()=>new T.MeshStandardMaterial({color:srgb('#d8c296'),roughness:.7}),steel:()=>new T.MeshStandardMaterial({color:srgb('#b9bfc4'),metalness:.8,roughness:.32}),
+    bronze:()=>new T.MeshStandardMaterial({color:srgb('#b0803f'),metalness:.7,roughness:.35}),alu:()=>new T.MeshStandardMaterial({color:srgb('#c3c8cc'),metalness:.55,roughness:.4}),frame:()=>new T.MeshStandardMaterial({color:srgb('#1f2226'),metalness:.35,roughness:.42}),
+    black:()=>new T.MeshStandardMaterial({color:srgb('#1d1b19'),roughness:.8}),chain:()=>new T.MeshStandardMaterial({color:srgb('#4b4a48'),metalness:.6,roughness:.5}),rider:()=>new T.MeshStandardMaterial({color:srgb('#6f6a64'),roughness:.85}),
+    hoof:()=>new T.MeshStandardMaterial({color:srgb('#3a2c22'),roughness:.6}),hair:()=>new T.LineBasicMaterial({color:srgb('#2b1d14')}),pack:()=>new T.MeshStandardMaterial({color:srgb('#4a5a3a'),roughness:.9}),cord:()=>new T.MeshStandardMaterial({color:srgb('#e0a936'),roughness:.7}),plat:()=>new T.MeshStandardMaterial({color:srgb('#2f55c9'),transparent:true,opacity:.18,depthWrite:false})};
+  const ALL=[];function reg(o,tag,name){o.traverse(m=>{if(m.isMesh){m.castShadow=true;m.receiveShadow=true;m.userData.tag=tag;m.userData.name=name;m.material=m.material.clone();ALL.push(m);}});return o;}
+  const v3=(x,y,z)=>new T.Vector3(x,y,z);
+  const cyl=(a,b,r,mat,seg=12)=>{const d=new T.Vector3().subVectors(b,a),L=d.length();const m=new T.Mesh(new T.CylinderGeometry(r,r,L,seg),mat);m.position.copy(a).addScaledVector(d,.5);m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),d.normalize());return m;};
+  const box=(a,b,w,h,mat)=>{const d=new T.Vector3().subVectors(b,a),L=d.length();const m=new T.Mesh(new T.BoxGeometry(w,L,h),mat);m.position.copy(a).addScaledVector(d,.5);m.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),d.normalize());return m;};
+  const disc=(r,t,mat)=>{const m=new T.Mesh(new T.CylinderGeometry(r,r,t,40),mat);m.rotation.x=Math.PI/2;return m;};
+  const sprocket=(T_,pitch,tag,name)=>{const r=pitch/(2*Math.sin(Math.PI/T_));const g=new T.Group();const dm=disc(r-.002,.003,MT.steel());g.add(dm);for(let i=0;i<T_;i++){const tt=new T.Mesh(new T.BoxGeometry(pitch*.45,pitch*.6,.003),dm.material);const a=i/T_*TAU;tt.position.set(Math.cos(a)*r,Math.sin(a)*r,0);tt.rotation.z=a+Math.PI/2;g.add(tt);}reg(g,tag,name);return {g,r};};
+  function chainLoop(c1,r1,c2,r2,z,tag,name){const d=c2.clone().sub(c1),L=d.length(),a=Math.atan2(d.y,d.x),beta=Math.asin((r1-r2)/L),pts=[];const n1=a+Math.PI/2+beta,n2=a-Math.PI/2-beta;
+    const arc=(c,r,from,to,stp)=>{for(let k=0;k<=stp;k++){const ang=from+(to-from)*k/stp;pts.push(v3(c.x+Math.cos(ang)*r,c.y+Math.sin(ang)*r,z));}};arc(c1,r1,n1,n2+TAU,24);arc(c2,r2,n2,n1,16);
+    return reg(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts,true),160,.0025,6,true),MT.chain()),tag,name);}
+  const root=new T.Group();scene.add(root);const O=K.O,PC=K.PC;const spin=[];let crankG=null,rider=null,cords=[];
+  function wheel3(A,r,tw,tag,name){const g=new T.Group();g.position.set(A.x,A.y,0);g.add(new T.Mesh(new T.TorusGeometry(r-tw/2,tw/2,14,64),MT.black()));g.add(new T.Mesh(new T.TorusGeometry(r-tw-.006,.007,8,64),MT.alu()));const hub=disc(.022,.12,MT.alu());g.add(hub);
+    const sp=[];for(let i=0;i<28;i++){const a=i/28*TAU,z=i%2?.03:-.03;sp.push(v3(0,0,z),v3(Math.cos(a)*(r-tw-.012),Math.sin(a)*(r-tw-.012),0));}g.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(sp),new T.LineBasicMaterial({color:0x9aa0a6})));root.add(g);reg(g,tag,name);spin.push({g,r});return g;}
+  if(S.mode==='bike'){const bike=new T.Group();root.add(bike);const fm=MT.frame(),p=(q,z=0)=>v3(q.x,q.y,z);
+    for(const [a,b,r] of [[BK.BB,BK.STt,.0145],[BK.STt,BK.HTt,.0135],[BK.BB,BK.HTb,.0165],[BK.HTb,BK.HTt,.019]])bike.add(cyl(p(a),p(b),r,fm));
+    for(const z of [-.065,.065]){bike.add(cyl(p(BK.BB,z*.4),p(BK.RA,z),.0095,fm));bike.add(cyl(p(V(-.135,.72),z*.3),p(BK.RA,z),.008,fm));bike.add(cyl(p(BK.HTb,z*.5),p(BK.FA,z*.75),.012,fm));}
+    bike.add(cyl(p(BK.STt),p(BK.saddle),.0136,MT.steel()));const sad=new T.Mesh(new T.BoxGeometry(.27,.045,.14),MT.black());sad.position.set(BK.saddle.x-.02,BK.saddle.y+.02,0);bike.add(sad);
+    bike.add(cyl(p(BK.HTt),p(V(.37,.91)),.0143,MT.black()));bike.add(cyl(p(V(.365,.905)),p(V(.46,.93)),.016,MT.steel()));
+    for(const z of [-.21,.21])bike.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3([v3(.46,.93,z*.5),v3(.47,.93,z),v3(.56,.93,z),v3(.6,.88,z*1.04),v3(.57,.8,z*1.06),v3(.5,.79,z*1.06)]),24,.012,8),MT.black()));bike.add(cyl(v3(.46,.93,-.105),v3(.46,.93,.105),.016,MT.black()));
+    const rk=MT.black();for(const z of [-.065,.065]){bike.add(cyl(v3(BK.rackX[0],PLATY-.012,z),v3(BK.rackX[1],PLATY-.012,z),.005,rk));bike.add(cyl(v3(BK.rackX[0]+.03,PLATY-.012,z),p(BK.RA,z*1.1),.005,rk));bike.add(cyl(v3(BK.rackX[1],PLATY-.012,z),v3(-.14,.72,z*.5),.004,rk));}
+    for(const x of [BK.rackX[0],BK.rackX[1]])bike.add(cyl(v3(x,PLATY-.012,-.065),v3(x,PLATY-.012,.065),.004,rk));
+    const rot=disc(.08,.002,MT.steel());rot.position.set(BK.RA.x,BK.RA.y,-.055);bike.add(rot);const cas=new T.Mesh(new T.CylinderGeometry(.085,.03,.04,24),MT.steel());cas.rotation.x=Math.PI/2;cas.position.set(BK.RA.x,BK.RA.y,.045);bike.add(cas);
+    reg(bike,'bike','State Bicycle Co. 4130 All-Road, Medium, 700 × 38c (yours)');wheel3(BK.FA,BK.R,.038,'bike','700 × 38c Vittoria Terreno Zero');wheel3(BK.RA,BK.R,.038,'bike','700 × 38c, 12 × 142 thru-axle');
+    const cr=sprocket(BK.ring,.0127,'bike','Chainring 42T, 170 mm cranks');cr.g.position.set(0,BK.BB.y,.05);bike.add(cr.g);
+    crankG=new T.Group();crankG.position.set(BK.BB.x,BK.BB.y,0);bike.add(crankG);for(const side of [1,-1]){const arm=new T.Group();const bar=new T.Mesh(new T.BoxGeometry(.17,.022,.012),MT.black());bar.position.x=.085;arm.add(bar);const ped=new T.Mesh(new T.BoxGeometry(.1,.02,.09),MT.black());ped.position.set(.17,0,side*.05);arm.add(ped);arm.position.z=side*.085;if(side<0)arm.rotation.z=Math.PI;crankG.add(arm);}
+    reg(crankG,'bike','Cranks 170 mm');crankG.userData.ring=cr.g;root.add(chainLoop(v3(0,BK.BB.y,0),cr.r,v3(BK.RA.x,BK.RA.y,0),.042,.05,'bike','Bike chain, 1 × 11, unchanged'));}
+  if(S.mode==='pack'){const pk=new T.Group();root.add(pk);const fr=MT.alu(),F=PC+HALF;
+    const belt=new T.Mesh(new T.TorusGeometry(1,.03,10,40),MT.pack());belt.scale.set(.17,.16,1);belt.rotation.x=Math.PI/2;belt.position.set(-.02,.98,0);pk.add(belt);
+    const lum=new T.Mesh(new T.BoxGeometry(.012,.17,.2),MT.pack());lum.position.set(-.195,.95,0);pk.add(lum);
+    for(const z of [-1,1]){pk.add(cyl(v3(-.2,.99,z*.08),v3(F-.005,PLATY+.012,z*RAIL_Z),.008,fr));pk.add(cyl(v3(-.2,.875,z*.06),v3(F-.005,PLATY+.006,z*RAIL_Z),.006,fr));
+      pk.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3([v3(-.19,1.03,z*.08),v3(-.16,1.3,z*.09),v3(-.08,1.47,z*.11),v3(.06,1.47,z*.11),v3(.15,1.3,z*.1),v3(.15,1.04,z*.1)]),30,.012,6),MT.pack()));}
+    if(S.cfg.mount==='frame'){for(const z of [-.13,.13])pk.add(cyl(v3(-.17,PLATY-.03,z),v3(-.17,1.55,z),.011,fr));for(const y of [.95,1.2,1.5])pk.add(cyl(v3(-.17,y,-.13),v3(-.17,y,.13),.009,fr));const bag=new T.Mesh(new T.BoxGeometry(.16,.3,.3),MT.pack());bag.position.set(-.26,1.36,0);pk.add(bag);}
+    reg(pk,'pack',OPT.mount.opts[S.cfg.mount].name);}
+  {const RM=MT.rider(),g=new T.Group();root.add(g);const limb=r=>{const q=new T.Group();const c=new T.Mesh(new T.CylinderGeometry(r,r*.85,1,12),RM);q.add(c);q.userData.c=c;g.add(q);return q;};
+    rider={th:[limb(.062),limb(.062)],sh:[limb(.046),limb(.046)],ft:[limb(.032),limb(.032)],ua:[limb(.04),limb(.04)],fa:[limb(.033),limb(.033)],torso:limb(.135)};const head=new T.Mesh(new T.SphereGeometry(.1,20,16),RM);g.add(head);rider.head=head;
+    const pelvis=new T.Mesh(new T.SphereGeometry(.14,16,12),RM);pelvis.scale.set(1,.7,1.05);g.add(pelvis);rider.pelvis=pelvis;reg(g,'rider',S.mode==='bike'?'Rider, 1.80 m: the pedalling legs read as forelegs':'Wearer, 1.80 m: your legs are the forelegs');}
+  /* --- the module: everything stands on the 356 × 356 platform --- */
+  const mod=new T.Group();mod.position.set(O.x,O.y,0);root.add(mod);const PCl=PC-O.x,PB=-OH; // platform centre and top, in module coordinates
+  {const pl=new T.Mesh(new T.BoxGeometry(PLAT,.002,PLAT),MT.plat());pl.position.set(PCl,PB-.001,0);mod.add(pl);pl.userData.skip=1;
+    const edge=new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(PLAT,.001,PLAT)),new T.LineBasicMaterial({color:0x2f55c9}));edge.position.set(PCl,PB,0);mod.add(edge);
+    const base=new T.Group();for(const z of [-RAIL_Z,RAIL_Z])base.add(box(v3(PCl+HALF,PB+.0125,z),v3(PCl-HALF,PB+.0125,z),.025,.025,MT.alu()));for(const x of [PCl+HALF-.0125,PCl-HALF+.0125])base.add(box(v3(x,PB+.0125,-RAIL_Z),v3(x,PB+.0125,RAIL_Z),.025,.025,MT.alu()));
+    const B=V(-J.a/1000,-J.l/1000);const plate=z=>{const s=new T.Shape(),pts=[[.055,.055],[.055,PB+.005],[B.x+.03,PB+.005],[B.x+.03,B.y-.04],[B.x-.04,B.y-.04],[B.x-.04,B.y+.06],[-.05,.08]];s.moveTo(...pts[0]);for(const q of pts.slice(1))s.lineTo(...q);s.lineTo(...pts[0]);
+      const h1=new T.Path();h1.absarc(0,0,.012,0,TAU,true);s.holes.push(h1);const h2=new T.Path();h2.absarc(B.x,B.y,.006,0,TAU,true);s.holes.push(h2);const m=new T.Mesh(new T.ExtrudeGeometry(s,{depth:.006,bevelEnabled:false}),MT.alu());m.position.z=z;return m;};
+    base.add(plate(PLATE_Z-.006));base.add(plate(-PLATE_Z));for(const z of [-1,1])base.add(box(v3(B.x-.0,PB+.0125,z*(RAIL_Z+.0125)),v3(-.0,PB+.0125,z*(RAIL_Z+.0125)),.012,.012,MT.alu()));
+    mod.add(base);reg(base,'frame','Module frame: 2 × 25 mm aluminium rails, 6 mm side plates, 356 × 356 footprint');}
+  const shaftG=new T.Group();mod.add(shaftG);{const SHL=2*(LAYER0+PLY/2);shaftG.add(disc(.006,SHL,MT.alu()));for(const z of [-1,1]){const fl=new T.Mesh(new T.BoxGeometry(.063,.03,.012),MT.alu());fl.position.set(0,0,z*(PLATE_Z-.012));mod.add(fl);reg(fl,'shaft','Flange bearing KFL001 (12 mm), inside the plate');}
+    const spr=sprocket(K.TJ,.00635,'drive',`Jackshaft sprocket ${K.TJ}T #25`);shaftG.add(spr.g);shaftG.userData.r=spr.r;
+    for(const z of [-1,1]){const sp=new T.Group();const d=disc(K.spool/2,.018,MT.black());sp.add(d);const fl1=disc(K.spool/2+.008,.003,MT.alu());fl1.position.z=.009;sp.add(fl1);const fl2=fl1.clone();fl2.position.z=-.009;sp.add(fl2);sp.position.z=z*.045;shaftG.add(sp);}
+    reg(shaftG,'shaft',`Shaft 12 mm aluminium × ${Math.round(SHL*1000)} mm; 2 cord spools ⌀${Math.round(K.spool*1000)} on CSK12 one-way bearings`);}
+  // bike drive: roller on the tyre -> 12:36 gears -> #25 chain -> jackshaft
+  const rollG=new T.Group();mod.add(rollG);let rollerM,gearA,gearB,spI;
+  {const R=V(-.40-O.x,.721-O.y),I=V(-.40-O.x,.745-O.y),Pv=V(PCl+.03,PB-.01);const up=S.mode==='pack';const g=new T.Group();g.position.set(Pv.x,Pv.y,0);rollG.add(g);if(up)g.rotation.z=-1.0;
+    const loc=q=>v3(q.x-Pv.x,q.y-Pv.y,0);for(const z of [-.03,.03])g.add(box(v3(0,0,z),loc(V(R.x,R.y)).setZ(z),.014,.008,MT.alu()));
+    rollerM=new T.Group();rollerM.position.copy(loc(R));const rw=disc(ROLL.r,.04,MT.black());rollerM.add(rw);for(let i=0;i<4;i++){const s=new T.Mesh(new T.BoxGeometry(.006,.03,.042),MT.alu());s.rotation.z=i/4*TAU;rollerM.add(s);}g.add(rollerM);
+    gearA=disc(.006+.002,.008,MT.steel());gearA.position.copy(loc(R)).setZ(.03);g.add(gearA);gearB=disc(.018,.008,MT.steel());gearB.position.copy(loc(I)).setZ(.03);g.add(gearB);
+    const s=sprocket(K.TS,.00635,'roller',`Intermediate sprocket ${K.TS}T #25`);s.g.position.copy(loc(I));g.add(s.g);spI=s;
+    if(!up)mod.add(chainLoop(v3(I.x,I.y,0),s.r,v3(0,0,0),shaftG.userData.r,0,'roller',`Chain #25, ${K.chainR} links, up between the rack tubes`));
+    reg(g,'roller',up?'Roller arm, pinned up (backpack mode)':'Roller: 52 mm urethane skate wheel on the tyre, sprung; 12:36 gears');}
+  // spine and rib hoops above the legs, inside the footprint
+  {const top=LX.ymax+.04,g=new T.Group();mod.add(g);const sc=new T.CatmullRomCurve3([v3(PCl+HALF-.01,top,0),v3(PCl,top+.012,0),v3(PCl-HALF+.01,top-.005,0)]);g.add(new T.Mesh(new T.TubeGeometry(sc,30,.008,10),MT.bone()));
+    for(let i=0;i<=12;i++){const q=sc.getPoint(i/12);const v=disc(.02,.02,MT.bone());v.rotation.set(0,0,Math.PI/2);v.position.copy(q);g.add(v);const pr=new T.Mesh(new T.BoxGeometry(.012,.035,.012),MT.bone());pr.position.set(q.x,q.y+.03,0);pr.rotation.z=.25;g.add(pr);}
+    for(let i=0;i<5;i++){const x=PCl+.13-i*.065;for(const s of [-1,1])g.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3([v3(x,top,s*.02),v3(x-.005,top-.03,s*(HULLZ-.035)),v3(x-.012,top-.12,s*(HULLZ-.007)),v3(x-.02,PB+.02,s*(HULLZ-.006))]),24,.003,6),MT.bone()));}
+    for(const x of [PCl+HALF-.02,PCl-HALF+.02])for(const z of [-1,1])g.add(cyl(v3(x,PB+.025,z*RAIL_Z),v3(x,top,z*.01),.006,MT.steel()));
+    reg(g,'body','Spine: 16 mm PVC conduit, foam vertebrae; 5 hoops of 4 mm fibreglass rod');}
+  const HL=hullPts(),trojan=S.body==='trojan';let headG=null,maneGeo=null,manePos=null;
+  const plankT=tex(1024,1024,(g,w,h)=>{g.fillStyle=trojan?'#8a6440':'#cfb27e';g.fillRect(0,0,w,h);for(let i=0;i<300;i++){g.strokeStyle=`rgba(90,55,20,${.05+Math.random()*.1})`;g.lineWidth=1+Math.random()*2;const y=Math.random()*h;g.beginPath();g.moveTo(0,y);for(let x=0;x<=w;x+=64)g.lineTo(x,y+Math.sin(x/90+i)*4);g.stroke();}
+    const ph=w/20;g.strokeStyle='rgba(20,14,8,.85)';g.lineWidth=ph*.2;for(let i=0;i<=20;i++){g.beginPath();g.moveTo(0,i*ph);g.lineTo(w,i*ph);g.stroke();}g.fillStyle='rgba(30,30,30,.8)';for(let i=0;i<20;i++)for(let j=0;j<5;j++){g.beginPath();g.arc(j*w/5+40,i*ph+ph*.4,2.5,0,TAU);g.fill();}});plankT.wrapT=T.RepeatWrapping;
+  {const hull=new T.Group(),low=[0,.02,.1,.1,.1,.1,.1,.06,0,0,0,0,0,0,0],sp=HL.pts.map((p,i)=>V(p.x-O.x,p.y-low[i]-O.y)),sh=new T.Shape();sh.moveTo(sp[0].x,sp[0].y);sh.splineThru(sp.slice(1).concat([sp[0]]));
+    const pm=S.cfg.body==='laths'?new T.MeshStandardMaterial({map:plankT,roughness:.75,side:T.DoubleSide}):new T.MeshStandardMaterial({color:srgb(S.cfg.body==='canvas'?'#d9c8a6':'#a37b4c'),roughness:.95,side:T.DoubleSide});for(const z of [1,-1]){const m=new T.Mesh(new T.ExtrudeGeometry(sh,{depth:.004,bevelEnabled:false,curveSegments:24}),pm);m.position.z=z>0?HULLZ-.001:-HULLZ-.003;hull.add(m);}
+    const bm=new T.MeshStandardMaterial({color:srgb(trojan?'#7a5636':'#c4a26a'),roughness:.7}),xs=[];for(let k=0;k<=14;k++)xs.push(HL.Rr-.03+(HL.F-.02-(HL.Rr-.03))*k/14);
+    for(const a of [.06,.3,.55,.8,1.05,1.3,Math.PI/2,1.84,2.09,2.34,2.59,2.84,3.08]){const z=HULLZ*Math.cos(a),dy=-.11*(1-Math.sin(a));hull.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(xs.map(x=>v3(x-O.x,hullTop(HL,x)+dy+.005-O.y,z))),30,.005,6),bm));}
+    for(const x of [HL.Rr-.03,HL.F-.02]){const pts=[];for(let k=0;k<=16;k++){const a=k/16*Math.PI;pts.push(v3(x-O.x,hullTop(HL,x)-.11*(1-Math.sin(a))+.005-O.y,HULLZ*Math.cos(a)));}hull.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),24,.009,6),bm));}
+    for(const [a,b] of [[[-.08,-.06],[.08,-.06]],[[.08,-.06],[.08,.06]],[[.08,.06],[-.08,.06]],[[-.08,.06],[-.08,-.06]]])hull.add(box(v3(a[0],a[1],HULLZ+.005),v3(b[0],b[1],HULLZ+.005),.008,.004,MT.black()));
+    if(S.cfg.body!=='bones'){mod.add(hull);reg(hull,'body','Body: '+OPT.body.opts[S.cfg.body].name);}}
+  if(S.cfg.body!=='bones'){const Wt=waist(),N=16,pos=[],idx=[];for(let k=0;k<=N;k++){const a=k/N*Math.PI;pos.push(HL.F-.02*Math.sin(a),HL.bel+(hullTop(HL,HL.F-.02)+.005-HL.bel)*Math.sin(a),HULLZ*Math.cos(a));const f=.35+.65*Math.sin(a),q=add(Wt.C,V(Wt.n.x*Wt.rb*f,Wt.n.y*Wt.rb*f));pos.push(q.x,q.y,Wt.rz*Math.cos(a));}
+    for(let k=0;k<N;k++){const i=2*k;idx.push(i,i+1,i+2,i+1,i+3,i+2);}const ge=new T.BufferGeometry();ge.setAttribute('position',new T.Float32BufferAttribute(pos,3));ge.setIndex(idx);ge.computeVertexNormals();
+    const ap=new T.Mesh(ge,new T.MeshStandardMaterial({color:srgb(trojan?'#6e5236':'#b59a72'),roughness:.95,side:T.DoubleSide}));root.add(ap);reg(ap,'body','Apron: waxed canvas from the body to a belt at your waist');}
+  if(trojan){headG=new T.Group();const hs=new T.Shape();hs.moveTo(...HEADP[0]);for(const q of HEADP.slice(1))hs.lineTo(...q);hs.lineTo(...HEADP[0]);const hm=new T.MeshStandardMaterial({map:plankT,roughness:.75});
+    const m=new T.Mesh(new T.ExtrudeGeometry(hs,{depth:.22,bevelEnabled:true,bevelThickness:.01,bevelSize:.01,bevelSegments:2}),hm);m.position.z=-.11;headG.add(m);
+    for(const z of [-1,1]){const e=new T.Mesh(new T.ConeGeometry(.03,.11,4),hm);e.position.set(-.02,.16,z*.07);e.rotation.set(z*.2,0,.25);headG.add(e);const ey=new T.Mesh(new T.BoxGeometry(.05,.02,.01),MT.black());ey.position.set(.07,.035,z*.122);headG.add(ey);}
+    root.add(headG);reg(headG,'body','Horse head: 5 mm foam board and balsa laths on a bike helmet, about 600 g');manePos=new Float32Array(36*6*6);maneGeo=new T.BufferGeometry();maneGeo.setAttribute('position',new T.BufferAttribute(manePos,3));root.add(new T.LineSegments(maneGeo,MT.hair()));}
+  const tailG=new T.Group();tailG.position.set(HL.Rr-.07-O.x,HL.top-.05-O.y,0);mod.add(tailG);const hairs=[];for(let i=0;i<60;i++){const a=Math.random()*TAU,r=Math.random()*.03;hairs.push({z:Math.cos(a)*r,y:Math.sin(a)*r,l:.45+Math.random()*.2});}
+  const hairGeo=new T.BufferGeometry(),hairPos=new Float32Array(hairs.length*16*3);hairGeo.setAttribute('position',new T.BufferAttribute(hairPos,3));tailG.add(new T.LineSegments(hairGeo,MT.hair()));reg(tailG,'body','Tail: horsehair switch, 60 cm');
+  function barShape(L,w){const r=w/2,s=new T.Shape();s.moveTo(0,-r);s.quadraticCurveTo(L/2,-r*.55,L,-r);s.absarc(L,0,r,-Math.PI/2,Math.PI/2,false);s.quadraticCurveTo(L/2,r*.55,0,r);s.absarc(0,0,r,Math.PI/2,Math.PI*1.5,false);return s;}
+  function plateShape(Pp,w){let pts=Pp.slice();const ar=(pts[1].x-pts[0].x)*(pts[2].y-pts[0].y)-(pts[2].x-pts[0].x)*(pts[1].y-pts[0].y);if(ar<0)pts=[pts[0],pts[2],pts[1]];const r=w/2,n=[];for(let i=0;i<3;i++){const a=pts[i],b=pts[(i+1)%3],dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy);n.push({x:dy/l,y:-dx/l});}
+    const s=new T.Shape(),ang=v=>Math.atan2(v.y,v.x);s.moveTo(pts[0].x+r*n[2].x,pts[0].y+r*n[2].y);for(let i=0;i<3;i++){const v=pts[i];let a0=ang(n[(i+2)%3]),a1=ang(n[i]);while(a1<a0)a1+=TAU;s.absarc(v.x,v.y,r,a0,a1,false);const nx=pts[(i+1)%3];s.lineTo(nx.x+r*n[i].x,nx.y+r*n[i].y);}
+    const la=Math.hypot(pts[1].x-pts[2].x,pts[1].y-pts[2].y),lb=Math.hypot(pts[0].x-pts[2].x,pts[0].y-pts[2].y),lc=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y),per=la+lb+lc;const ic={x:(la*pts[0].x+lb*pts[1].x+lc*pts[2].x)/per,y:(la*pts[0].y+lb*pts[1].y+lc*pts[2].y)/per},rho=Math.abs(ar)/per,inset=.028;
+    if(rho>inset+.025){const f=(rho-inset)/rho,q=pts.map(p=>({x:ic.x+(p.x-ic.x)*f,y:ic.y+(p.y-ic.y)*f})),h=new T.Path();h.moveTo(q[0].x,q[0].y);h.lineTo(q[2].x,q[2].y);h.lineTo(q[1].x,q[1].y);h.lineTo(q[0].x,q[0].y);s.holes.push(h);}return s;}
+  const ref=legL(0),legs=[];
+  const LMo=OPT.link.opts[S.cfg.link],PVo=OPT.piv.opts[S.cfg.piv],linkM=LMo.col==='wood'?MT.wood():new T.MeshStandardMaterial({color:srgb({pvc:'#e3b81f',alu:'#c3c8cc',petg:'#3a4148'}[LMo.col]),metalness:LMo.col==='alu'?.55:.05,roughness:LMo.col==='alu'?.4:.55}),bushM=new T.MeshStandardMaterial({color:srgb(PVo.vis[1]),metalness:PVo.vis[2],roughness:.4});
+  for(const side of [1,-1]){const lg=new T.Group();mod.add(lg);const bodies={};
+    for(const b of BODIES){const Pp=b.j.map(k=>ref[k]),p0=Pp[0],a=Math.atan2(Pp[1].y-p0.y,Pp[1].x-p0.x),ca=Math.cos(-a),sa=Math.sin(-a);const L=Pp.map(p=>V((p.x-p0.x)*ca-(p.y-p0.y)*sa,(p.x-p0.x)*sa+(p.y-p0.y)*ca));
+      const isCrank=b.id==='crank',shp=b.j.length===2?barShape(L[1].x,isCrank?.03:BARW):plateShape(L,BARW);for(const q of L){const h=new T.Path();h.absarc(q.x,q.y,.0041,0,TAU,true);shp.holes.push(h);}
+      const geo=new T.ExtrudeGeometry(shp,{depth:PLY,bevelEnabled:true,bevelThickness:.0012,bevelSize:.0012,bevelSegments:2,curveSegments:16});geo.translate(0,0,-PLY/2);
+      const g=new T.Group();if(!isCrank&&LMo.tube){for(const [a,c2] of (b.j.length===2?[[0,1]]:[[0,1],[1,2],[2,0]]))g.add(cyl(v3(L[a].x,L[a].y,0),v3(L[c2].x,L[c2].y,0),PLY/2,linkM,10));}else g.add(new T.Mesh(geo,isCrank?MT.alu():linkM));for(const q of L)for(const f of [-1,1]){const bu=disc(PVo.vis[0],.0016,bushM);bu.position.set(q.x,q.y,f*(PLY/2+.0008));g.add(bu);}
+      g.position.z=side*layerZ(LAYERS[b.id]);lg.add(g);bodies[b.id]={g,j:b.j};reg(g,'links',`${b.name} ${b.j.join('–')} · ${isCrank?'6 mm aluminium':LMo.name} · layer ${LAYERS[b.id]}`);}
+    const bolts={};for(const Jn of JOINTS){const st=JSTACK[Jn],z0=Jn==='B'?PLATE_Z-.006:layerZ(st.lo)-PLY/2,z1=layerZ(st.hi)+PLY/2+.004;const g=new T.Group();const shb=new T.Mesh(new T.CylinderGeometry(.004,.004,z1-z0,12),MT.steel());shb.rotation.x=Math.PI/2;shb.position.z=side*(z0+z1)/2;g.add(shb);
+      const hd=new T.Mesh(new T.CylinderGeometry(.0065,.0065,.005,6),MT.steel());hd.rotation.x=Math.PI/2;hd.position.z=side*(z1+.003);g.add(hd);lg.add(g);bolts[Jn]=g;reg(g,'links',`Pivot ${Jn}: ${PVo.bolt}, ${st.shoulder} mm`);}
+    const hoof=new T.Group(),hs=new T.Shape();hs.moveTo(-.045,0);hs.lineTo(.05,0);hs.quadraticCurveTo(.064,.024,.025,.062);hs.lineTo(-.032,.062);hs.quadraticCurveTo(-.05,.03,-.045,0);
+    const hm=new T.Mesh(new T.ExtrudeGeometry(hs,{depth:.05,bevelEnabled:true,bevelThickness:.005,bevelSize:.005,bevelSegments:3}),S.cfg.hoof==='pine'?MT.wood():MT.hoof());hm.position.set(0,.006,-.025);hoof.add(hm);const pad=new T.Mesh(new T.BoxGeometry(.1,.006,.06),MT.black());pad.position.y=.003;hoof.add(pad);
+    hoof.position.z=side*layerZ(LAYERS.t2);lg.add(hoof);reg(hoof,'hooves','Hoof: '+OPT.hoof.opts[S.cfg.hoof].name);legs.push({side,bodies,bolts,hoof,lg});}
+  if(S.mode==='pack'){for(const z of [-1,1]){const c=new T.Mesh(new T.CylinderGeometry(.0025,.0025,1,6),MT.cord());root.add(c);reg(c,'cords','Cord: 4 mm Dyneema from thigh strap to spool, over a guide pulley');const c2=c.clone();c2.material=c.material.clone();root.add(c2);ALL.push(c2);c2.userData=c.userData;cords.push([c,c2,z]);}}
+  if(S.built&&S.mode==='bike'){for(const c of mod.children)if(!legs.some(L=>L.lg===c))c.visible=false;for(const m of ALL)if(m.userData.tag==='body')m.visible=false;AB.attach(scene);}
+  const cam={tx:-.1,ty:.78,tz:0,r:4.0,th:.6,ph:1.3};
+  function updCam(){const sp=new T.Vector3(Math.sin(cam.ph)*Math.sin(cam.th),Math.cos(cam.ph),Math.sin(cam.ph)*Math.cos(cam.th)).multiplyScalar(cam.r/Math.pow(Math.min(1,camera.aspect),.55));camera.position.set(cam.tx+sp.x,cam.ty+sp.y,cam.tz+sp.z);camera.lookAt(cam.tx,cam.ty,cam.tz);}
+  function resize(){const w=c3.clientWidth||1,h=c3.clientHeight||1;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+  const setLimb=(g,a,b)=>{const d=new T.Vector3().subVectors(b,a),L=d.length();g.position.copy(a).addScaledVector(d,.5);g.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),d.clone().normalize());(g.userData.c||g).scale.set(1,L,1);};
+  function pose(ph){let headAt=null;for(const w of spin)w.g.rotation.z=-S.dist/w.r;const th=thetaAt(ph);shaftG.rotation.z=th;if(S.built&&S.mode==='bike')AB.pose(S.dist,th-thetaAt(0));if(S.mode==='bike'){rollerM.rotation.z=S.dist/ROLL.r;gearA.rotation.y=S.dist/ROLL.r;spI.g.rotation.z=-S.dist/ROLL.r/3;}
+    for(const L of legs){const Pp=legL(ph+(L.side>0?.5:0));for(const id in L.bodies){const b=L.bodies[id],p0=Pp[b.j[0]],p1=Pp[b.j[1]];b.g.position.x=p0.x;b.g.position.y=p0.y;b.g.rotation.z=Math.atan2(p1.y-p0.y,p1.x-p0.x);}for(const Jn in L.bolts)L.bolts[Jn].position.set(Pp[Jn].x,Pp[Jn].y,0);L.hoof.position.x=Pp.H.x;L.hoof.position.y=Pp.H.y;}
+    if(S.mode==='bike'){const r=riderBike();crankG.rotation.z=r.psiR;crankG.userData.ring.rotation.z=r.psiR;r.legs.forEach((l,i)=>{const z=l.side*.1;setLimb(rider.th[i],v3(l.hip.x,l.hip.y,z),v3(l.kn.x,l.kn.y,z));setLimb(rider.sh[i],v3(l.kn.x,l.kn.y,z),v3(l.ank.x,l.ank.y,z));setLimb(rider.ft[i],v3(l.ank.x,l.ank.y,z),v3(l.toe.x,l.toe.y,z));
+        setLimb(rider.ua[i],v3(r.sh.x,r.sh.y,l.side*.19),v3(r.el.x,r.el.y,l.side*.22));setLimb(rider.fa[i],v3(r.el.x,r.el.y,l.side*.22),v3(r.hand.x,r.hand.y,l.side*.21));});setLimb(rider.torso,v3(r.pelvis.x,r.pelvis.y,0),v3(r.sh.x-.02,r.sh.y,0));rider.head.position.set(r.head.x,r.head.y,0);rider.pelvis.position.set(r.pelvis.x,r.pelvis.y,0);headAt=r.head;}
+    else{const r=walker();r.legs.forEach((l,i)=>{const z=l.side*.1;setLimb(rider.th[i],v3(l.hip.x,l.hip.y,z),v3(l.kn.x,l.kn.y,z));setLimb(rider.sh[i],v3(l.kn.x,l.kn.y,z),v3(l.ank.x,l.ank.y,z));setLimb(rider.ft[i],v3(l.ank.x,l.ank.y,z),v3(l.toe.x,l.toe.y,z));});
+      r.arms.forEach((a,i)=>{setLimb(rider.ua[i],v3(r.sh.x,r.sh.y,a.side*.2),v3(a.el.x,a.el.y,a.side*.22));setLimb(rider.fa[i],v3(a.el.x,a.el.y,a.side*.22),v3(a.hand.x,a.hand.y,a.side*.22));});setLimb(rider.torso,v3(r.hip.x,r.hip.y+.05,0),v3(r.sh.x,r.sh.y,0));rider.head.position.set(r.head.x,r.head.y,0);rider.pelvis.position.set(r.hip.x,r.hip.y+.03,0);headAt=r.head;
+      for(const [c1,c2,z] of cords){const l=r.legs[z<0?0:1],gp=v3(PC+HALF-.01,PLATY+.02,z*.05),sp=v3(O.x,O.y-K.spool/2,z*.045),st=v3(l.strap.x,l.strap.y,z*.1);setLimb(c1,st,gp);setLimb(c2,gp,sp);}}
+    if(headG&&headAt){headG.position.set(headAt.x,headAt.y,0);headG.rotation.z=S.mode==='bike'?-.1:0;let q=0;const A=V(headAt.x-.1,headAt.y+.05),Bm=V(HL.F-.04,hullTop(HL,HL.F-.04)+.01);
+      for(let i=0;i<36;i++){const z=(i%6-2.5)*.006,o=Math.floor(i/6)*.003;for(let sg=0;sg<6;sg++){const f=t=>[A.x+(Bm.x-A.x)*t,A.y+(Bm.y-A.y)*t+.05*Math.sin(Math.PI*t)+o,z];const a=f(sg/6),b=f((sg+1)/6);manePos.set([...a,...b],q);q+=6;}}maneGeo.attributes.position.needsUpdate=true;}
+    let k=0;const sw=Math.sin(TAU*ph*2)*.04;for(const hh of hairs){for(let sg=0;sg<8;sg++){const f=t=>[-.04-t*.08-sw*t*t*.5,-t*hh.l,hh.z*(1+t*2)+sw*t*t];const a=f(sg/8),b=f((sg+1)/8);hairPos.set([a[0],a[1]+hh.y,a[2],b[0],b[1]+hh.y,b[2]],k);k+=6;}}hairGeo.attributes.position.needsUpdate=true;
+    floorT.offset.x=S.dist;wallT.offset.x=S.dist/4;}
+  function highlight(tags){for(const m of ALL){if(m.userData.skip)continue;const on=!tags||tags.includes(m.userData.tag);m.material.transparent=!on;m.material.opacity=on?1:.12;m.material.depthWrite=on;}}
+  function bare(on){for(const m of ALL)if(['rider','body'].includes(m.userData.tag))m.visible=!on&&!(S.built&&S.mode==='bike'&&m.userData.tag==='body');}
+  const ray=new T.Raycaster();function pick(x,y){const r=c3.getBoundingClientRect();ray.setFromCamera({x:(x-r.left)/r.width*2-1,y:-(y-r.top)/r.height*2+1},camera);const h=ray.intersectObjects(ALL.filter(m=>m.visible&&!m.userData.skip&&(!m.material.transparent||m.material.opacity>.5)),false);return h.length?h[0].object.userData.name:null;}
+  return {scene,camera,cam,updCam,resize,pose,highlight,bare,pick,render:()=>renderer.render(scene,camera)};}
+
+/* ===== 2D ===== */
+function fit2(cv){const r=cv.getBoundingClientRect(),dp=Math.min(2,devicePixelRatio||1),w=Math.max(1,Math.round(r.width*dp)),h=Math.max(1,Math.round(r.height*dp));if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}const g=cv.getContext('2d');g.setTransform(dp,0,0,dp,0,0);return {g,w:r.width,h:r.height};}
+function sceneBox(){return {x0:Math.min(K.O.x+LX.min,K.PC-HALF-.16)-.08,x1:BK.FA.x+BK.R+.03,y1:Math.max(1.8,K.O.y+LX.ymax+.12)};} // same frame in both modes, so both draw at the same scale
+function machine2D(g,M,ph,st,dist){const O=K.O,PC=K.PC,u=Math.abs(M(V(1,0)).x-M(V(0,0)).x);
+  const L=(a,b,col,w)=>{g.strokeStyle=col;g.lineWidth=w;g.beginPath();g.moveTo(M(a).x,M(a).y);g.lineTo(M(b).x,M(b).y);g.stroke();};
+  const circle=(c,r,col,w,fill)=>{const p=M(c);g.beginPath();g.arc(p.x,p.y,r*u,0,TAU);if(fill){g.fillStyle=fill;g.fill();}if(col){g.strokeStyle=col;g.lineWidth=w;g.stroke();}};
+  const W=p=>add(O,p);g.lineCap='round';g.lineJoin='round';
+  const legDraw=(P,col,alpha)=>{g.globalAlpha=alpha;for(const [a,b] of LINKS){if(a==='O'){L(W(P.O),W(P.C),st.ink,.04*u);continue;}L(W(P[a]),W(P[b]),col,BARW*u);}for(const k of ['B','C','D','E','F','G'])circle(W(P[k]),.007,null,0,st.ink);const h=M(W(P.H));g.fillStyle=st.hoof;g.beginPath();g.ellipse(h.x,h.y-.04*u,.055*u,.04*u,0,0,TAU);g.fill();g.globalAlpha=1;};
+  legDraw(legL(ph),st.far,.55);
+  if(S.mode==='bike'){for(const A of [BK.FA,BK.RA]){circle(A,BK.R-.019,st.ink,.038*u);circle(A,BK.R-.045,st.thin,1);for(let i=0;i<14;i++){const a=i/14*TAU-dist/BK.R;L(A,V(A.x+Math.cos(a)*(BK.R-.045),A.y+Math.sin(a)*(BK.R-.045)),st.thin,.6);}}
+    for(const [a,b] of [[BK.BB,BK.STt],[BK.STt,BK.HTt],[BK.BB,BK.HTb],[BK.HTb,BK.HTt],[BK.BB,BK.RA],[V(-.135,.72),BK.RA],[BK.HTb,BK.FA],[BK.STt,BK.saddle],[BK.HTt,V(.46,.93)]])L(a,b,st.ink,.02*u);
+    L(V(BK.saddle.x-.15,BK.saddle.y+.02),V(BK.saddle.x+.1,BK.saddle.y+.02),st.ink,.035*u);g.strokeStyle=st.ink;g.lineWidth=.022*u;g.beginPath();[V(.46,.93),V(.56,.93),V(.6,.88),V(.57,.8),V(.5,.79)].forEach((p,i)=>{const q=M(p);i?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y);});g.stroke();
+    L(V(BK.rackX[0],PLATY-.012),V(BK.rackX[1],PLATY-.012),st.ink,.012*u);L(V(BK.rackX[0]+.03,PLATY-.012),BK.RA,st.ink,.01*u);L(V(BK.rackX[1],PLATY-.012),V(-.14,.72),st.ink,.01*u);
+    circle(V(-.40,.721),ROLL.r,st.ink,.012*u);L(V(-.40,.745),O,st.chain,1.3);L(V(PC+.03,PLATY-.01),V(-.40,.721),st.ink,.012*u);
+    const r=riderBike();for(const [i,col] of [[0,st.far],[1,st.rider]]){const l=r.legs[i];L(l.hip,l.kn,col,.115*u);L(l.kn,l.ank,col,.09*u);L(l.ank,l.toe,col,.055*u);L(BK.BB,l.pd,st.ink,.02*u);}
+    L(r.pelvis,r.sh,st.rider,.25*u);L(r.sh,r.el,st.rider,.075*u);L(r.el,r.hand,st.rider,.062*u);circle(r.head,.1,null,0,st.rider);}
+  else{const r=walker();L(V(-.2,.99),V(PC+HALF-.005,PLATY+.012),st.ink,.016*u);L(V(-.2,.875),V(PC+HALF-.005,PLATY+.006),st.ink,.012*u);L(V(-.195,.87),V(-.195,1.03),st.packc,.014*u);
+    for(const [i,col] of [[0,st.far],[1,st.rider]]){const l=r.legs[i];L(l.hip,l.kn,col,.115*u);L(l.kn,l.ank,col,.09*u);L(l.ank,l.toe,col,.06*u);g.globalAlpha=i?1:.5;L(l.strap,V(PC+HALF-.01,PLATY+.02),st.cord,1.4);L(V(PC+HALF-.01,PLATY+.02),V(O.x,O.y-K.spool/2),st.cord,1.4);g.globalAlpha=1;}
+    L(r.hip,r.sh,st.rider,.25*u);const am=r.arms[1];L(r.sh,am.el,st.rider,.075*u);L(am.el,am.hand,st.rider,.062*u);circle(r.head,.1,null,0,st.rider);L(V(-.19,.97),V(.15,.97),st.packc,.05*u);g.strokeStyle=st.packc;g.lineWidth=.024*u;g.beginPath();[V(-.19,1.03),V(-.16,1.3),V(-.08,1.47),V(.06,1.47),V(.15,1.3),V(.15,1.04)].forEach((p,i)=>{const q=M(p);i?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y);});g.stroke();}
+  // platform and module frame
+  g.strokeStyle=st.plat;g.lineWidth=3;g.beginPath();g.moveTo(M(V(PC-HALF,PLATY)).x,M(V(0,PLATY)).y);g.lineTo(M(V(PC+HALF,PLATY)).x,M(V(0,PLATY)).y);g.stroke();
+  g.globalAlpha=.9;g.fillStyle=st.plate;g.beginPath();const B=V(-J.a/1000,-J.l/1000),PB=-OH;[[.055,.055],[.055,PB+.005],[B.x+.03,PB+.005],[B.x+.03,B.y-.04],[B.x-.04,B.y-.04],[B.x-.04,B.y+.06],[-.05,.08]].forEach((p,i)=>{const q=M(W(V(p[0],p[1])));i?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y);});g.closePath();g.fill();g.globalAlpha=1;
+  L(V(PC-HALF,PLATY+.0125),V(PC+HALF,PLATY+.0125),st.ink,.025*u);circle(O,K.spool/2,st.ink,1.2);
+  legDraw(legL(ph+.5),st.fill,1);const HL=hullPts();
+  const poly=(pts,fill,stroke)=>{g.beginPath();pts.forEach((p,i)=>{const q=M(p);i?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y);});g.closePath();if(fill){g.fillStyle=fill;g.fill();}if(stroke){g.strokeStyle=stroke;g.lineWidth=1;g.stroke();}};
+  const smooth=pts=>{const P=pts.map(M),n=P.length;g.beginPath();g.moveTo((P[n-1].x+P[0].x)/2,(P[n-1].y+P[0].y)/2);for(let i=0;i<n;i++){const p=P[i],q=P[(i+1)%n];g.quadraticCurveTo(p.x,p.y,(p.x+q.x)/2,(p.y+q.y)/2);}g.closePath();};
+  if(S.bare||S.cfg.body==='bones'){const top=O.y+LX.ymax+.04;L(V(PC+HALF-.01,top),V(PC-HALF+.01,top),st.bone,.025*u);for(let i=0;i<5;i++){const x=PC+.13-i*.065;L(V(x,top),V(x-.02,PLATY+.02),st.bone,.014*u);}}
+  else{const Wt=waist();{const bk=add(Wt.C,V(Wt.n.x*Wt.rb,Wt.n.y*Wt.rb)),sd=add(Wt.C,V(Wt.n.x*Wt.rb*.35,Wt.n.y*Wt.rb*.35));poly([V(HL.F,HL.bel),V(HL.F-.03,HL.top),bk,sd],st.apron);}
+    smooth(HL.pts);g.globalAlpha=st.hullA;g.fillStyle=st.hull;g.fill();g.globalAlpha=1;g.save();g.clip();g.strokeStyle=st.seam;g.lineWidth=1;if(S.cfg.body==='laths')for(let y=HL.bel-.08;y<HL.top+.03;y+=.071){const a=M(V(HL.Rr-.2,y)),b=M(V(HL.F+.02,y));g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke();}
+    g.lineWidth=1.6;const h0=M(V(O.x-.08,O.y+.06)),h1=M(V(O.x+.08,O.y-.06));g.strokeRect(h0.x,h0.y,h1.x-h0.x,h1.y-h0.y);g.restore();smooth(HL.pts);g.strokeStyle=st.ink;g.lineWidth=1.2;g.stroke();}
+  const tb=V(HL.Rr-.07,HL.top-.05);g.strokeStyle=st.hair;g.lineWidth=1;const sw=Math.sin(TAU*ph*2)*.04;for(let i=0;i<9;i++){const a=M(tb),b=M(V(tb.x-.12-sw-i*.008,tb.y-.5+i*.012)),c=M(V(tb.x-.1-i*.004,tb.y-.2));g.beginPath();g.moveTo(a.x,a.y);g.quadraticCurveTo(c.x,c.y,b.x,b.y);g.stroke();}
+  if(S.cfg.mount==='frame'&&S.mode==='pack')L(V(-.17,PLATY-.03),V(-.17,1.55),st.ink,.02*u);
+  if(S.body==='trojan'&&!S.bare){const hd=S.mode==='bike'?riderBike().head:walker().head,rt=S.mode==='bike'?-.1:0,cs=Math.cos(rt),sn=Math.sin(rt),tr=p=>V(hd.x+p[0]*cs-p[1]*sn,hd.y+p[0]*sn+p[1]*cs);
+    const A=tr([-.1,.05]),Bm=V(HL.F-.04,hullTop(HL,HL.F-.04)+.01);g.strokeStyle=st.hair;for(let i=0;i<7;i++){const a=M(A),b=M(Bm),c=M(V((A.x+Bm.x)/2,(A.y+Bm.y)/2+.06+i*.004));g.beginPath();g.moveTo(a.x,a.y+i);g.quadraticCurveTo(c.x,c.y,b.x,b.y);g.stroke();}
+    poly(HEADP.map(tr),st.hull,st.ink);poly([[-.04,.1],[-.03,.21],[.02,.11]].map(tr),st.hull,st.ink);const e=M(tr([.07,.035]));g.fillStyle=st.ink;g.fillRect(e.x-.025*u,e.y-.01*u,.05*u,.02*u);}
+  return legL(ph+.5);}
+const ST_EL=()=>({hull:S.cfg.body==='canvas'?'#d9c8a6':S.cfg.body==='card'?'#b08a58':S.body==='trojan'?'#9a7448':'#cdb07c',hullA:.94,seam:'rgba(60,40,20,.45)',apron:S.body==='trojan'?'#7a5c3c':'#b59a72',ink:C.ink,far:'#b9a98c',fill:'#c9a46c',bone:'#cbb48a',thin:C['ink-3'],rider:'#8c867e',plate:'#b8bdc1',hoof:'#3a2c22',chain:C.ok,hair:'#3b2a1d',packc:'#6b7a58',plat:C.accent,cord:'#e0a936'});
+const ST_PL={hull:'#efe4cc',hullA:.9,seam:'rgba(20,17,13,.35)',apron:'rgba(239,228,204,.65)',ink:'#efe4cc',far:'rgba(239,228,204,.35)',fill:'#efe4cc',bone:'rgba(239,228,204,.7)',thin:'rgba(239,228,204,.35)',rider:'rgba(239,228,204,.75)',plate:'rgba(239,228,204,.3)',hoof:'#efe4cc',chain:'rgba(239,228,204,.4)',hair:'rgba(239,228,204,.6)',packc:'rgba(239,228,204,.5)',plat:'rgba(239,228,204,.8)',cord:'rgba(239,228,204,.7)'};
+const vstat=t=>{$('vstat').textContent=t;};
+const dimH=(g,M,a,b,y,txt,col)=>{const A=M(V(a,y)),Bq=M(V(b,y));g.strokeStyle=col;g.lineWidth=1;g.beginPath();g.moveTo(A.x,A.y);g.lineTo(Bq.x,Bq.y);g.stroke();for(const q of [A,Bq]){g.beginPath();g.moveTo(q.x,q.y-4);g.lineTo(q.x,q.y+4);g.stroke();}g.font='10px '+MONO;g.textAlign='center';const tw=g.measureText(txt).width;g.fillStyle=C.view;g.fillRect((A.x+Bq.x)/2-tw/2-3,A.y-12,tw+6,11);g.fillStyle=col;g.fillText(txt,(A.x+Bq.x)/2,A.y-3);};
+const dimV=(g,M,x,a,b,txt,col)=>{const A=M(V(x,a)),Bq=M(V(x,b));g.strokeStyle=col;g.lineWidth=1;g.beginPath();g.moveTo(A.x,A.y);g.lineTo(Bq.x,Bq.y);g.stroke();for(const q of [A,Bq]){g.beginPath();g.moveTo(q.x-4,q.y);g.lineTo(q.x+4,q.y);g.stroke();}g.save();g.translate(A.x-5,(A.y+Bq.y)/2);g.rotate(-Math.PI/2);g.font='10px '+MONO;g.textAlign='center';g.fillStyle=col;g.fillText(txt,0,0);g.restore();};
+function drawElev(){const {g,w,h}=fit2(c2);g.fillStyle=C.view;g.fillRect(0,0,w,h);const top=54,bot=44,bx=sceneBox();const u=Math.min((w-30)/(bx.x1-bx.x0),(h-top-bot)/bx.y1);const ox=(w-(bx.x1-bx.x0)*u)/2-bx.x0*u,oy=h-bot;const M=p=>V(ox+p.x*u,oy-p.y*u);
+  g.strokeStyle=C.rule;g.lineWidth=1;for(let x=Math.ceil(bx.x0*10)/10;x<=bx.x1;x+=.1){const X=M(V(x,0)).x;g.globalAlpha=Math.abs(Math.round(x*10)%5)===0?.8:.35;g.beginPath();g.moveTo(X,oy);g.lineTo(X,M(V(0,bx.y1)).y);g.stroke();}g.globalAlpha=1;
+  g.strokeStyle=C['ink-2'];g.lineWidth=1.5;g.beginPath();g.moveTo(0,oy);g.lineTo(w,oy);g.stroke();const O=K.O;
+  g.strokeStyle=C.warn;g.lineWidth=1.3;g.beginPath();for(let k=0;k<=NS;k+=3){const q=M(add(O,legL(k/NS).H));k?g.lineTo(q.x,q.y):g.moveTo(q.x,q.y);}g.stroke();
+  const P=machine2D(g,M,S.ph,ST_EL(),S.dist);g.font='600 10px '+BODY;g.fillStyle=C.ink;g.textAlign='left';for(const k of (S.bare?['O','B','C','D','E','F','G','H']:['E','G','H'])){const q=M(add(O,P[k]));g.fillText(k,q.x+6,q.y-5);}
+  dimH(g,M,K.PC-HALF,K.PC+HALF,PLATY-.06,'platform 356 mm',C.accent);dimV(g,M,K.PC+HALF+.03,0,PLATY,(S.mode==='bike'?'rack ':'base ')+mm(PLATY),C.accent);{const xa=Math.min(K.O.x+LX.min,K.PC-HALF-.155),xb=S.mode==='bike'?BK.FA.x+BK.R:.36;dimH(g,M,xa,xb,bx.y1-.03,'overall '+mm(xb-xa),C.accent);}
+  if(S.mode==='bike')dimH(g,M,BK.RA.x,BK.FA.x,.04,'wheelbase 1054 mm',C.accent);
+  g.font='10px '+MONO;g.fillStyle=C['ink-2'];g.textAlign='left';g.fillText(`hooves ${mm(K.clear)} above the ground at the lowest point`,6,oy+13);
+  vstat(`side · ${MODES[S.mode].name.toLowerCase()} · blue = the 356 mm platform · red = hoof path`);}
+function drawPlate(){const {g,w,h}=fit2(c2);g.fillStyle='#14110d';g.fillRect(0,0,w,h);const top=60,bot=72,pad=6,bx=sceneBox(),ar=(bx.x1-bx.x0)/bx.y1;let cols=3,bu=0;for(const c of [2,3,4,6]){const r=Math.ceil(12/c),cw0=(w-pad*(c+1))/c,ch0=(h-top-bot-pad*(r+1))/r,u0=Math.min(cw0/ar,ch0);if(u0>bu){bu=u0;cols=c;}}const rows=Math.ceil(12/cols),cw=(w-pad*(cols+1))/cols,ch=(h-top-bot-pad*(rows+1))/rows;
+  for(let i=0;i<12;i++){const c=i%cols,r=Math.floor(i/cols),x=pad+c*(cw+pad),y=top+pad+r*(ch+pad);g.save();g.beginPath();g.rect(x,y,cw,ch);g.clip();g.fillStyle='#1c1813';g.fillRect(x,y,cw,ch);
+    const u=Math.min(cw/(bx.x1-bx.x0),ch/bx.y1)*.96,ox=x+(cw-(bx.x1-bx.x0)*u)/2-bx.x0*u,oy=y+ch-3;g.strokeStyle='rgba(239,228,204,.18)';g.lineWidth=1;for(let k=-24;k<=12;k++){const X=ox+k*.1*u;g.beginPath();g.moveTo(X,y);g.lineTo(X,oy);g.stroke();}for(let k=0;k<=18;k++){const Y=oy-k*.1*u;g.beginPath();g.moveTo(x,Y);g.lineTo(x+cw,Y);g.stroke();}
+    const ph=i/12,dd=S.dist-((S.ph-ph+1)%1)*K.advG,saved=S.dist;S.dist=dd;machine2D(g,p=>V(ox+p.x*u,oy-p.y*u),ph,ST_PL,dd);S.dist=saved;g.fillStyle='rgba(239,228,204,.9)';g.font='600 10px '+MONO;g.textAlign='left';g.fillText(String(i+1),x+5,y+13);g.restore();
+    if(Math.floor(S.ph*12)===i){g.strokeStyle=C.warn;g.lineWidth=2;g.strokeRect(x+1,y+1,cw-2,ch-2);}}
+  const fx=pad,fw=w-2*pad,fy=h-bot+6,rh=10;g.font='9px '+MONO;g.textAlign='left';const rowsF=[['LH',p=>onGround(p)],['RH',p=>onGround(p+.5)]];
+  if(S.mode==='pack'){const Sh=strideH(S.v),base=S.dist-S.ph*K.advG;rowsF.splice(1,0,['LF',p=>(((base+p*K.advG)/Sh)%1+1)%1<.62]);rowsF.push(['RF',p=>(((base+p*K.advG)/Sh+.5)%1+1)%1<.62]);}
+  rowsF.forEach(([l,f],i)=>{g.fillStyle='rgba(239,228,204,.7)';g.fillText(l,fx,fy+i*rh+8);for(let k=0;k<120;k++)if(f(k/120)){g.fillStyle=l[1]==='H'?'#efe4cc':'rgba(239,228,204,.55)';g.fillRect(fx+24+k/120*(fw-24),fy+i*rh+1,(fw-24)/120+.5,rh-3);}});
+  const X=fx+24+S.ph*(fw-24);g.strokeStyle=C.warn;g.lineWidth=1.5;g.beginPath();g.moveTo(X,fy-2);g.lineTo(X,fy+rowsF.length*rh);g.stroke();
+  g.fillStyle='#efe4cc';g.font='500 11px '+BODY;g.fillText(`Plate · ${MODES[S.mode].name.toLowerCase()} · ${(S.v*3.6).toFixed(1)} km/h · 12 exposures per leg cycle`,pad,top-6);
+  vstat(`plate · after Muybridge · rows: hind hooves at their lowest${S.mode==='pack'?'; LF, RF = your feet':''}`);}
+function drawLegAt(g,M,Jx,ph,cols,alpha){const u=lk(Jx,TD/NS*TAU-TAU*ph);if(!u)return;g.globalAlpha=alpha;g.lineCap='round';for(const b of BODIES){g.strokeStyle=cols(b);for(const [p,q] of bodyEdges(b)){const a=M(V(u[p].x/1000,u[p].y/1000)),c=M(V(u[q].x/1000,u[q].y/1000));g.beginPath();g.moveTo(a.x,a.y);g.lineTo(c.x,c.y);g.stroke();}}g.globalAlpha=1;return u;}
+function drawLeg(){const {g,w,h}=fit2(c2);g.fillStyle=C.view;g.fillRect(0,0,w,h);const P=legL(S.ph+.5),O=K.O;const x0=Math.min(LX.min,K.PC-HALF-O.x)-.06,x1=Math.max(LX.max,K.PC+HALF-O.x)+.06,y0=-O.y-.03,y1=LX.ymax+.05;const top=106,bot=30;const u=Math.min((w-24)/(x1-x0),(h-top-bot)/(y1-y0));const ox=(w-(x1-x0)*u)/2-x0*u,oy=h-bot+y0*u;const M=p=>V(ox+p.x*u,oy-p.y*u);
+  const gy=M(V(0,-O.y)).y;g.strokeStyle=C['ink-2'];g.lineWidth=1.5;g.beginPath();g.moveTo(0,gy);g.lineTo(w,gy);g.stroke();
+  const pa=M(V(K.PC-HALF-O.x,-OH)),pb=M(V(K.PC+HALF-O.x,-OH));g.fillStyle='rgba(47,85,201,.12)';g.fillRect(pa.x,pa.y-HALF*2*u,pb.x-pa.x,HALF*2*u);g.strokeStyle=C.accent;g.lineWidth=2;g.beginPath();g.moveTo(pa.x,pa.y);g.lineTo(pb.x,pb.y);g.stroke();g.setLineDash([4,3]);g.strokeRect(pa.x,pa.y-HALF*2*u,pb.x-pa.x,HALF*2*u);g.setLineDash([]);
+  g.fillStyle=C.accent;g.font='10px '+MONO;g.textAlign='left';g.fillText('356 mm platform: nothing above it leaves this box',pa.x+4,pa.y-HALF*2*u-4);
+  for(let k=0;k<NS;k+=2){const a=M(legL(k/NS).H),b=M(legL((k+2)/NS).H),on=onGround(k/NS);g.strokeStyle=on?C.warn:C['ink-3'];g.lineWidth=on?2.4:1.2;g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.stroke();}
+  const o=M(P.O);g.strokeStyle=C['ink-3'];g.setLineDash([3,3]);g.beginPath();g.arc(o.x,o.y,J.m/1000*u,0,TAU);g.stroke();g.setLineDash([]);
+  const lc=['#7c4dcc','#d13f78','#d9822b','#21915f','#2f55c9'];for(const b of BODIES){g.strokeStyle=lc[(LAYERS[b.id]-1)%lc.length];g.lineWidth=Math.max(4,BARW*u*.55);g.lineCap='round';g.globalAlpha=.85;for(const [p,q] of bodyEdges(b)){const a=M(P[p]),c=M(P[q]);g.beginPath();g.moveTo(a.x,a.y);g.lineTo(c.x,c.y);g.stroke();}g.globalAlpha=1;}
+  g.font='10px '+MONO;g.textAlign='center';for(const [p,q,n] of LINKS){const a=P[p],b=P[q],m=M(V((a.x+b.x)/2,(a.y+b.y)/2)),t=J[n]+'',tw=g.measureText(t).width;g.fillStyle=C.view;g.globalAlpha=.85;g.fillRect(m.x-tw/2-2,m.y-6,tw+4,11);g.globalAlpha=1;g.fillStyle=C.ink;g.fillText(t,m.x,m.y+3);}
+  for(const k of ['O','B','C','D','E','F','G','H']){const q=M(P[k]);g.fillStyle=C.panel;g.beginPath();g.arc(q.x,q.y,5,0,TAU);g.fill();g.strokeStyle=C.ink;g.lineWidth=1.5;g.stroke();g.fillStyle=C.ink;g.font='600 11px '+BODY;g.textAlign='left';g.fillText(k,q.x+7,q.y-6);}
+  g.font='10px '+MONO;g.fillStyle=C['ink-2'];let y=56;for(const t of [`lengths in mm · crank ${J.m} · O ${J.oh} above the platform`,`advance ${mm(K.adv)} per turn · on ground ${Math.round(DUTY*100)}%`,`hoof lifts ${mm(K.lift)} · slip ${mm(K.slip)} per step`,`${LAYERS.n} layers of 12 mm · colours = layer`]){g.fillText(t,10,y);y+=13;}
+  vstat('leg · evolved from Jansen’s linkage to fit the 14 × 14 in platform · red = hoof at its lowest');}
+function drawEvo(){const {g,w,h}=fit2(c2);g.fillStyle=C.view;g.fillRect(0,0,w,h);const wide=w>620;const lw=wide?w*.58:w,lh=wide?h:h*.62;
+  // left: champion against the platform, Jansen at the same hoof drop for comparison
+  const Jb=EV.best.J,jsc=(800+Jb.oh-25)/(-Math.min(...[...Array(72)].map((_,k)=>lk(JANSEN,k/72*TAU).H.y))),Jj={};for(const k in JANSEN)Jj[k]=JANSEN[k]*jsc;
+  const x0=-.8,x1=.3,y0=-(PLATY+Jb.oh/1000)-.03,y1=.32;const top=48,u=Math.min((lw-20)/(x1-x0),(lh-top-24)/(y1-y0)),ox=(lw-(x1-x0)*u)/2-x0*u,oy=top+y1*u;const M=p=>V(ox+p.x*u,oy-p.y*u);
+  const gy=M(V(0,y0+.03)).y;g.strokeStyle=C['ink-2'];g.lineWidth=1.3;g.beginPath();g.moveTo(0,gy);g.lineTo(lw,gy);g.stroke();
+  const xc=-Jb.a/2000,pa=M(V(xc-HALF,-Jb.oh/1000)),pb=M(V(xc+HALF,-Jb.oh/1000));g.fillStyle='rgba(47,85,201,.12)';g.fillRect(pa.x,pa.y-PLAT*u,pb.x-pa.x,PLAT*u);g.strokeStyle=C.accent;g.lineWidth=2;g.beginPath();g.moveTo(pa.x,pa.y);g.lineTo(pb.x,pb.y);g.stroke();
+  g.lineWidth=2;drawLegAt(g,M,Jj,S.ph,()=>'#a39a8a',.5);
+  let jx0=0,jx1=0,jy1=0;for(let k=0;k<72;k++){const q=lk(Jj,k/72*TAU);if(!q)continue;for(const n in q){jx0=Math.min(jx0,q[n].x);jx1=Math.max(jx1,q[n].x);jy1=Math.max(jy1,q[n].y);}}
+  g.fillStyle=C.warn;g.font='10px '+MONO;g.textAlign='left';g.fillText(`grey: Jansen scaled to the same hoof drop, ${Math.round(jx1-jx0)} mm long, ${Math.round(jy1+Jb.oh)} mm tall above the platform`,8,gy+14);
+  g.lineWidth=4;drawLegAt(g,M,Jb,S.ph,b=>b.id==='crank'?C.ink:'#c9a46c',1);
+  g.fillStyle=C.accent;g.textAlign='left';g.fillText('356 mm',pa.x+3,pa.y-PLAT*u-4);
+  // right/bottom: cost history
+  const hx0=wide?lw+12:12,hy0=wide?60:lh+8,hw=(wide?w-lw-24:w-24),hh=(wide?h*.42:h-lh-32);const Hs=EV.hist.length?EV.hist:[1];const lv=Hs.map(v=>Math.log10(Math.max(1,v)));const mn=Math.min(...lv),mx=Math.max(...lv);
+  g.strokeStyle=C.rule;g.strokeRect(hx0,hy0,hw,hh);g.strokeStyle=C.accent;g.lineWidth=1.6;g.beginPath();Hs.forEach((v,i)=>{const X=hx0+i/Math.max(1,Hs.length-1)*hw,Y=hy0+hh-(Math.log10(Math.max(1,v))-mn)/((mx-mn)||1)*hh;i?g.lineTo(X,Y):g.moveTo(X,Y);});g.stroke();
+  g.fillStyle=C['ink-2'];g.font='10px '+MONO;g.textAlign='left';g.fillText(`cost (log) · ${EV.running?'generation '+EV.gen:EV.src} · best ${EV.best.c.toFixed(2)}`,hx0,hy0-4);
+  if(wide){const f=EV.best;let y=hy0+hh+22;for(const t of [`advance ${Math.round(f.adv)} mm/turn`,`slip ${Math.round(f.slip)} mm/step`,`on ground ${Math.round(f.d*100)}%`,`hoof lift ${Math.round(f.lift)} mm`,`hoof front ${Math.round(f.hx)} mm from O`,`crank ${f.m} mm, O ${f.oh} mm up`]){g.fillText(t,hx0,y);y+=14;}}
+  vstat(`evolve · grey = Jansen at the same hoof drop · tan = ${EV.src==='champion'?'the evolved leg in use':'best of this run'} · blue = platform`);}
+
+/* ===== scrub, speed ===== */
+const scrub=$('scrub');function drawScrub(){const {g,w,h}=fit2(scrub);g.clearRect(0,0,w,h);g.font='9px '+MONO;[['LH',p=>onGround(p)],['RH',p=>onGround(p+.5)]].forEach(([l,f],i)=>{g.fillStyle=C['ink-2'];g.fillText(l,0,9+i*12);g.fillStyle=C.ink;for(let k=0;k<120;k++)if(f(k/120))g.fillRect(20+k/120*(w-22),2+i*12,(w-22)/120+.5,8);});const X=20+S.ph*(w-22);g.strokeStyle=C.accent;g.lineWidth=2;g.beginPath();g.moveTo(X,0);g.lineTo(X,h);g.stroke();}
+let sDrag=false;const scrubAt=e=>{const r=scrub.getBoundingClientRect(),np=Math.max(0,Math.min(.999,(e.clientX-r.left-20)/(r.width-22)));S.dist+=(np-S.ph)*K.advG;S.ph=np;setPlaying(false);};
+scrub.addEventListener('pointerdown',e=>{scrub.setPointerCapture(e.pointerId);sDrag=true;scrubAt(e);});scrub.addEventListener('pointermove',e=>{if(sDrag)scrubAt(e);});scrub.addEventListener('pointerup',()=>sDrag=false);
+function setPlaying(p){S.playing=p;$('pi').className='ic '+(p?'pause-i':'play-i');$('play').setAttribute('aria-label',p?'Pause':'Play');}
+$('play').addEventListener('click',()=>{audio();setPlaying(!S.playing);});
+function syncSpeed(){if(S.built)AB.recompute(S.v);const m=MODES[S.mode],el=$('spd');el.min=m.vmin;el.max=m.vmax;el.value=S.v;$('spdv').textContent=(S.v*3.6).toFixed(1)+' km/h';}
+$('spd').addEventListener('input',e=>{S.v=+e.target.value;MODES[S.mode].v=S.v;$('spdv').textContent=(S.v*3.6).toFixed(1)+' km/h';derive();header();if(S.tab==='drive')renderInsp();});
+
+/* ===== build steps ===== */
+function steps(){const f=v=>`<span class="num">${v}</span>`,c=S.cfg,O_=k=>OPT[k].opts[c[k]],Lo=O_('link'),Po=O_('piv');return [
+ {ph:'Module · one unit, 356 × 356 mm footprint'},
+ {t:'Cut the links',d:Lo.step(Po.hole)+` Lengths are centre to centre, in the Parts list.`,tags:['links']},
+ {t:'Fit the pivots',d:Po.step,tags:['links']},
+ {t:'Make the crank arms',d:`2 × 6 mm aluminium, 30 × 100 mm. Bore ${f('12 mm')} to suit the shaft; ${c.shaft==='dflat'?'two M5 set screws onto the flat':'4 mm keyway and one M5 set screw'}. Pin hole at ${f(J.m+' mm')}.`,tags:['links']},
+ {t:'Build the base and side plates',d:O_('frame').step+` O ${f(J.oh+' mm')} above the rails, ${f(mm(J.a/2000))} forward of centre; B ${f(J.a+' mm')} behind O and ${f(J.l+' mm')} lower.`,tags:['frame']},
+ {t:'Fit shaft and bearings',d:O_('shaft').step+` Length ${f(mm(2*(LAYER0+PLY/2)))}, flush with the crank arms. On it: the ${f(K.TJ+'T')} #25 sprocket at the centre and two cord spools ${f('⌀'+Math.round(K.spool*1000))} on CSK12PP one-way bearings.`,tags:['shaft']},
+ {t:'Assemble the legs',d:`Stack by layer (Joints). Nylon washer between layers. ${Po.bolt} at C, D, E, F, G; snug each nylock until it turns freely with no end play.`,tags:['links']},
+ {t:'Hang the legs',d:`Crank arms on the shaft ${f('180°')} apart. Bolt B through plate and doubler, lock nut inside.`,tags:['links','frame']},
+ {t:'Make the hooves',d:O_('hoof').step,tags:['hooves']},
+ {t:'Spine and rib hoops',d:`16 mm PVC conduit spine, ${f('336 mm')}, on 4 struts, ${f(mm(LX.ymax+.04))} above O; foam vertebrae slid on. 5 hoops of 4 mm fibreglass rod, half-width ${f(mm(HULLZ-.007))}: outside the legs, inside the footprint.`,tags:['body']},
+ {t:'Skin the body',d:O_('body').step,tags:['body'],off:c.body==='bones'},
+ {t:'Hang the apron',d:`Tea-dyed cotton lawn, ${f('600 × 900 mm')}, from the front edge of the body to a belt at your waist, elastic gores at the sides. It joins the horse body to yours.`,tags:['body'],off:c.body==='bones'},
+ {t:'Horse head (Trojan)',d:`5 mm foam board sides and balsa laths, ${f('480 × 340 × 220 mm')}, glued to a bike helmet; eye slots at your eye line; about ${f('600 g')}. Your torso becomes the neck and your legs the forelegs.`,tags:['body'],bd:'trojan'},
+ {t:'Finish',d:Lo.col==='wood'?`Sand to 180. Black tea, 6 bags per litre, 3 coats. Amber shellac, 1 coat.`:`Links stay ${Lo.col==='pvc'?'yellow, as Jansen leaves them':'as they are'}. Tea and shellac on the wooden parts only.`,tags:['links','body','hooves']},
+ {ph:'Bicycle mode · your State All-Road, Medium'},
+ {t:'Clear the rack',d:`Remove the wire basket and the bungee net. The module takes the same 14 × 14 in footprint, ${f('800 mm')} up.`,tags:['bike'],mode:'bike'},
+ {t:'Clamp the module',d:`4 M6 U-clamps through the cross bars around the rack rails. Platform centre over the rear axle, ${f(mm(-MODES.bike.PC))} behind the bottom bracket.`,tags:['frame','bike'],mode:'bike'},
+ {t:'Fit the roller drive',d:`Under the platform: a sprung arm holds a ${f('52 mm')} urethane skate wheel on top of the tyre. 12:36 spur gears (module 1) then #25 chain ${f(K.TS+':'+K.TJ)}, ${f(K.chainR+' links')}, up between the rack tubes. The gear pair reverses the roller so the legs walk forward.`,tags:['roller'],mode:'bike'},
+ {t:'Ride',d:`The tyre drives the legs at road pace: ${f(mm(K.advB))} per leg cycle. They keep walking when you coast. Above ${f('2.2 Hz')} (${f((2.2*K.advB*3.6).toFixed(0)+' km/h')}) lift the roller arm off the tyre.`,tags:null,mode:'bike'},
+ {ph:'Backpack mode · walking'},
+ {t:'Wear the mount',d:O_('mount').step+` Base top at ${f('800 mm')}. Pin the roller arm up.`,tags:['pack','frame','roller'],mode:'pack'},
+ {t:'Rig the cords',d:`Velcro strap on the back of each thigh, ${f('half-way to the knee')}. 3 mm Dyneema cord from each strap, over a guide pulley at the front of the base, ${f('3 turns')} round its spool. A bungee inside each spool rewinds it.`,tags:['cords','shaft'],mode:'pack'},
+ {t:'Walk',d:c.timing==='gait'?`Each forward swing of a thigh turns the legs ${f('half a cycle')} (spool ${f('⌀'+Math.round(2*S.pull/Math.PI*1000))}): the hind legs keep step with yours, and the hooves drift forward while off the ground.`:`Each forward swing of a thigh pulls about ${f(mm(S.pull))} of cord and turns the legs ${f(K.perStep.toFixed(2)+' of a cycle')}, so the hooves keep pace with the ground.`,tags:null,mode:'pack'}];}
+
+/* ===== parts ===== */
+function partsRows(){return BODIES.filter(b=>b.id!=='crank').map(b=>({part:b.name,joints:b.j.join('–'),centres:bodyEdges(b).map(([p,q])=>J[LINKS.find(l=>(l[0]===p&&l[1]===q)||(l[0]===q&&l[1]===p))[2]]+' mm').join(' / '),form:OPT.link.opts[S.cfg.link].tube?(b.j.length===2?'tube, ends flattened':'triangle of tubes'):(b.j.length===2?'bar, '+Math.round(BARW*1000)+' mm wide':'plate, cut-out'),layer:LAYERS[b.id]}));}
+/* ===== test bench: every option carries its mass, price, strength, tools and look ===== */
+const OPT={
+ link:{label:'Links',opts:{
+  ply6:{name:'6 mm birch ply, 30 mm wide',t:.006,w:.030,rho:680,E:9e9,crush:25e6,hours:5,tools:['jigsaw','drillpress'],col:'wood',look:.9,bom:[['Birch ply 6 mm, 610 × 610','1','buy','Lumber yard',18]],
+    step:h=>`From 6 mm birch ply cut 10 bars and 4 plates, 30 mm wide. Clamp each pair and drill both together on a drill press: ${h} holes, ±0.5 mm.`},
+  ply12:{name:'12 mm birch ply, 45 mm wide',t:.012,w:.045,rho:680,E:9e9,crush:25e6,hours:6,tools:['jigsaw','drillpress'],col:'wood',look:.9,bom:[['Baltic birch 12 mm, 1220 × 610','1','buy','Lumber yard',35]],
+    step:h=>`From 12 mm Baltic birch cut 10 bars and 4 plates, 45 mm wide. Clamp each pair and drill both together on a drill press: ${h} holes, ±0.5 mm.`},
+  pvc:{name:'16 mm PVC conduit, ends flattened',tube:[.016,.0012],rho:1400,E:2.8e9,crush:45e6,hours:8,tools:['heatgun','drillpress'],col:'pvc',look:.75,bom:[['PVC electrical conduit 16 mm × 3 m','3','buy','Hardware store',14]],
+    step:h=>`Cut 16 mm PVC conduit to each length plus 30 mm. Heat each end and press it flat in a vice, then drill ${h} through the flat. Plates become triangles of tube, as Theo Jansen builds them.`},
+  alu:{name:'Aluminium flat bar 25 × 4',t:.004,w:.025,rho:2700,E:69e9,crush:150e6,hours:6,tools:['hacksaw','drillpress'],col:'alu',look:.7,bom:[['Aluminium flat bar 25 × 4 × 2 m','3','buy','Metal supplier',42]],
+    step:h=>`Cut aluminium flat bar 25 × 4 to each length plus 25 mm; plates are bolted triangles of bar. Deburr; drill ${h} on a drill press.`},
+  petg:{name:'3D-printed PETG, 25 × 8, 40% infill',t:.008,w:.025,rho:760,E:1.8e9,crush:25e6,hours:3,tools:['printer'],col:'petg',look:.6,bom:[['PETG filament 1 kg','1','buy','Online',18]],
+    step:h=>`Print every part flat: 25 × 8 mm section, 40% infill, 4 walls, about 30 h of printing. Print the ${h} holes 0.2 mm small and ream them.`}}},
+ piv:{label:'Pivots',opts:{
+  nylon:{name:'Nylon flanged bushing, ⌀8 shoulder bolt',d:.008,hole:'8 mm',play:.0001,m:.001,bm:.010,pmax:12e6,pv:.1e6,mu:.25,tools:[],vis:[.0055,'#ece6d8',0],bolt:'⌀8 shoulder bolt (M6)',
+    rows:nb=>[[`Flanged nylon bushings 6 × 8 × 6`,String(nb),'buy','Industrial supply',Math.round(nb*.3)],['Shoulder bolts ⌀8 (M6), nylocks, nylon washers','12 + 60','buy','Industrial supply',40]],
+    step:`One flanged nylon bushing per hole, 6 × 8 × 6 mm, pushed in by hand. The hooves carry no weight, so the pivots only carry the legs’ own motion.`},
+  bronze:{name:'Bronze sleeve, ⌀10 shoulder bolt',d:.010,hole:'14 mm',play:.00004,len:.012,m:.010,bm:.055,pmax:30e6,pv:1.75e6,mu:.12,tools:[],vis:[.007,'#b0803f',.7],bolt:'⌀10 shoulder bolt (M8)',
+    rows:nb=>[[`Bronze sleeve bushings 10 × 14 × 12`,String(nb),'buy','Industrial supply',Math.round(nb*1.5)],['Shoulder bolts ⌀10 (M8), nylocks, washers','12 + 60','buy','Industrial supply',60]],
+    step:`One bronze sleeve bushing per hole, 10 × 14 × 12 mm, pressed in with a vice.`},
+  ball:{name:'608 ball bearing, M8 bolt',d:.008,hole:'22 mm counterbored',play:.00002,len:.007,m:.012,bm:.020,ball:true,mu:.004,tools:['forstner','drillpress'],vis:[.011,'#b9bfc4',.8],bolt:'M8 bolt with 8 mm spacers',
+    rows:nb=>[[`608-2RS ball bearings`,String(nb),'buy','Skate shop or online',Math.round(nb*.8)],['M8 bolts, nylocks, 8 mm spacers','12 + 60','buy','Hardware store',25]],
+    step:`One 608 skate bearing per hole in a 22 mm counterbore, cut with a Forstner bit on the drill press. M8 bolts with 8 mm spacers between layers.`},
+  bolt:{name:'Plain bolt in the hole',d:.006,hole:'6.2 mm',play:.00025,m:0,bm:.008,pmax:0,pv:.02e6,mu:.4,tools:[],vis:[.006,'#1d1b19',0],bolt:'M6 bolt',
+    rows:nb=>[['M6 bolts, nylocks, nylon washers','12 + 60','buy','Hardware store',15]],
+    step:`No bushings: M6 bolts straight through 6.2 mm holes, nylon washers between parts. Cheapest; the holes wear oval.`}}},
+ body:{label:'Body',opts:{
+  laths:{name:'Basswood laths with 10 mm gaps',m:.80,hours:8,tools:[],look:1,reveal:.6,bom:[['Basswood laths 3 × 40 and 3 × 20, 600 mm','30 + 13','buy','Craft or model shop',30]],
+    step:`Basswood laths, 3 × 40 mm with 10 mm gaps, glued to the hoops as 2 side panels cut to the outline in Side view; 13 laths 3 × 20 mm over the top. The legs move inside and touch nothing; below the belly line they show as hind legs.`},
+  canvas:{name:'Tea-dyed canvas over the hoops',m:.55,hours:6,tools:[],look:.85,reveal:0,bom:[['Cotton canvas 2 m, tea-dyed','1','buy','Fabric store',25]],
+    step:`Cotton canvas, tea-dyed, cut as 2 side panels to the outline in Side view plus a top piece, laced to the hoops. The legs move inside it.`},
+  bones:{name:'Spine and ribs only (Volos skeleton)',m:.25,hours:3,tools:[],look:.55,reveal:1,bom:[],step:`No skin.`},
+  card:{name:'Corrugated cardboard panels',m:.65,hours:4,tools:[],look:.6,reveal:0,bom:[['Corrugated cardboard boxes; PVA glue','3','salvage','Scrap',3]],
+    step:`Corrugated cardboard side panels cut to the outline in Side view, glued to the hoops and painted.`}}},
+ hoof:{label:'Hooves',opts:{
+  eva:{name:'EVA foam, 30 g',give:.012,m:.03,hours:.5,tools:[],look:.8,bom:[['EVA yoga block; bike inner tube','1','salvage','Scrap',5]],
+    step:`Cut from an EVA yoga block, 100 × 60 × 60 mm, about 30 g each; glue on a strip of bike inner tube as the sole. The hoof is the fastest-moving part, so its weight sets the load on every pivot.`},
+  pine:{name:'Pine block, 250 g',give:.005,m:.25,hours:1.5,tools:['jigsaw'],look:1,bom:[['Pine offcut, foam pad, old tyre','1','salvage','Scrap',0]],
+    step:`Pine block 110 × 70 × 75 mm, foam pad, tyre-tread sole: 250 g at the fastest-moving point of the leg.`}}},
+ shaft:{label:'Shaft',opts:{
+  dflat:{name:'12 mm D-profile, set screws, KFL001',m:.24,hours:1,tools:[],bom:[['KFL001 flange bearings; 12 mm D-profile shaft','2 + 1','buy','Robotics or 3D-printer supply',22]],
+    step:`KFL001 two-bolt flange bearing (12 mm) on each plate’s inner face. 12 mm D-profile shaft: crank arms and spools are held by set screws on the flat, so no keyway is cut.`},
+  keyed:{name:'12 mm aluminium, keyed, KFL001',m:.24,hours:1,tools:['shop'],bom:[['KFL001 flange bearings; 12 mm aluminium shaft','2 + 1','buy','Industrial supply',20]],
+    step:`KFL001 two-bolt flange bearing (12 mm) on each plate’s inner face. 12 mm aluminium shaft with a 4 mm keyway, cut by a machine shop.`},
+  steel:{name:'20 mm steel, keyed, UCFL204',m:1.76,hours:1,tools:['shop'],bom:[['UCFL204 flange bearings; 20 mm steel shaft','2 + 1','buy','Industrial supply',45]],
+    step:`UCFL204 cast-iron flange bearings, 20 mm steel shaft with a keyway, cut by a machine shop.`}}},
+ frame:{label:'Frame',opts:{
+  alu3:{name:'3 mm aluminium plates, 20 mm tube rails',m:.70,hours:5,tools:['hacksaw','drillpress'],bom:[['Aluminium 3 mm sheet 400 × 200; 20 mm square tube 1 m','2 + 1','buy','Metal supplier',35]],
+    step:`2 rails of 20 mm square aluminium tube, 356 mm long, 150 mm apart; 2 side plates of 3 mm aluminium with lightening holes.`},
+  ply:{name:'18 mm birch ply plates and rails',m:1.15,hours:4,tools:['jigsaw','drillpress'],bom:[['Birch ply 18 mm, 600 × 300','1','buy','Lumber yard',20]],
+    step:`Rails and side plates from 18 mm birch ply, glued and screwed; heavier, needs only woodworking tools.`},
+  alu6:{name:'6 mm aluminium plates, 25 mm rails',m:1.47,hours:5,tools:['hacksaw','drillpress'],bom:[['Aluminium 6 mm plate 400 × 200; 25 mm square tube 1 m','2 + 1','buy','Metal supplier',55]],
+    step:`2 rails of 25 mm square aluminium tube; side plates of 6 mm aluminium.`}}},
+ mount:{label:'Back mount',mode:'pack',opts:{
+  hip:{name:'Hip belt, shoulder straps, 2 struts',m:.70,hours:2,tools:['hacksaw'],bom:[['Padded hip belt with shoulder straps; 16 mm aluminium tube 1.2 m','1 + 1','salvage','An old backpack; hardware store',20]],
+    step:`A padded hiking hip belt with shoulder straps, no frame. Two 16 mm aluminium tubes run from the belt’s lumbar plate to the front of the base rails, with a lower brace each side; 4 M5 bolts hold the module.`},
+  frame:{name:'Freighter-frame backpack',m:2.5,hours:1,tools:[],bom:[['Freighter-frame backpack with 14 × 14 in shelf','1','salvage','Used outdoor or hunting gear',60]],
+    step:`A freighter-frame backpack with its load shelf at 800 mm; heavier and taller, nothing to make.`}}},
+ timing:{label:'Leg timing',mode:'pack',opts:{
+  road:{name:'Hooves keep pace with the ground'},gait:{name:'Hind legs keep step with yours'}}}};
+const TOOLS={drillpress:{name:'Drill press',c:150,alt:'A makerspace drill press, or a drilling block clamped to each pair'},jigsaw:{name:'Jigsaw',c:60,alt:'A coping saw, slower'},hacksaw:{name:'Hacksaw and files',c:25,alt:''},
+  heatgun:{name:'Heat gun',c:25,alt:'Borrow one; a hair dryer is not hot enough'},printer:{name:'3D printer',c:250,alt:'A library or makerspace printer, or an online print service'},shop:{name:'Machine shop job',c:60,alt:'A D-profile shaft with set screws needs no keyway'},forstner:{name:'22 mm Forstner bit',c:15,alt:''}};
+const clamp01=x=>Math.max(0,Math.min(1,x));
+const optOf=(c,k)=>OPT[k].opts[c[k]];
+const nHoles=()=>2*JOINTS.reduce((a,Jn)=>a+JSTACK[Jn].bodies.length,0);
+function toolsFor(c){const t=new Set();for(const k of ['link','piv','body','hoof','shaft','frame','mount'])for(const x of optOf(c,k).tools||[])t.add(x);return [...t];}
+function bomFor(c){const R=(item,qty,how,where,cost,mode,bd)=>({item,qty,how,where,cost,mode,bd}),rows=[R('State 4130 All-Road, Medium, 700 × 38c, rear rack','1','have','Yours',0,'bike')],add=(arr,mode)=>{for(const r of arr)rows.push(R(r[0],r[1],r[2],r[3],r[4],mode));};
+  add(optOf(c,'link').bom);add(optOf(c,'piv').rows(nHoles()));add([['Aluminium flat 6 × 30 × 200 (crank arms)','1','buy','Metal supplier',8]]);add(optOf(c,'shaft').bom);add(optOf(c,'frame').bom);
+  add([['PVC conduit 16 mm × 0.5 m; fibreglass rod 4 mm × 5 m; foam','1 set','buy','Hardware store; kite shop',15]]);add(optOf(c,'body').bom);if(c.body!=='bones')add([['Cotton lawn 1 m, elastic, belt (apron)','1 set','buy','Fabric store',20]]);add(optOf(c,'hoof').bom);
+  add([[`#25 sprockets ${K.TS}T and ${K.TJ}T; #25 chain`,'2 + 1','buy','Robotics or go-kart supply',30],['52 mm urethane skate wheel, 608 bearings; nylon spur gears 12T + 36T','1 + 2','buy','Skate shop; robotics supply',20],['M6 U-clamps','4','buy','Hardware store',8]],'bike');
+  add([['CSK12PP one-way bearings; 2 spools, turned or printed','2 + 2','buy','Industrial supply',20],['3 mm Dyneema cord 4 m, 2 guide pulleys, 2 thigh straps, 2 bungees','1 set','buy','Outdoor or sailing shop',30]],'pack');add(optOf(c,'mount').bom,'pack');
+  add([['Horsehair tail switch, 60 cm','1','buy','Tack shop',35],[optOf(c,'link').col==='wood'?'Black tea, amber shellac':'Black tea, shellac (wooden parts)','1','buy','Grocery, hardware',optOf(c,'link').col==='wood'?22:12]]);
+  rows.push(R('Foam board 5 mm, balsa lath, used bike helmet','1 set','buy','Craft store; used gear',25,null,'trojan'));return rows;}
+function bom(){return bomFor(S.cfg);}
+function linOf(L){return L.tube?L.rho*Math.PI*(L.tube[0]-L.tube[1])*L.tube[1]:L.rho*L.t*L.w;}
+function massRows(c,mode,bodyStyle){const L=optOf(c,'link'),Pv=optOf(c,'piv'),sumL=LINKS.filter(l=>l[2]!=='m').reduce((a,l)=>a+J[l[2]],0)/1000;
+  const rows=[[`Links: ${L.name}`,2*sumL*linOf(L)*1.15],[`Pivots: ${Pv.name}`,nHoles()*Pv.m+2*JOINTS.length*Pv.bm],['Crank arms, 6 mm aluminium',.10],[`Shaft: ${optOf(c,'shaft').name}`,optOf(c,'shaft').m],[`Frame: ${optOf(c,'frame').name}`,optOf(c,'frame').m],
+    [`Body: spine, hoops; ${optOf(c,'body').name}`,optOf(c,'body').m+(c.body==='bones'?0:.1)],[`Hooves: ${optOf(c,'hoof').name}; tail`,2*optOf(c,'hoof').m+.15],mode==='bike'?['Roller drive and 4 U-clamps',.48]:['Cord drive: spools, one-way bearings, cords',.15]];
+  const mod=rows.reduce((a,r)=>a+r[1],0);if(mode==='pack')rows.push([`Mount: ${optOf(c,'mount').name}`,optOf(c,'mount').m]);if(bodyStyle==='trojan')rows.push(['Horse head on a helmet',.6]);return {rows,mod,tot:rows.reduce((a,r)=>a+r[1],0)};}
+function W(){return massRows(S.cfg,S.mode,S.body);}
+
+/* kinematics of each part over one crank turn: centroid, rotation, and their rates per radian of crank */
+let GEO=null;
+function buildGeo(){const h=TAU/NS;GEO=BODIES.filter(b=>b.id!=='crank').map(b=>{const edges=bodyEdges(b).map(([p,q])=>Math.hypot(PU[0][p].x-PU[0][q].x,PU[0][p].y-PU[0][q].y)/1000);
+    const c=[],ph=[];for(let k=0;k<NS;k++){const P=PU[k];let x=0,y=0;for(const j of b.j){x+=P[j].x;y+=P[j].y;}c.push(V(x/b.j.length/1000,y/b.j.length/1000));ph.push(Math.atan2(P[b.j[1]].y-P[b.j[0]].y,P[b.j[1]].x-P[b.j[0]].x));}
+    const rg2=b.j.length===2?edges[0]**2/12:edges.reduce((a,e)=>a+e*e,0)/36,d1=[],d2=[],w=[],ke=[];
+    for(let k=0;k<NS;k++){const a=c[(k-1+NS)%NS],m=c[k],n=c[(k+1)%NS];const v1=V((n.x-a.x)/(2*h),(n.y-a.y)/(2*h));d1.push(v1);d2.push(V((n.x-2*m.x+a.x)/(h*h),(n.y-2*m.y+a.y)/(h*h)));let dp=ph[(k+1)%NS]-ph[(k-1+NS)%NS];while(dp>Math.PI)dp-=TAU;while(dp<-Math.PI)dp+=TAU;w.push(dp/(2*h));ke.push(.5*(v1.x*v1.x+v1.y*v1.y+rg2*w[k]*w[k]));}
+    return {b,L:edges.reduce((a,e)=>a+e,0),c,d2,w,ke};});
+  const wOf=id=>id==='crank'?()=>1:(k=>GEO.find(G=>G.b.id===id).w[k]);GEO.rel={};
+  for(const Jn of JOINTS){const ws=BODIES.filter(b=>b.j.includes(Jn)).map(b=>wOf(b.id));if(Jn==='B')ws.push(()=>0);let sum=0;for(let k=0;k<NS;k++){let mx=0;for(let i=0;i<ws.length;i++)for(let j=i+1;j<ws.length;j++)mx=Math.max(mx,Math.abs(ws[i](k)-ws[j](k)));sum+=mx;}GEO.rel[Jn]=sum/NS;}
+  GEO.hock=PU.filter(p=>p.G.x<p.H.x).length/NS;GEO.sway=PU.reduce((a,p)=>a+(Math.hypot(p.B.x-p.H.x,p.B.y-p.H.y)+Math.hypot(p.F.x-p.H.x,p.F.y-p.H.y)+Math.hypot(p.G.x-p.H.x,p.G.y-p.H.y))/1000,0)/NS;GEO.J=J;}
+
+function evalCfg(c,mode,fast){if(!GEO||GEO.J!==J)buildGeo();
+  const Lm=optOf(c,'link'),Pv=optOf(c,'piv'),Bd=optOf(c,'body'),Hf=optOf(c,'hoof'),pack=mode==='pack',gait=pack&&c.timing==='gait',v=mode===S.mode?S.v:MODES[mode].v,Sh=strideH(v),advG=pack?(gait?Sh:K.adv):K.advB,f=v/advG,om=TAU*f,gr=9.81;
+  const tE=Lm.tube?2*Lm.tube[1]:Lm.t,lin=linOf(Lm),Iw=Lm.tube?Math.PI*(Lm.tube[0]**4-(Lm.tube[0]-2*Lm.tube[1])**4)/64:Lm.w*Lm.t**3/12;
+  const ms=GEO.map(G=>G.L*lin*(G.b.j.length===3?1.15:1)+G.b.j.length*(Pv.m+Pv.bm*.5)+(G.b.id==='t2'?Hf.m:0)),Mleg=ms.reduce((a,b)=>a+b,0);
+  const Kc=new Float64Array(NS),Pc=new Float64Array(NS);let Fpk=0,Fsum=0;
+  for(let k=0;k<NS;k++){let kc=0,pe=0,fx=0,fy=0;for(let i=0;i<GEO.length;i++){const G=GEO[i],m=ms[i];kc+=m*G.ke[k];pe+=m*G.c[k].y;fx+=m*G.d2[k].x;fy+=m*G.d2[k].y;}Kc[k]=kc;Pc[k]=pe*gr;const F=Math.hypot(om*om*fx,om*om*fy+Mleg*gr);if(F>Fpk)Fpk=F;Fsum+=F;}
+  const Fm=Fsum/NS,h=TAU/NS,H=NS/2,Kt=i=>Kc[i]+Kc[(i+H)%NS],Pt=i=>Pc[i]+Pc[(i+H)%NS];let tpk=0,kmax=-1e9,kmin=1e9;const tau=fast?null:new Float64Array(NS);
+  for(let k=0;k<NS;k++){const kp=(k+1)%NS,km=(k-1+NS)%NS,t=om*om*(Kt(kp)-Kt(km))/(2*h)+(Pt(kp)-Pt(km))/(2*h);if(Math.abs(t)>tpk)tpk=Math.abs(t);if(tau)tau[k]=t;const kt=Kt(k);kmax=Math.max(kmax,kt);kmin=Math.min(kmin,kt);}
+  let Pf=0;for(const Jn of JOINTS)Pf+=Pv.mu*Fm*(Pv.d/2)*GEO.rel[Jn]*om;Pf=2*Pf+2*.003*Fm*.006*om;const dK=om*om*(kmax-kmin),Pk=(pack?.5:.2)*dK*2*f,P=Pf+Pk,tf=Pf/om;
+  const iT=GEO.findIndex(G=>G.b.id==='t2'),iF=GEO.findIndex(G=>G.b.id==='f'),meff=ms[iT]+ms[iF]/2,Fstrike=meff*v*v/Hf.give,Fd=Math.max(Fpk,Fstrike); // hoof meets a bump taller than its 25 mm clearance at walking or riding speed
+  const jl=Math.max(tE,Pv.len||0),sway=2*Pv.play/jl*GEO.sway;
+  const Lmax=Math.max(J.j,J.k,J.c,J.f)/1000,sfBuck=Math.PI**2*Lm.E*Iw/(Lmax*Lmax)/Fd,holeD=Pv.ball?.022:Pv.d,sfHole=Lm.crush/(Fd/(holeD*tE)),sfBush=Pv.ball?1370/Fd:(Pv.pmax||Lm.crush*.5)/(Fd/(Pv.d*tE));
+  const vmax=Math.max(...JOINTS.map(Jn=>GEO.rel[Jn]))*om*Pv.d/2,sfPV=Pv.ball?99:Pv.pv/(Fm/(Pv.d*tE)*vmax),fit=!Pv.ball||(!Lm.tube&&Lm.t>=.007&&Lm.w>=.034),sfMin=Math.min(sfBuck,sfHole,sfBush,sfPV);
+  const eng=fit?100*Math.min(clamp01((sfMin-1)/2),clamp01((40-sway*1000)/25)):0;
+  const mr=massRows(c,mode,S.body),kg=mr.tot,mt={};let might;
+  if(!pack){mt.P=P/.9;mt.N=(tpk*TAU/K.advB)/.7*1.5;might=100*clamp01(1-(mt.P-10)/50);}
+  else{const r=gait?S.pull/Math.PI:K.spool/2,PCp=-.42-LX.hx-J.a/2000;mt.T=(tpk+tf)/r;mt.M=mr.mod*gr*(-.12-PCp);might=100*Math.min(clamp01(1-(mt.T-40)/110),clamp01(1-(mt.M-8)/32),clamp01(1-(kg-4)/8));}
+  const rows=bomFor(c),cost=rows.filter(r=>r.how!=='have'&&(!r.bd||r.bd===S.body)&&(!r.mode||r.mode===mode)).reduce((a,r)=>a+r.cost,0),tl=toolsFor(c),miss=tl.filter(t=>!S.tools[t]),tcost=miss.reduce((a,t)=>a+TOOLS[t].c,0),price=cost+tcost;
+  const ps=100*clamp01(1-(price-.7*S.budget)/(1.3*S.budget)),hours=Lm.hours+nHoles()*.04+Bd.hours+optOf(c,'frame').hours+optOf(c,'shaft').hours+Hf.hours+(pack?optOf(c,'mount').hours:0)+10;
+  // looks, each 0..100
+  const chestX=pack?.15:.12,PCm=pack?-.42-LX.hx-J.a/2000:MODES.bike.PC,depth=(OH+LX.ymax+.17),ratio=(chestX-(PCm-HALF-.155))/depth,lk={};
+  lk.sil=100*Math.exp(-(((ratio-2)/.6)**2))*Bd.look;lk.ratio=ratio;lk.hock=100*GEO.hock;const target=v<2?.6:.45;lk.target=target;lk.gait=100*clamp01(1-Math.abs(DUTY-target)/.3);
+  const rr=pack?(gait?1:Sh/K.adv):f/(v/(BK.C*42/S.cog));lk.r=rr;const n=Math.max(1,Math.round(rr));lk.time=100*clamp01(1-2*Math.abs(rr-n))*(n===1?1:n===2?.7:.35);
+  lk.drift=gait?1-K.adv/Sh:0;lk.plant=100*clamp01(1-lk.drift*1.5);lk.mat=100*Lm.look*Hf.look;lk.reveal=100*(.5+.5*Bd.reveal);
+  const looks=.25*lk.sil+.1*lk.hock+.15*lk.gait+.15*lk.time+.15*lk.plant+.1*lk.mat+.1*lk.reveal;
+  const sc={eng,price:ps,might,looks},pr=S.prio,ws=pr.eng+pr.price+pr.might+pr.looks||1;let overall=(sc.eng*pr.eng+sc.price*pr.price+sc.might*pr.might+sc.looks*pr.looks)/ws;const fails=!fit||sfMin<1;if(fails)overall*=.3;
+  return {Fstrike,sway,sc,overall,fails,fit,sf:{buck:sfBuck,hole:sfHole,bush:sfBush,pv:sfPV,min:sfMin},Fpk,Fm,P,Pf,Pk,tpk,tf,tau,mt,kg,mr,price,cost,tcost,miss,hours,lk,f,gait,Mleg};}
+
+function barriers(E,c){const out=[],Lm=optOf(c,'link'),lmax=Math.max(J.j,J.k,J.c,J.f),x=v=>v.toFixed(1)+'×';
+  if(!E.fit)out.push(['blocks',`608 bearings are 7 mm wide and need 22 mm holes; ${Lm.name} cannot hold them.`,'Use nylon bushings, or 12 mm ply links.']);
+  if(E.sf.buck<1.5)out.push([E.sf.buck<1?'blocks':'risk',`The longest rod (${lmax} mm) buckles at ${x(E.sf.buck)} the peak leg force of ${Math.round(E.Fpk)} N.`,'Thicker or wider links, or a lower speed.']);
+  if(Math.min(E.sf.hole,E.sf.bush)<1.5)out.push([Math.min(E.sf.hole,E.sf.bush)<1?'blocks':'risk',`Pivot holes are loaded to ${x(1/Math.min(E.sf.hole,E.sf.bush))} what the material takes.`,'Bushings, thicker links, or 2 mm aluminium cheek plates at the ends.']);
+  if(E.sway>.02)out.push([E.sway>.04?'risk':'risk',`Pivot play lets each hoof sway ${Math.round(E.sway*1000)} mm sideways; the legs sit ${Math.round(PITCH*1000)} mm apart in the stack, so parts will rub.`,'Thicker links give each pivot a longer bearing; bronze bushings or 608 bearings have less play.']);
+  if(E.sf.pv<1.5)out.push([E.sf.pv<1?'blocks':'risk',`Pivots wear fast: sliding load is ${x(1/E.sf.pv)} the bushing limit.`,'Bronze bushings or 608 ball bearings.']);
+  if(E.price>S.budget){const top=bomFor(c).filter(r=>r.how!=='have'&&(!r.mode||r.mode===S.mode)).sort((a,b)=>b.cost-a.cost).slice(0,2).map(r=>`${r.item} ($${r.cost})`).join('; ');const ok=TB.mode===S.mode?TB.points.filter(p=>!p.fails).sort((a,b)=>a.price-b.price)[0]:null;out.push(['cost',`The kit is $${Math.round(E.price)}, over the $${S.budget} budget. Largest items: ${top}${E.tcost?`; tools $${E.tcost}`:''}.`,(ok?`The cheapest build that passes every engineering test costs $${Math.round(ok.price)} with your tools. `:'')+'Mark the tools you can borrow, or raise the budget.']);}
+  for(const t of E.miss)out.push(['tool',`Needs a ${TOOLS[t].name.toLowerCase()}: $${TOOLS[t].c} if you buy one.`,TOOLS[t].alt||'Borrow one.']);
+  if(E.hours>30)out.push(['time',`About ${Math.round(E.hours)} hours of work, ${Math.ceil(E.hours/8)} full days.`,'Bones body, printed or pre-cut links.']);
+  if(S.mode==='pack'){if(E.mt.T>80)out.push(['effort',`Each step pulls the cord with up to ${Math.round(E.mt.T)} N.`,'Gait timing (larger spool), lighter links and hooves.']);if(E.mt.M>20)out.push(['effort',`The module pulls you backward with ${Math.round(E.mt.M)} N·m.`,'Lighter body, frame and mount.']);}
+  else{if(E.mt.P>30)out.push(['effort',`Driving the legs costs about ${Math.round(E.mt.P)} W on top of riding.`,'Lighter links and hooves; ball-bearing pivots.']);out.push(['rule','The body covers a seatpost light.','Fit a red rear light on the croup; it is required on the road at night.']);}
+  if(E.lk.time<50)out.push(['looks',S.mode==='pack'?`The hind legs make ${E.lk.r.toFixed(2)} cycles per stride, so they cannot stay in step with your legs.`:`The hind legs step ${E.lk.r.toFixed(1)} times per pedal turn.`,S.mode==='pack'?'Gait timing: one cycle per stride; the hooves then drift forward while off the ground.':'Ride at the speed where it is a whole number, or accept it.']);
+  if(E.lk.gait<60)out.push(['looks',`Hooves are down ${Math.round(DUTY*100)}% of the cycle; a horse at this speed has them down about ${Math.round(E.lk.target*100)}%.`,`Evolve with a duty target of ${E.lk.target}.`]);
+  return out;}
+
+function applyCfg(){const L=optOf(S.cfg,'link');PLY=L.tube?L.tube[0]:L.t;BARW=L.tube?L.tube[0]:L.w;PITCH=PLY+WASH;planLayers();HULLZ=Math.max(.147,layerZ(LAYERS.n)+PLY/2+.016);derive();rebuild();header();renderInsp();TB.key='';}
+const TB={points:[],best:null,key:'',E:null};
+function combos(){const keys=['link','piv','body','hoof','shaft','frame'].concat(S.mode==='pack'?['mount','timing']:[]),out=[];const rec=(i,c)=>{if(i===keys.length){out.push(Object.assign({},S.cfg,c));return;}for(const o in OPT[keys[i]].opts)rec(i+1,Object.assign({},c,{[keys[i]]:o}));};rec(0,{});return out;}
+function tbSearch(){const all=combos();TB.points=[];let best=null;for(const c of all){const E=evalCfg(c,S.mode,true);TB.points.push({c,price:E.price,kg:E.kg,o:E.overall,fails:E.fails});TB.mode=S.mode;if(!E.fails&&(!best||E.overall>best.o))best={c,o:E.overall};}
+  TB.best=best;if(best){S.cfg=Object.assign({},best.c);applyCfg();}}
+function curE(){const key=JSON.stringify([S.cfg,S.mode,S.v.toFixed(2),S.body,S.budget,S.tools,S.prio,S.pull,S.cog,J.a,J.m,J.k]);if(key!==TB.key){TB.key=key;TB.E=evalCfg(S.cfg,S.mode);}return TB.E;}
+function testHTML(){const E=curE(),c=S.cfg,sfc=v=>v>=1.5?'pass':'fail',sft=v=>v>=99?'—':v.toFixed(1)+'×',row=(t,v,lim,ok)=>`<tr><td>${t}</td><td class="n">${v}</td><td class="n" style="color:var(--ink-3)">${lim}</td><td class="${ok?'pass':'fail'}">${ok?'pass':'fail'}</td></tr>`;
+  const prio=[['eng','Engineering'],['price','Price'],['might','Might'],['looks','Looks']],sel=k=>`<div class="sl"><label for="o-${k}">${OPT[k].label}</label><select id="o-${k}" data-k="${k}">${Object.entries(OPT[k].opts).map(([id,o])=>`<option value="${id}"${c[k]===id?' selected':''}>${o.name}</option>`).join('')}</select><span></span></div>`;
+  const tests=[row('Longest rod, buckling',sft(E.sf.buck),'≥ 1.5×',E.sf.buck>=1.5),row('Pivot holes, crushing',sft(E.sf.hole),'≥ 1.5×',E.sf.hole>=1.5),row('Bushings, load',sft(E.sf.bush),'≥ 1.5×',E.sf.bush>=1.5),row('Bushings, wear',sft(E.sf.pv),'≥ 1.5×',E.sf.pv>=1.5),row('Hoof side sway from pivot play',Math.round(E.sway*1000)+' mm','≤ 20 mm',E.sway<=.02),row('Bearings fit the links',E.fit?'yes':'no','yes',E.fit)];
+  const might=S.mode==='bike'?[row('Power to drive the legs',Math.round(E.mt.P)+' W','≤ 30 W',E.mt.P<=30),row('Roller pressed on the tyre',Math.round(E.mt.N)+' N','spring',true),row('Load on the rack',E.kg.toFixed(1)+' kg','≤ 25 kg',E.kg<=25)]
+    :[row('Cord pull per step',Math.round(E.mt.T)+' N','≤ 80 N',E.mt.T<=80),row('Backward pull on your hips',Math.round(E.mt.M)+' N·m','≤ 20 N·m',E.mt.M<=20),row('Weight on you',E.kg.toFixed(1)+' kg','≤ 6 kg',E.kg<=6)];
+  const lk=E.lk,looks=[row('Body length to depth',lk.ratio.toFixed(2),'pony ≈ 2',lk.sil>=50),row('Hock behind the hoof',Math.round(lk.hock)+'%','≥ 60%',lk.hock>=60),row('Hooves down',Math.round(DUTY*100)+'%','horse ≈ '+Math.round(lk.target*100)+'%',lk.gait>=60),
+    row(S.mode==='pack'?'Hind cycles per stride':'Hind steps per pedal turn',lk.r.toFixed(2),'whole number',lk.time>=50),row('Hooves keep pace',E.gait?Math.round(lk.drift*100)+'% drift':'yes','≤ 20% drift',lk.plant>=70)];
+  const bars=barriers(E,c);
+  return `<section><div class="grid2"><div class="cell"><small>Overall</small><span class="big" style="color:${E.fails?'var(--warn)':'inherit'}">${Math.round(E.overall)}</span> / 100${E.fails?' · fails':''}</div><div class="cell"><small>Kit for this mode · weight · time</small><span class="big">$${Math.round(E.price)}</span> · ${E.kg.toFixed(1)} kg · ${Math.round(E.hours)} h</div></div>
+    <div class="row"><button class="btn" id="tbfind">Find the winner</button><span class="muted">tries all ${combos().length} builds in ${MODES[S.mode].name.toLowerCase()} mode against the weights below</span></div>
+    <h2>What matters</h2>${prio.map(([k,n])=>`<div class="sl"><label for="p-${k}">${n}</label><input id="p-${k}" data-p="${k}" type="range" min="0" max="3" step="1" value="${S.prio[k]}"><span class="val">${Math.round(E.sc[k])}</span></div>`).join('')}
+    <div class="sl"><label for="budget">Budget</label><input id="budget" type="range" min="100" max="800" step="25" value="${S.budget}"><span class="val">$${S.budget}</span></div>
+    <h2>Build</h2>${['link','piv','body','hoof','shaft','frame'].concat(S.mode==='pack'?['mount','timing']:[]).map(sel).join('')}
+    <h2>Tools you have</h2><div class="row">${Object.entries(TOOLS).map(([id,t])=>`<button class="mini" data-tool="${id}" aria-pressed="${!!S.tools[id]}">${t.name}</button>`).join('')}</div>
+    <h2>What stops it being made</h2><div class="tw"><table><tbody>${bars.length?bars.map(b=>`<tr><td><span class="tag" style="color:${b[0]==='blocks'?'var(--warn)':b[0]==='looks'?'var(--accent)':'var(--ink-2)'}">${b[0]}</span></td><td>${b[1]}<br><span class="muted">${b[2]}</span></td></tr>`).join(''):'<tr><td>Nothing: every test passes and it is inside the budget.</td></tr>'}</tbody></table></div>
+    <h2>Engineering</h2><p class="muted">Design force ${Math.round(Math.max(E.Fpk,E.Fstrike))} N: the larger of the legs’ own motion at ${E.f.toFixed(2)} Hz (${Math.round(E.Fpk)} N) and a hoof hitting a bump taller than its 25 mm clearance (${Math.round(E.Fstrike)} N).</p><div class="tw"><table><tbody>${tests.join('')}</tbody></table></div>
+    <h2>Might · what it takes from you</h2><div class="tw"><table><tbody>${might.join('')}</tbody></table></div>
+    <h2>Looks · against a real horse</h2><div class="tw"><table><tbody>${looks.join('')}</tbody></table></div>
+    <p class="muted">Forces come from the linkage’s own motion: each part’s mass times its acceleration over a full crank turn, plus gravity, both legs half a turn apart. Safety factors compare the peak force with the material’s limit. Prices are estimates, not quotes.</p></section>`;}
+function wireTest(){const el=$('insp'),q=id=>$(id);if(!q('tbfind'))return;q('tbfind').addEventListener('click',()=>{q('tbfind').textContent='Testing…';setTimeout(()=>{tbSearch();renderInsp();},20);});
+  el.querySelectorAll('select[data-k]').forEach(s=>s.addEventListener('change',()=>{S.cfg[s.dataset.k]=s.value;applyCfg();}));
+  el.querySelectorAll('input[data-p]').forEach(s=>s.addEventListener('change',()=>{S.prio[s.dataset.p]=+s.value;TB.points=[];renderInsp();}));
+  q('budget').addEventListener('change',e=>{S.budget=+e.target.value;TB.points=[];renderInsp();});
+  el.querySelectorAll('[data-tool]').forEach(b=>b.addEventListener('click',()=>{S.tools[b.dataset.tool]=!S.tools[b.dataset.tool];TB.points=[];renderInsp();}));}
+function drawTest(){const {g,w,h}=fit2(c2);g.fillStyle=C.view;g.fillRect(0,0,w,h);const E=curE(),wide=w>640,pad=12,top=document.querySelector('.vbar').getBoundingClientRect().height+18;
+  const crit=[['Engineering',E.sc.eng],['Price',E.sc.price],['Might',E.sc.might],['Looks',E.sc.looks]],bw=wide?w*.42-pad:w-2*pad;let y=top;
+  g.font='600 22px '+MONO;g.fillStyle=E.fails?C.warn:C.ink;g.textAlign='left';g.fillText(Math.round(E.overall)+'',pad,y+18);g.font='500 11px '+BODY;g.fillStyle=C['ink-2'];g.fillText(E.fails?'overall · fails an engineering test':'overall, weighted by what matters',pad+42,y+16);y+=34;
+  for(const [n,v] of crit){g.fillStyle=C['ink-2'];g.font='500 11px '+BODY;g.fillText(n,pad,y+10);const x0=pad+82,bl=bw-82-34;g.fillStyle=C.rule;g.fillRect(x0,y+2,bl,9);g.fillStyle=v>=70?C.ok:v>=40?C.accent:C.warn;g.fillRect(x0,y+2,bl*v/100,9);g.fillStyle=C.ink;g.font='500 11px '+MONO;g.textAlign='right';g.fillText(Math.round(v)+'',pad+bw,y+11);g.textAlign='left';y+=20;}
+  // torque over one crank turn
+  const ty0=wide?y+18:y+14,th=wide?h-ty0-40:Math.max(50,(h-ty0)*.35),tw=bw;if(E.tau){let mx=0;for(const t of E.tau)mx=Math.max(mx,Math.abs(t)+E.tf);mx=mx||1;g.strokeStyle=C.rule;g.strokeRect(pad,ty0,tw,th);g.beginPath();g.moveTo(pad,ty0+th/2);g.lineTo(pad+tw,ty0+th/2);g.stroke();
+    g.strokeStyle=C.ink;g.lineWidth=1.4;g.beginPath();for(let k=0;k<NS;k+=2){const X=pad+k/NS*tw,Y=ty0+th/2-(E.tau[k]+E.tf)/mx*th/2;k?g.lineTo(X,Y):g.moveTo(X,Y);}g.stroke();const X=pad+S.ph*tw;g.strokeStyle=C.accent;g.beginPath();g.moveTo(X,ty0);g.lineTo(X,ty0+th);g.stroke();
+    g.fillStyle=C['ink-2'];g.font='10px '+MONO;g.fillText(`torque at the shaft over one turn · peak ${E.tpk.toFixed(1)} N·m · ${Math.round(E.P)} W`,pad,ty0-4);}
+  // every build: price against weight
+  const sx0=wide?w*.46:pad,sy0=wide?top+6:ty0+th+30,sw=wide?w-sx0-pad:w-2*pad,sh=wide?h-sy0-40:h-sy0-26;if(sh<40)return;g.strokeStyle=C.rule;g.lineWidth=1;g.strokeRect(sx0,sy0,sw,sh);g.fillStyle=C['ink-2'];g.font='10px '+MONO;
+  if(!TB.points.length||TB.mode!==S.mode){g.textAlign='center';g.fillText('Find the winner to place every build here',sx0+sw/2,sy0+sh/2);g.textAlign='left';return;}
+  const P=TB.points,pmin=Math.min(...P.map(p=>p.price)),pmax=Math.max(...P.map(p=>p.price)),kmin=Math.min(...P.map(p=>p.kg)),kmax=Math.max(...P.map(p=>p.kg)),X=v=>sx0+6+(v-pmin)/((pmax-pmin)||1)*(sw-12),Y=v=>sy0+sh-6-(v-kmin)/((kmax-kmin)||1)*(sh-12);
+  const omax=Math.max(...P.map(p=>p.o));for(const p of P){g.globalAlpha=p.fails?.25:.35+.65*p.o/omax;g.fillStyle=p.fails?C.warn:C.accent;g.fillRect(X(p.price)-1.5,Y(p.kg)-1.5,3,3);}g.globalAlpha=1;
+  g.fillStyle=C['ink-2'];const cx=X(E.price),cy=Y(E.kg);g.strokeStyle=C.ink;g.lineWidth=2;g.beginPath();g.arc(cx,cy,6,0,TAU);g.stroke();
+  g.fillText(`each dot is one build · across: price $${Math.round(pmin)}–${Math.round(pmax)} · up: weight ${kmin.toFixed(1)}–${kmax.toFixed(1)} kg · ring: this build`,sx0,sy0-4);
+  vstat('test · bars score this build; the curve is the torque the legs need; dots are every build, darker = higher score, red = fails');}
+/* ===== inspector ===== */
+function header(){if(S.built&&S.mode==='bike'){$('hstat').textContent=AB.status();return;}$('hstat').textContent=S.mode==='bike'?`legs ${K.f.toFixed(2)} Hz · ${Math.round(K.cad)} rpm in 42×${S.cog} · hooves ${mm(K.clear)} up`:`legs ${K.f.toFixed(2)} Hz · stride ${(S.v/K.Sh).toFixed(2)} Hz · hooves ${mm(K.clear)} up`;}
+const heelGap=f=>Math.round(-245-(MODES.bike.PC*1000+f.J.a/2+f.hx)); // heel at the back of the pedal stroke, x = -245 mm from the bottom bracket
+function renderInsp(){const el=$('insp');let h='';const t=S.tab;
+  if(S.built&&S.mode==='bike'&&['build','parts','drive','test'].includes(t)){AB.recompute(S.v);el.innerHTML=AB.html(t);AB.wire(el,window.__abChanged);return;}
+  if(t==='build'){const st=steps();let n=0;h=`<section><div class="grid2"><div class="cell"><small>Footprint</small><span class="big">356²</span> mm</div><div class="cell"><small>${S.mode==='bike'?'On the rack':'On you'}</small><span class="big">${W().tot.toFixed(1)}</span> kg</div></div><ol class="steps">${st.map((s,i)=>s.ph?`<li class="ph">${s.ph}</li>`:`<li data-i="${i}" class="${S.step===i?'cur':''}${s.mode&&s.mode!==S.mode||s.bd&&s.bd!==S.body||s.off?' off':''}"><span class="no">${++n}</span><span><b>${s.t}</b><span class="d">${s.d}</span></span></li>`).join('')}</ol></section>`;}
+  if(t==='parts'){const pr=partsRows(),bm=bom(),tot=bm.reduce((a,r)=>a+r.cost,0);{const w=W();h=`<section><h2>Weight · ${MODES[S.mode].name.toLowerCase()} mode</h2><div class="tw"><table><thead><tr><th>Part</th><th>kg</th></tr></thead><tbody>${w.rows.map(r=>`<tr><td>${r[0]}</td><td class="n">${r[1].toFixed(2)}</td></tr>`).join('')}<tr><td><b>Total</b></td><td class="n"><b>${w.tot.toFixed(1)}</b></td></tr></tbody></table></div><p class="muted">Change materials in the Test tab; this list follows.</p>`;}h+=`<h2>Cut list · ${OPT.link.opts[S.cfg.link].name} · 2 of each</h2><div class="tw"><table><thead><tr><th>Part</th><th>Pivots</th><th>Centres</th><th>Layer</th></tr></thead><tbody>${pr.map(r=>`<tr><td>${r.part}<br><span class="muted">${r.form}</span></td><td class="m">${r.joints}</td><td class="m">${r.centres}</td><td class="n">${r.layer}</td></tr>`).join('')}<tr><td>Crank arm<br><span class="muted">6 × 30 aluminium</span></td><td class="m">O–C</td><td class="m">${J.m} mm</td><td class="n">1</td></tr></tbody></table></div>
+    <h2>Buy, salvage, have</h2><div class="tw"><table><thead><tr><th>Item</th><th>Qty</th><th>How</th><th>$</th></tr></thead><tbody>${bm.map(r=>`<tr style="${r.mode&&r.mode!==S.mode||r.bd&&r.bd!==S.body?'opacity:.45':''}"><td>${r.item}<br><span class="muted">${r.where}${r.mode?' · '+MODES[r.mode].name.toLowerCase()+' mode':''}${r.bd?' · Trojan head':''}</span></td><td class="m">${r.qty}</td><td><span class="tag ${r.how}">${r.how}</span></td><td class="n">${r.cost.toFixed(0)}</td></tr>`).join('')}<tr><td><b>Both modes, estimated</b></td><td></td><td></td><td class="n"><b>${tot.toFixed(0)}</b></td></tr></tbody></table></div><p class="muted">Prices are estimates, not quotes.</p></section>`;}
+  if(t==='drive'){h=S.mode==='bike'?`<section><div class="grid2"><div class="cell"><small>Legs</small><span class="big">${K.f.toFixed(2)}</span> Hz</div><div class="cell"><small>Your cadence</small><span class="big">${Math.round(K.cad)}</span> rpm</div><div class="cell"><small>Roller → gears</small><span class="big">12:36</span></div><div class="cell"><small>Chain #25</small><span class="big">${K.TS}:${K.TJ}</span></div></div>
+    <div class="sl"><label for="cog">Cassette cog</label><select id="cog">${BK.cogs.map(c=>`<option value="${c}"${c===S.cog?' selected':''}>42 × ${c}</option>`).join('')}</select><span class="val">${(BK.C*42/S.cog).toFixed(2)} m</span></div>
+    <dl class="kv"><dt>Roller</dt><dd>52 mm on the tyre tread: turns once per ${mm(2*Math.PI*ROLL.r)} of road</dd><dt>Needed per leg turn</dt><dd>${mm(K.adv)}</dd><dt>From the train</dt><dd>${mm(K.advB)}</dd><dt>Hooves</dt><dd>${mm(K.clear)} above the road at their lowest</dd><dt>Your bike</dt><dd>wheelbase 1054, chainstay 450, BB drop 75, 42T × 11–42</dd></dl>
+    <p class="muted">The roller reads the tyre’s tread speed, which is road speed, so the legs keep pace whatever gear you ride and keep walking when you coast. No wheel of their own touches the road.</p></section>`
+   :`<section><div class="grid2"><div class="cell"><small>Legs</small><span class="big">${K.f.toFixed(2)}</span> Hz</div><div class="cell"><small>Your stride</small><span class="big">${(S.v/K.Sh).toFixed(2)}</span> Hz</div><div class="cell"><small>Spool</small><span class="big">⌀${Math.round(K.spool*1000)}</span> mm</div><div class="cell"><small>Stride length</small><span class="big">${K.Sh.toFixed(2)}</span> m</div></div>
+    <div class="sl"><label for="pull">Cord pull per step</label><input id="pull" type="range" min="0.10" max="0.25" step="0.005" value="${S.pull}"><span class="val">${mm(S.pull)}</span></div>
+    <dl class="kv"><dt>Per step</dt><dd>one thigh pulls, the legs turn ${K.perStep.toFixed(2)} of a cycle</dd><dt>Per leg cycle</dt><dd>${mm(K.adv)} of hoof travel</dd><dt>One-way bearings</dt><dd>CSK12PP, 12 mm bore, keyed</dd><dt>On your hips</dt><dd>${W().tot.toFixed(1)} kg; module centre ${mm(-0.12-K.PC)} behind your back, ${(W().mod*9.81*(-0.12-K.PC)).toFixed(0)} N·m, taken by the hip belt and shoulder straps</dd><dt>Hooves</dt><dd>${mm(K.clear)} above level ground at their lowest</dd></dl>
+    <p class="muted">Your thighs drive the hind legs through cords and one-way bearings, so the hind legs step only when you step. The spool size sets how far they turn per step; measure your own cord pull and set it here.</p></section>`;}
+  if(t==='evolve'){const f=EV.best,ok=(v,b)=>`<td class="${v?'pass':'fail'}">${b}</td>`;h=`<section><h2>Evolve under the platform constraint</h2><p class="muted">Genome: Jansen’s 13 link lengths plus the height of O, whole millimetres. Rejected: any linkage that locks or comes within 12% of a toggle. Rewarded: a flat, long, steady hoof stroke. Penalised: anything above the platform outside the 356 mm square, a crank that hits the rails, hooves that reach the rider’s heels.</p>
+    <div class="row"><button class="btn" id="evrun" ${EV.running?'disabled':''}>Run 1000 generations</button><button class="btn ghost" id="evstop" ${EV.running?'':'disabled'}>Stop</button><button class="btn ghost" id="evuse" ${EV.src==='champion'||EV.running?'disabled':''}>Use this leg</button><button class="btn ghost" id="evreset">Back to the built leg</button></div>
+    <div class="tw"><table><thead><tr><th>Test</th><th>Value</th><th></th></tr></thead><tbody>
+      <tr><td>Above-platform parts inside 356 mm</td><td class="n">${Math.round(f.over||0)} mm over</td>${ok((f.over||0)<1,(f.over||0)<1?'pass':'fail')}</tr>
+      <tr><td>Crank clears the rails</td><td class="n">${f.oh-f.m} mm</td>${ok(f.oh-f.m>=25,f.oh-f.m>=25?'pass':'fail')}</tr>
+      <tr><td>Hoof to rider’s heel, bicycle, closest</td><td class="n">${heelGap(f)} mm</td>${ok(heelGap(f)>=50,heelGap(f)>=50?'pass':'fail')}</tr>
+      <tr><td>Advance per turn</td><td class="n">${Math.round(f.adv)} mm</td><td></td></tr>
+      <tr><td>Slip per step</td><td class="n">${Math.round(f.slip)} mm</td><td></td></tr>
+      <tr><td>Hoof on ground</td><td class="n">${Math.round(f.d*100)}%</td><td></td></tr>
+      <tr><td>Hoof lift</td><td class="n">${Math.round(f.lift)} mm</td><td></td></tr></tbody></table></div>
+    <p class="muted">${EV.src==='champion'?'Shown: the leg this page builds, the best of six offline runs of 3000 generations.':'Shown: the best of this run. “Use this leg” rebuilds the parts, layers, drive and drawings around it.'}</p></section>`;}
+  if(t==='test')h=testHTML();
+  if(t==='joints'){h=`<section><h2>Layers, inside to outside</h2><p class="muted">Computed: no two parts on one layer come within a bar width of each other, and no part crosses a bolt or the shaft end on a layer that bolt occupies. Outermost bolt head at ${mm(layerZ(LAYERS.n)+PLY/2+.01)} from centre: inside the body at ${mm(HULLZ)}.</p>
+    <div class="tw"><table><thead><tr><th>Layer</th><th>Parts</th><th>From centre</th></tr></thead><tbody>${[...Array(LAYERS.n)].map((_,i)=>{const L=i+1;return `<tr><td class="n">${L}</td><td>${BODIES.filter(b=>LAYERS[b.id]===L).map(b=>b.name+' '+b.j.join('–')).join(', ')}</td><td class="n">${mm(layerZ(L))}</td></tr>`;}).join('')}</tbody></table></div>
+    <h2>Pivots</h2><div class="tw"><table><thead><tr><th>Pivot</th><th>Parts (layer)</th><th>Stack</th><th>Bolt</th></tr></thead><tbody>${JOINTS.map(Jn=>{const s=JSTACK[Jn];return `<tr><td class="m">${Jn}</td><td>${s.bodies.map(x=>x.b.name+' ('+x.L+')').join(', ')}${Jn==='B'?', plate':''}</td><td class="n">${mm(s.stack)}</td><td class="m">${OPT.piv.opts[S.cfg.piv].bolt} × ${s.shoulder}</td></tr>`;}).join('')}<tr><td class="m">O</td><td>Crank arm (1) on the shaft end</td><td class="n">—</td><td class="m">key + 1 M5 set screw</td></tr></tbody></table></div></section>`;}
+  el.innerHTML=h;wire();}
+function wire(){const el=$('insp');wireTest();el.querySelectorAll('ol.steps li[data-i]').forEach(li=>li.addEventListener('click',()=>{const i=+li.dataset.i,st=steps()[i];if(st.mode&&st.mode!==S.mode)setMode(st.mode);if(st.bd&&st.bd!==S.body)setBody(st.bd);S.step=S.step===i?-1:i;if(R3)R3.highlight(S.step<0?null:steps()[S.step].tags);renderInsp();knock(1800,.02,.12);}));
+  const cog=$('cog');if(cog)cog.addEventListener('change',()=>{S.cog=+cog.value;derive();header();renderInsp();});
+  const pull=$('pull');if(pull)pull.addEventListener('input',()=>{S.pull=+pull.value;pull.nextElementSibling.textContent=mm(S.pull);derive();header();clearTimeout(pull._t);pull._t=setTimeout(()=>{rebuild();renderInsp();},300);});
+  const q=id=>$(id);if(q('evrun'))q('evrun').addEventListener('click',()=>{evStart();showView('evo');renderInsp();});if(q('evstop'))q('evstop').addEventListener('click',()=>{EV.running=false;renderInsp();});
+  if(q('evuse'))q('evuse').addEventListener('click',()=>{setLinkage(EV.best.J);planLayers();EV.src='champion';derive();rebuild();header();renderInsp();});
+  if(q('evreset'))q('evreset').addEventListener('click',()=>{EV.running=false;EV.best={J:CHAMP,...fitness(CHAMP)};EV.hist=CHAMP_HIST.slice();EV.src='champion';setLinkage(CHAMP);planLayers();derive();rebuild();header();renderInsp();});}
+function rebuild(){if(T){R3=build3D();R3.resize();R3.bare(S.bare);if(S.step>=0)R3.highlight(steps()[S.step].tags);}}
+function setMode(m){if(m===S.mode)return;S.mode=m;S.v=MODES[m].v;document.querySelectorAll('.mode button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===m));derive();syncSpeed();header();rebuild();renderInsp();knock(700,.06,.25);}
+function modeBtns(){document.querySelectorAll('.mode button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m==='built'?S.built:(!S.built&&b.dataset.m===S.mode)));}
+document.querySelectorAll('.mode button').forEach(b=>b.addEventListener('click',()=>{audio();S.step=-1;const m=b.dataset.m,was=S.built;S.built=m==='built';const mm=S.built?'bike':m;if(mm===S.mode){if(was!==S.built){derive();syncSpeed();header();rebuild();renderInsp();}}else setMode(mm);modeBtns();}));
+window.__abChanged=geomChanged=>{if(geomChanged){AB.recompute(S.v);derive();rebuild();}header();renderInsp();};modeBtns();
+function showView(v){S.view=v;document.querySelectorAll('.vseg button[data-v]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v===v));c3.hidden=v!=='3d';c2.hidden=v==='3d';$('fit').style.display=v==='3d'?'':'none';if(R3)R3.resize();}
+document.querySelectorAll('.vseg button[data-v]').forEach(b=>b.addEventListener('click',()=>{showView(b.dataset.v);knock(1500,.015,.1);}));
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{S.tab=b.dataset.t;document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));renderInsp();$('insp').scrollTop=0;if(S.tab==='evolve'&&S.view!=='evo')showView('evo');if(S.tab==='test'&&S.view!=='test')showView('test');}));
+function setBody(b){S.body=b;document.querySelectorAll('[data-b]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.b===b));rebuild();}
+document.querySelectorAll('[data-b]').forEach(b=>b.addEventListener('click',()=>{setBody(b.dataset.b);renderInsp();knock(900,.04,.2);}));
+$('snd').addEventListener('click',e=>{S.sound=!S.sound;e.currentTarget.setAttribute('aria-pressed',S.sound);if(S.sound){audio();knock(900,.05,.25);}});
+$('xray').addEventListener('click',e=>{S.bare=!S.bare;e.currentTarget.setAttribute('aria-pressed',S.bare);if(R3)R3.bare(S.bare);});
+$('fit').addEventListener('click',()=>{if(R3)Object.assign(R3.cam,{th:.6,ph:1.3,r:4.0,tx:-.1,ty:.78});});
+derive();
+if(T){R3=build3D();const ptr=new Map();let g0=null;
+  c3.addEventListener('pointerdown',e=>{c3.setPointerCapture(e.pointerId);ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});if(ptr.size===2){const [a,b]=[...ptr.values()];g0={pinch:1,d:Math.hypot(a.x-b.x,a.y-b.y),r:R3.cam.r};}else g0={x:e.clientX,y:e.clientY,th:R3.cam.th,ph:R3.cam.ph,mv:false};});
+  c3.addEventListener('pointermove',e=>{if(!ptr.has(e.pointerId)||!g0)return;ptr.set(e.pointerId,{x:e.clientX,y:e.clientY});if(g0.pinch){if(ptr.size===2){const [a,b]=[...ptr.values()];R3.cam.r=Math.max(.8,Math.min(9,g0.r*g0.d/Math.max(1,Math.hypot(a.x-b.x,a.y-b.y))));}return;}const dx=e.clientX-g0.x,dy=e.clientY-g0.y;if(Math.hypot(dx,dy)>5)g0.mv=true;R3.cam.th=g0.th-dx*.008;R3.cam.ph=Math.max(.2,Math.min(1.55,g0.ph-dy*.006));});
+  c3.addEventListener('pointerup',e=>{const p=ptr.get(e.pointerId);ptr.delete(e.pointerId);if(g0&&!g0.pinch&&!g0.mv&&p){const n=R3.pick(e.clientX,e.clientY);if(n){vstat(n);S.hold=performance.now()+3500;knock(2200,.015,.1);}}if(!ptr.size)g0=null;});
+  c3.addEventListener('pointercancel',e=>{ptr.delete(e.pointerId);if(!ptr.size)g0=null;});
+  c3.addEventListener('wheel',e=>{e.preventDefault();R3.cam.r=Math.max(.8,Math.min(9,R3.cam.r*Math.exp(e.deltaY*.0012)));},{passive:false});
+  $('loading').remove();}else $('loading').textContent='3D library did not load. Side, Plate, Leg and Evolve still work.';
+new ResizeObserver(()=>{if(R3)R3.resize();}).observe($('view'));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{readC();if(R3)R3.scene.background=new T.Color(C.view).convertSRGBToLinear();});
+let last=performance.now(),lastCon=[false,false],evT=0;
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(EV.running){const t0=performance.now();while(EV.running&&performance.now()-t0<14)evStep();if(now-evT>400){evT=now;if(S.tab==='evolve')renderInsp();}if(!EV.running&&S.tab==='evolve')renderInsp();}
+  if(S.playing){S.dist+=S.v*dt;const rate=S.built&&S.mode==='bike'?AB.phaseRate(S.v):S.v/K.advG;S.ph=((S.ph+rate*dt)%1+1)%1;}
+  const con=[0,.5].map(o=>onGround(S.ph+o));if(S.mode==='pack')con.forEach((c,i)=>{if(c&&!lastCon[i])knock(i?520:600,.06,.3);});lastCon=con;
+  if(S.view==='3d'&&R3){R3.pose(S.ph);R3.updCam();R3.render();if(!S.hold||now>S.hold){const st=S.step>=0?steps()[S.step]:null;vstat(st?st.t:S.built&&S.mode==='bike'?'3d · as built · cords coloured by pull, blue slack to orange tight':`3d · ${MODES[S.mode].name.toLowerCase()} mode · blue square = the 356 mm platform · tap a part`);}}
+  else if(S.view==='elev')drawElev();else if(S.view==='plate')drawPlate();else if(S.view==='leg')drawLeg();else if(S.view==='test')drawTest();else drawEvo();
+  drawScrub();requestAnimationFrame(frame);}
+if(R3)R3.resize();syncSpeed();header();renderInsp();requestAnimationFrame(frame);
+})();
+</script>
+
+</html>

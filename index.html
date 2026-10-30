@@ -22,24 +22,24 @@ nav a small{font:500 10px var(--f-mono);color:var(--ink-3)}nav a[aria-current="p
 @media (max-width:760px){header{flex-wrap:wrap;padding:6px 8px;gap:6px}.brand{order:1}.more{order:2;margin-left:auto}nav{order:3;flex-basis:100%}nav a{height:36px;padding:0 9px;font-size:12px}h1{font-size:13px}}
 </style></head>
 <body>
-<header><a class="brand" href="#whole" style="text-decoration:none;color:inherit"><img src="favicon.svg" alt=""><h1>Centaur Walker</h1></a>
+<header><a class="brand" href="#velo" style="text-decoration:none;color:inherit"><img src="favicon.svg" alt=""><h1>Centaur Walker</h1></a>
 <nav id="nav" aria-label="Workbench"></nav><a class="more" href="archive.html">All versions</a></header>
 <main class="stack" id="stack"></main>
 <script>
 (()=>{
 // every working page, in the order the power flows and the build goes; each stays loaded once opened
 const TABS=[
- ['whole','Whole picture','start here','whole.html'],
+ ['velo','Velocipede','the original, with the bike as built','velocipede.html'],
  ['belts','Belts','grip, make, mount','belt.html'],
  ['axle','Top axle','assembly, rod, leg','versions/32-complete-workbench.html'],
  ['redesign','Redesign','lift-off module','rig3d.html'],
  ['power','Powertrain','ratios','powertrain.html'],
- ['leg','Original leg','v14 reference','versions/14-velocipede-final.html'],
  ['book','Build book','leg steps','build-book.html'],
- ['tpl','Templates','print to cut','templates.html']];
+ ['tpl','Templates','print to cut','templates.html'],
+ ['whole','Overview','drive and legs, one view','whole.html']];
 const nav=document.getElementById('nav'),stack=document.getElementById('stack'),frames={};
 nav.innerHTML=TABS.map(([k,n,s])=>`<a href="#${k}" data-k="${k}">${n}<small>${s}</small></a>`).join('');
-function show(k){if(!TABS.some(t=>t[0]===k))k='whole';const t=TABS.find(t=>t[0]===k);
+function show(k){if(!TABS.some(t=>t[0]===k))k='velo';const t=TABS.find(t=>t[0]===k);
   if(!frames[k]){const f=document.createElement('iframe');f.src=t[3];f.title=t[1];f.loading='eager';stack.appendChild(f);frames[k]=f;}
   for(const id in frames)frames[id].classList.toggle('on',id===k);
   nav.querySelectorAll('a').forEach(a=>{const on=a.dataset.k===k;a.setAttribute('aria-current',on?'page':'false');if(on)a.scrollIntoView({inline:'nearest',block:'nearest'});});
