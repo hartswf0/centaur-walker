@@ -12,7 +12,7 @@ Horse hindquarters on two Jansen-linkage legs that pin to your hip belt or your 
 |---|---|
 | [build-book.html](build-book.html) | LEGO-style build book. **Build**: 5 bags, 31 steps, exploded 3D steps with real dimensions, a parts box per step, sub-builds, and a check on every step. **Mechanism**: the whole machine on your bike or on you, skin off, with the power path drawn on it. **Exploded**: every piece apart with its size, plus the full cut list. |
 | [walker.html](walker.html) | Engineering instrument: statics, pivot friction, leg inertia, hoof grip and skid speed, roll, side play, buckling, cost, shop list with Home Depot items, and tests that are all computed. |
-| [belt.html](belt.html) | Belt lab: the as-built drive in side, top and section views. Tension along each cord, gripping and idle arcs, wrap angles, misalignment, turning direction, what slips first under the legs’ load, collision marks, and bench tests with expected numbers. |
+| [belt.html](belt.html) | Belt lab in 3D: the as-built drive from the photos, with close-ups of the red-wheel gap, the cage and the top pulley. Tension along each cord, gripping and idle arcs, wrap angles, misalignment, turning direction, what slips first under the legs’ load, collision marks, and bench tests with expected numbers. |
 | [rig3d.html](rig3d.html) | Drive module in 3D, built from photo measurements. Aluminium angle, slotted steel angle or plywood frame; red wheels on LSTA12 arms swinging from a 3/8-16 cage axle; two tape tracks on the cage; two-bucket-lid pulley on a 5/16 shaft with a centre bearing post; both legs on clevis pins. Drive-forces view (tight and slack belt sides, turning direction, contact forces), belt tension, crank torque from the legs' weight and swing, what breaks first, cut list, 15 build steps. |
 | [powertrain.html](powertrain.html) | The physical velocipede drive as built: rear tyre → red scooter wheels → paint-roller cage → top axle. Enter measured diameters and axle positions; it gives road per crank turn against the legs' target, crank rpm, rotation direction, belt cut lengths, and how to build the threaded top axle so it stops unscrewing. |
 | [templates.html](templates.html) | 13 full-size letter sheets (print at 100%): every bar with its hole crosses, the plate corners, the hub ring wrap, the hoof pad. Also as [templates.pdf](templates.pdf). |
@@ -58,6 +58,10 @@ Every version made along the way is kept in [`versions/`](versions/), in order:
 | [Centaur Rig v4](versions/25-centaur-rig-v4.html) | Rig line: layer stacks, friction, sound, variants A–D, tolerances. |
 | [Centaur Rig v5](versions/26-centaur-rig-v5.html) | Rig line: phone-first joint lab, nine joint types at every pin. |
 | [Build-shop prompt](versions/27-build-shop-prompt.html) | Rig line: the SCION prompt rewritten for this rig. |
+| [Rig 3D v1](versions/33-rig3d-v1.html) | The built velocipede in 3D from measurements: rear wheel, rack, basket, Razor deck, red wheels, roller cage, A-frame, #8-32 top rod. |
+| [Rig 3D v2](versions/34-rig3d-v2.html) | Real parts: Razor A deck and wheels, Simpson straps, roller frame, the coroplast-and-pine leg, the axle fix. |
+| [Drive module v3](versions/35-drive-module-v3.html) | The drive as one lift-off module: plywood cheeks and platform, lid pulley, both legs on clevis pins, build steps, collision checks. |
+| [Belt lab, 2D](versions/36-belt-lab-2d.html) | First belt lab: the as-built cords in flat side, top and section views. |
 
 ## Centaur Rig line
 

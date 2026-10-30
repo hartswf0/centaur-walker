@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Velocipede Rig 3D</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#e9e7e2;--panel:#f7f6f2;--paper:#f4f2ec;--ink:#17150f;--ink-2:#5a554b;--ink-3:#8d877b;--rule:#d0cabe;--accent:#2f55c9;--accent-ink:#fff;--hot:#e2591b;--ok:#15803d;
+  --f-body:'IBM Plex Sans',system-ui,sans-serif;--f-mono:'IBM Plex Mono',ui-monospace,monospace;--f-disp:'Bodoni Moda',Georgia,serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f0e0c;--panel:#171512;--paper:#1d1a16;--ink:#ece7dd;--ink-2:#a9a293;--ink-3:#736c60;--rule:#2d2924;--accent:#8fa8ff;--accent-ink:#0d1014;--hot:#ff8a4c;--ok:#4ade80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f0e0c;--panel:#171512;--paper:#1d1a16;--ink:#ece7dd;--ink-2:#a9a293;--ink-3:#736c60;--rule:#2d2924;--accent:#8fa8ff;--accent-ink:#0d1014;--hot:#ff8a4c;--ok:#4ade80;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-body);display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+header{display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid var(--rule);background:var(--panel);min-width:0}
+h1{font:500 17px var(--f-disp);letter-spacing:.14em;text-transform:uppercase;margin:0;white-space:nowrap}
+.status{font:12px var(--f-mono);color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.status b{color:var(--hot)}.status b.ok{color:var(--ok)}
+header a{font:500 12px var(--f-body);color:var(--accent);text-decoration:none;white-space:nowrap}
+main{display:grid;grid-template-columns:1fr 420px;min-height:0}
+.view{position:relative;background:var(--paper);min-height:0;overflow:hidden;touch-action:none}
+.view canvas{position:absolute;inset:0;width:100%;height:100%;display:block}#ov{pointer-events:none}
+.vbar{position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:6px;flex-wrap:wrap;z-index:2;pointer-events:none}
+.vbar button{pointer-events:auto;height:30px;border:1px solid var(--rule);background:var(--panel);color:var(--ink-2);border-radius:7px;font:600 12px var(--f-body);padding:0 10px;cursor:pointer}.vbar button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.seg2{position:absolute;left:10px;top:10px;display:flex;z-index:2;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.seg2 button{height:32px;border:0;background:var(--panel);color:var(--ink-2);font:600 12.5px var(--f-body);padding:0 12px;cursor:pointer}.seg2 button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+aside{background:var(--panel);border-left:1px solid var(--rule);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;gap:4px;padding:8px 10px;flex-shrink:0;border-bottom:1px solid var(--rule)}
+.tabs button{flex:1;height:34px;border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);border-radius:8px;font:600 12.5px var(--f-body);cursor:pointer}.tabs button[aria-selected="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.pane{overflow:auto;flex:1;padding:4px 12px 16px}.pane[hidden]{display:none}
+h2{font:600 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:14px 2px 6px}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.nums div{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:6px 8px}.nums b{display:block;font:600 15px var(--f-mono)}.nums small{font-size:11px;color:var(--ink-2)}.nums .bad{border-color:var(--hot)}.nums .bad b{color:var(--hot)}.nums .good{border-color:var(--ok)}
+.msg{margin:6px 0;padding:8px 10px;border-radius:8px;border:1px solid var(--rule);background:var(--paper);font-size:13px}.msg.bad{border-color:var(--hot)}.msg.bad b{color:var(--hot)}.msg.good{border-color:var(--ok)}
+.step{display:grid;grid-template-columns:22px 1fr;gap:8px;padding:8px 2px;border-bottom:1px solid var(--rule);font-size:13px}.step i{font:700 11px var(--f-mono);font-style:normal;color:var(--panel);background:var(--accent);border-radius:50%;width:20px;height:20px;display:grid;place-items:center}
+.parts tr{cursor:pointer}.parts{width:100%;border-collapse:collapse;font-size:12.5px}.parts td{padding:6px 4px;border-bottom:1px solid var(--rule);vertical-align:top}.parts td.q{font:600 12px var(--f-mono);width:30px}.parts td.d{font:500 11.5px var(--f-mono);text-align:right;color:var(--ink-2)}.parts tr.on td{background:var(--paper);color:var(--hot)}
+.parts small{display:block;color:var(--ink-3);font-size:11px}.tag{font:600 10px var(--f-mono);padding:1px 5px;border-radius:4px;border:1px solid var(--rule);color:var(--ink-3);margin-left:4px}.tag.new{border-color:var(--accent);color:var(--accent)}.tag.chk{border-color:var(--hot);color:var(--hot)}
+.task{border-bottom:1px solid var(--rule);padding:9px 2px}.task p{margin:0;font-size:13px}.task small{color:var(--ink-3);font-size:11.5px;display:block;margin-top:2px}
+.task .in{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0}.task .in label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-2)}
+.task input[type=number]{width:70px;font:600 13px var(--f-mono);padding:4px 6px;border:1px solid var(--rule);border-radius:6px;background:var(--panel);color:var(--ink);text-align:right}
+.row{display:flex;gap:8px;align-items:center;padding:8px 2px}.row .lab{font:600 11px var(--f-mono);color:var(--ink-3);text-transform:uppercase}.row input[type=range]{flex:1;accent-color:var(--accent)}.row span.v{font:600 12px var(--f-mono);min-width:70px;text-align:right}
+.segp{display:flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden;flex:1}.segp button{flex:1;height:32px;border:0;background:var(--paper);color:var(--ink-2);font:600 12.5px var(--f-body);cursor:pointer}.segp button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.stack{width:100%;border-collapse:collapse;font-size:12.5px}.stack td{padding:4px;border-bottom:1px solid var(--rule)}.stack td.d{font:600 12px var(--f-mono);text-align:right}
+p.note{font-size:12px;color:var(--ink-2);margin:6px 2px}
+@media (max-width:760px){main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}aside{border-left:0;border-top:1px solid var(--rule)}header{padding:7px 10px}h1{font-size:13px;letter-spacing:.08em}header a{display:none}.status{font-size:11px}.vbar button{height:28px;font-size:11px;padding:0 8px}.seg2 button{height:28px;font-size:11.5px;padding:0 9px}}
+</style></head>
+<body>
+<header><h1>Rig 3D</h1><div class="status" id="status"></div><a href="../powertrain.html">Powertrain</a><a href="../index.html">All pages</a></header>
+<main>
+  <section class="view" id="view"><canvas id="c3"></canvas><canvas id="ov"></canvas>
+    <div class="seg2"><button id="mBuilt">As built</button><button id="mFixed" aria-pressed="true">Fixed axle</button></div>
+    <div class="vbar"><button id="vSide">Side</button><button id="vRear">Rear</button><button id="vTop">Top</button><button id="v3q" aria-pressed="true">3/4</button><button id="vAxle">Axle</button><button id="vPlay" aria-pressed="true">Moving</button><button id="vBasket" aria-pressed="true">Basket</button><button id="vLabels" aria-pressed="true">Labels</button></div>
+  </section>
+  <aside>
+    <div class="tabs"><button data-t="axle" aria-selected="true">Axle fix</button><button data-t="leg">Leg</button><button data-t="parts">Parts</button><button data-t="do">Measure</button></div>
+    <div class="pane" id="p-axle"></div>
+    <div class="pane" id="p-leg" hidden></div>
+    <div class="pane" id="p-parts" hidden><p class="note">Every part in the model. Tap a row to find it. <span class="tag new">new</span> = to buy or make for the fix; <span class="tag chk">check</span> = my reading of your photos, confirm it.</p><table class="parts" id="parts"></table></div>
+    <div class="pane" id="p-do" hidden><p class="note">Each answer goes straight into the model. Bike level on the floor; inches.</p><div id="tasks"></div></div>
+  </aside>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(()=>{
+const T=window.THREE,TAU=Math.PI*2,$=id=>document.getElementById(id),css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const IN=.0254,MM=.001,V=(x,y)=>({x,y});
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+// ---------------- the real leg (velocipede CHAMP, millimetres) ----------------
+const J={m:62,a:202,l:89,b:342,c:281,d:277,e:596,f:327,g:206,h:359,i:518,j:226,k:426};
+function circ(p,r1,q,r2,side){const dx=q.x-p.x,dy=q.y-p.y,d=Math.hypot(dx,dy);if(d<1e-9)return null;const a=(r1*r1-r2*r2+d*d)/(2*d),hh=r1*r1-a*a;if(hh<0)return null;const h=Math.sqrt(hh),mx=p.x+a*dx/d,my=p.y+a*dy/d;return V(mx-side*h*dy/d,my+side*h*dx/d);}
+function lk(th){const O=V(0,0),B=V(-J.a,-J.l),C=V(J.m*Math.cos(th),J.m*Math.sin(th));const D=circ(B,J.b,C,J.j,1),E=circ(B,J.c,C,J.k,-1);if(!D||!E)return null;const F=circ(B,J.d,D,J.e,1);if(!F)return null;const G=circ(F,J.f,E,J.g,-1);if(!G)return null;const H=circ(G,J.h,E,J.i,-1);if(!H)return null;return {O,B,C,D,E,F,G,H};}
+const NS=360,PU=[];for(let k=0;k<NS;k++)PU.push(lk(k/NS*TAU));
+const YMIN=Math.min(...PU.map(p=>p.H.y)),CONTACT=PU.map(p=>p.H.y<YMIN+6);let TD=0;for(let k=0;k<NS;k++)if(CONTACT[k]&&!CONTACT[(k+1)%NS])TD=k;
+const STX=PU.filter((p,i)=>CONTACT[i]).map(p=>p.H.x),DUTY=CONTACT.filter(Boolean).length/NS,ADV=(Math.max(...STX)-Math.min(...STX))/DUTY; // mm per crank turn
+const HT=-YMIN; // mm, rod centre to hoof point
+const legAt=th=>PU[((Math.round(th/TAU*NS)%NS)+NS)%NS];
+const HOOF_ANG=(()=>{const P=PU[(((Math.round(TD-NS*DUTY/2))%NS)+NS)%NS];return Math.atan2(P.H.y-P.E.y,P.H.x-P.E.x);})();
+const LINKS=[{id:'crank',name:'Crank arm',j:['O','C'],L:1,kind:'pine',len:J.m},{id:'t1',name:'Hip plate',j:['B','D','F'],L:1,kind:'plate'},{id:'t2',name:'Shank plate',j:['G','E','H'],L:1,kind:'plate'},
+  {id:'j',name:'Upper rod',j:['C','D'],L:2,kind:'pine',len:J.j},{id:'c',name:'Thigh rocker',j:['B','E'],L:2,kind:'pine',len:J.c},{id:'f',name:'Gaskin rod',j:['F','G'],L:2,kind:'pine',len:J.f},{id:'k',name:'Lower rod',j:['C','E'],L:3,kind:'pine',len:J.k}];
+// ---------------- the rig in inches, from the photos ----------------
+const DEF={deckTop:33,rodFwd:12,rodUp:8.5,redX:4.4,redY:-5.6,cageX:4,cageY:-1,basketW:15.5,basketL:14,redD:3.74,groove:3.2,cageD:1.75,greenD:2.0,discD:3.5,topD:2.0,cross1:0,cross2:0,rodLen:12,discOut:8,count:0,wheelTurns:10};
+const P=Object.assign({},DEF,store.get('rig3d2',{}));
+let MODE=store.get('rig3d2-mode','fixed'),LEGS2=store.get('rig3d2-legs',false),PULLEY=store.get('rig3d2-pulley','green');
+const save=()=>{store.set('rig3d2',P);store.set('rig3d2-mode',MODE);store.set('rig3d2-legs',LEGS2);store.set('rig3d2-pulley',PULLEY);dirty=true;};
+// ---------------- renderer ----------------
+const c3=$('c3'),ov=$('ov'),view=$('view'),og=ov.getContext('2d');
+const R=new T.WebGLRenderer({canvas:c3,antialias:true});R.setPixelRatio(Math.min(2,devicePixelRatio||1));R.shadowMap.enabled=true;R.outputEncoding=T.sRGBEncoding;
+const scene=new T.Scene(),camera=new T.PerspectiveCamera(32,1,.01,30),srgb=c=>new T.Color(c).convertSRGBToLinear();
+scene.add(new T.HemisphereLight(0xffffff,0x8a7d6a,.9));const sun=new T.DirectionalLight(0xffffff,.8);sun.position.set(1.2,3,2.2);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-1.5,right:1.5,top:1.5,bottom:-1.5});scene.add(sun);
+const fill=new T.DirectionalLight(0xe4e9ff,.35);fill.position.set(-2,1,-1.5);scene.add(fill);
+const ground=new T.Mesh(new T.PlaneGeometry(8,8),new T.ShadowMaterial({opacity:.15}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+const grid=new T.GridHelper(8,80,0x000000,0x000000);grid.material.transparent=true;grid.material.opacity=.07;scene.add(grid);
+const mat=(c,o={})=>new T.MeshStandardMaterial(Object.assign({color:srgb(c),roughness:.6},o));
+const MAT={alu:()=>mat('#cfd4d8',{metalness:.55,roughness:.3}),galv:()=>mat('#b9bec3',{metalness:.6,roughness:.42}),zinc:()=>mat('#d3d7db',{metalness:.6,roughness:.35}),black:()=>mat('#26241f',{roughness:.8}),tyre:()=>mat('#1e1d1b',{roughness:.9}),
+  red:()=>mat('#c23a30',{roughness:.45}),hub:()=>mat('#9a9a96'),orange:()=>mat('#f2622e',{roughness:.5}),green:()=>mat('#2f9a4a',{roughness:.5}),brass:()=>mat('#c9a640',{metalness:.6,roughness:.35}),pine:()=>mat('#e6ca98',{roughness:.7}),
+  ply:()=>mat('#d8b98a'),coro:()=>mat('#e4e7ea',{roughness:.55,side:T.DoubleSide}),lid:()=>mat('#f1efe9',{roughness:.5}),cord:()=>mat('#141312',{roughness:.7}),bungY:()=>mat('#c9c23a'),bungB:()=>mat('#3f62b5'),bungG:()=>mat('#2f8f78'),hot:()=>mat('#e2591b'),label:()=>mat('#f5f5f2')};
+const edgeMat=new T.LineBasicMaterial({color:srgb('#1b1a17'),transparent:true,opacity:.4});
+const v3=(x,y,z)=>new T.Vector3(x,y,z);
+const PARTS={};let rig=new T.Group();scene.add(rig);let dirty=true;
+function reg(o,id){o.traverse(m=>{if(m.isMesh){m.castShadow=true;m.receiveShadow=true;m.userData.part=id;if(!m.userData.noEdge&&m.geometry.attributes.position.count<4000){const e=new T.LineSegments(new T.EdgesGeometry(m.geometry,30),edgeMat);m.add(e);}}});(PARTS[id]=PARTS[id]||[]).push(o);return o;}
+const cylAB=(a,b,r,m,seg=12)=>{const d=new T.Vector3().subVectors(b,a),L=d.length(),o=new T.Mesh(new T.CylinderGeometry(r,r,L,seg),m);o.position.copy(a).addScaledVector(d,.5);o.quaternion.setFromUnitVectors(v3(0,1,0),d.normalize());return o;};
+const boxAB=(a,b,w,t,m,up)=>{const d=new T.Vector3().subVectors(b,a),L=d.length(),o=new T.Mesh(new T.BoxGeometry(w,L,t),m);o.position.copy(a).addScaledVector(d,.5);o.quaternion.setFromUnitVectors(v3(0,1,0),d.clone().normalize());if(up){/* rotate about the long axis so the wide face points along 'up' */const q=new T.Quaternion().setFromUnitVectors(v3(0,1,0),d.clone().normalize());const cur=v3(1,0,0).applyQuaternion(q);const want=up.clone().sub(d.clone().normalize().multiplyScalar(up.dot(d.clone().normalize()))).normalize();const ang=Math.atan2(cur.clone().cross(want).dot(d.clone().normalize()),cur.dot(want));o.quaternion.premultiply(new T.Quaternion().setFromAxisAngle(d.clone().normalize(),ang));}return o;};
+const discZ=(r,t,m,seg=40)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,t,seg),m);o.rotation.x=Math.PI/2;return o;};
+const tube=(pts,r,m,seg)=>new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts,false,'catmullrom',.15),seg||pts.length*8,r,8),m);
+// Simpson LSTA strap: 1-1/4 in. wide, 20 ga, with nail holes (0.162 in.) and larger holes, laid flat along +y
+function lsta(lenIn){const w=1.25*IN,L=lenIn*IN,s=new T.Shape();const r=.12*IN;s.moveTo(-w/2,0);s.lineTo(w/2,0);s.lineTo(w/2,L);s.lineTo(-w/2,L);s.lineTo(-w/2,0);
+  const holes=[];for(let y=.45;y<lenIn-.3;y+=.75){const k=Math.round((y-.45)/.75);const big=k%3===2;holes.push({y,x:big?0:(k%2?.28:-.28),r:big?.28:.081});}
+  for(const h of holes){const p=new T.Path();p.absarc(h.x*IN,h.y*IN,h.r*IN,0,TAU,true);s.holes.push(p);}
+  const g=new T.ExtrudeGeometry(s,{depth:.036*IN,bevelEnabled:false,curveSegments:10});g.translate(0,0,-.018*IN);const m=new T.Mesh(g,MAT.galv());m.userData.holes=holes;return m;}
+// place a flat strap from a to b with its face normal n
+function strapAB(lenIn,a,b,n){const m=lsta(lenIn);const d=new T.Vector3().subVectors(b,a).normalize();const x=new T.Vector3().crossVectors(d,n).normalize(),z=new T.Vector3().crossVectors(x,d);const M=new T.Matrix4().makeBasis(x,d,z);m.quaternion.setFromRotationMatrix(M);m.position.copy(a);return m;}
+const nut=(r=.0055,h=.004)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,h,6),MAT.zinc());o.rotation.x=Math.PI/2;return o;};
+// ---------------- geometry from the measurements ----------------
+function G(){const Rt=13.75,rr=P.redD/2;const red={x:-P.redX,y:P.deckTop+P.redY};const dy=red.y-Rt,h=Math.sqrt(Math.max(1,(Rt+rr)**2-dy*dy));const tc={x:red.x+h,y:Rt};
+  const rod={x:P.rodFwd,y:P.deckTop+P.rodUp};const plateZ=P.basketW/2+.9;
+  return {Rt,rr,red,tc,rod,cage:{x:-P.cageX,y:P.deckTop+P.cageY},plateZ};}
+const W=(p,z=0)=>v3(p.x*IN,p.y*IN,z*IN);
+function drive(){const roadRed=Math.PI*P.redD,cagePerRed=P.groove/P.cageD,top=PULLEY==='lid'?11.9:P.greenD,topPerCage=P.cageD/top;const roadPerCrank=roadRed/(cagePerRed*topPerCage);
+  const cross1=P.cross1,cross2=PULLEY==='lid'?1:P.cross2;const dir=(cross1?-1:1)*(cross2?-1:1); // +1: crank turns opposite to the wheel
+  return {roadPerCrank,top,dir,ok:dir===-1,crankPerWheel:Math.PI*27.5/roadPerCrank};}
+// layer stack for the leg (metres from the side plate face, outward)
+const PLY=.012,PINE=.019,CORO=.004,WASH=.0016;
+const LZ=L=>WASH+(L-1)*(PINE+WASH)+PINE/2;
+// ---------------- build ----------------
+let LEG=[],SP={},BASKET=null,LABELS=[];
+function build(){scene.remove(rig);rig=new T.Group();scene.add(rig);for(const k in PARTS)delete PARTS[k];LEG=[];LABELS=[];const g=G(),fixed=MODE==='fixed';
+  const lab=(id,p,text)=>LABELS.push({id,p,text});
+  // rear wheel 700×38c
+  const tc=W(g.tc);{const w=new T.Group();w.position.copy(tc);w.add(new T.Mesh(new T.TorusGeometry(g.Rt*IN-.019,.019,14,64),MAT.tyre()));w.add(new T.Mesh(new T.TorusGeometry(g.Rt*IN-.045,.007,8,64),MAT.alu()));
+    const sp=[];for(let i=0;i<28;i++){const a=i/28*TAU,z=i%2?.03:-.03;sp.push(v3(0,0,z),v3(Math.cos(a)*(g.Rt*IN-.05),Math.sin(a)*(g.Rt*IN-.05),0));}w.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(sp),new T.LineBasicMaterial({color:0x9aa0a6})));
+    const mk=new T.Mesh(new T.BoxGeometry(.05,.022,.045),MAT.hot());mk.position.y=g.Rt*IN-.019;w.add(mk);rig.add(reg(w,'wheel'));SP.wheel=w;}
+  // frame stub, seat post and saddle
+  const bb=W({x:g.tc.x+17,y:10.8}),saddle=W({x:g.rod.x+4,y:g.rod.y+3.5});
+  {const f=new T.Group(),bl=MAT.black();for(const z of [-.065,.065]){f.add(cylAB(v3(tc.x,tc.y,z),v3(bb.x,bb.y,z*.4),.009,bl));f.add(cylAB(v3(tc.x,tc.y,z),v3(saddle.x-.02,saddle.y-.2,z*.3),.008,bl));}
+    f.add(cylAB(bb,v3(saddle.x-.02,saddle.y-.2,0),.016,bl));f.add(cylAB(v3(saddle.x-.02,saddle.y-.2,0),v3(saddle.x,saddle.y-.03,0),.0136,MAT.zinc()));const sd=new T.Mesh(new T.BoxGeometry(.27,.05,.15),bl);sd.position.set(saddle.x+.05,saddle.y,0);f.add(sd);rig.add(reg(f,'bike'));}
+  // rear rack: two side rails and stays
+  const rackY=P.deckTop-1.25;{const r=new T.Group(),bl=MAT.black();for(const z of [-2.1,2.1]){r.add(cylAB(W({x:-1.5,y:rackY},z),W({x:P.rodFwd+4,y:rackY},z),.0055,bl));r.add(cylAB(W({x:-.5,y:rackY},z),v3(tc.x,tc.y,z*IN*1.15),.0055,bl));}
+    for(const x of [-1,4,9])r.add(cylAB(W({x,y:rackY},-2.1),W({x,y:rackY},2.1),.0045,bl));rig.add(reg(r,'rack'));}
+  // wire basket (flat tray as in the photos)
+  BASKET=new T.Group();{const y=rackY-.2,x0=0,x1=P.basketL,hw=P.basketW/2,pts=[];for(let k=0;k<=10;k++){const z=-hw+2*hw*k/10;pts.push(W({x:x0,y},z),W({x:x1,y},z));}for(let k=0;k<=7;k++){const x=x0+(x1-x0)*k/7;pts.push(W({x,y},-hw),W({x,y},hw));}
+    BASKET.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(pts),new T.LineBasicMaterial({color:srgb('#2a2824')})));}rig.add(BASKET);BASKET.visible=$('vBasket').getAttribute('aria-pressed')==='true';
+  // Razor A deck, 17.3 × 3.6 in., aluminium, rear wheel slot facing the back of the bike
+  {const d=new T.Group(),al=MAT.alu(),L=17.3,Wd=3.6,y=P.deckTop;const top=new T.Mesh(new T.BoxGeometry((L-2.6)*IN,.14*IN,Wd*IN),al);top.position.set((2.6+(L-2.6)/2)*IN,(y-.07)*IN,0);d.add(top);
+    for(const z of [-1,1]){const pr=new T.Mesh(new T.BoxGeometry(2.6*IN,.14*IN,.85*IN),al);pr.position.set(1.3*IN,(y-.07)*IN,z*(Wd/2-.425)*IN);d.add(pr);const rail=new T.Mesh(new T.BoxGeometry(L*IN,.95*IN,.12*IN),al);rail.position.set(L/2*IN,(y-.5)*IN,z*(Wd/2-.06)*IN);d.add(rail);}
+    for(const z of [-.9,0,.9]){const rib=new T.Mesh(new T.BoxGeometry((L-2.8)*IN,.25*IN,.1*IN),al);rib.position.set((2.8+(L-2.8)/2)*IN,(y-.25)*IN,z*IN);rib.userData.noEdge=1;d.add(rib);}
+    const lb=new T.Mesh(new T.BoxGeometry(2.6*IN,.55*IN,.01*IN),MAT.label());lb.position.set(6*IN,(y-.5)*IN,(Wd/2+.01)*IN);lb.userData.noEdge=1;d.add(lb);rig.add(reg(d,'deck'));lab('deck',W({x:9,y:P.deckTop+.2},Wd/2),'Razor A deck 17.3 × 3.6');}
+  // two LSTA9 straps from the deck's rear prongs down to the red wheel axle
+  const red=W(g.red);for(const z of [-1.55,1.55]){const a=W({x:.4,y:P.deckTop-.5},z);const dir=new T.Vector3().subVectors(v3(red.x,red.y,z*IN),a).normalize();const b=a.clone().addScaledVector(dir,9*IN);rig.add(reg(strapAB(9,a,b,v3(0,0,1)),'redarm'));}
+  lab('redarm',W({x:-1.5,y:P.deckTop-2.5},1.6),'LSTA9 arm');
+  // the two Razor wheels, 95 mm, side by side with the cord in the gap
+  {const rg=new T.Group();rg.position.copy(red);for(const z of [-.55,.55]){const w=discZ(P.redD/2*IN,24*MM,MAT.red(),36);w.position.z=z*IN;rg.add(w);const h=discZ(P.redD/2*IN*.58,24.4*MM,MAT.hub(),18);h.position.z=z*IN;rg.add(h);
+      for(const s of [-1,1]){const br=discZ(11*MM,7*MM,MAT.zinc(),16);br.position.z=z*IN+s*8.5*MM;rg.add(br);}}
+    const gr=discZ(P.groove/2*IN,4*MM,MAT.hub(),24);rg.add(gr);rig.add(reg(rg,'red'));SP.red=rg;rig.add(reg(cylAB(W(g.red,-1.7),W(g.red,1.7),.004,MAT.zinc()),'redbolt'));lab('red',W({x:g.red.x-1.8,y:g.red.y-1.5},1.5),'Razor wheels 95 mm');}
+  // paint roller frame: 9 in. cage on a bent 1/4 in. wire, plastic handle strapped to the deck with bungee cords
+  {const cg=new T.Group(),c=W(g.cage);cg.position.copy(c);for(let i=0;i<6;i++){const a=i/6*TAU;const b=new T.Mesh(new T.CylinderGeometry(1.3*MM,1.3*MM,9*IN,6),MAT.zinc());b.rotation.x=Math.PI/2;b.position.set(Math.cos(a)*P.cageD/2*IN,Math.sin(a)*P.cageD/2*IN,0);b.userData.noEdge=1;cg.add(b);}
+    for(const z of [-4.5,4.5]){const cap=discZ((P.cageD/2+.25)*IN,.9*IN,MAT.orange(),24);cap.position.z=z*IN;cg.add(cap);}rig.add(reg(cg,'cage'));SP.cage=cg;
+    const wire=[W(g.cage,-4.9),W(g.cage,-6.4),W({x:g.cage.x+2,y:g.cage.y+.4},-6.4),W({x:1.5,y:P.deckTop+.3},-1.2),W({x:4,y:P.deckTop+.45},0)];rig.add(reg(tube(wire,3.2*MM,MAT.zinc(),60),'cage'));
+    const hd=new T.Mesh(new T.CylinderGeometry(.55*IN,.6*IN,7.5*IN,16),MAT.orange());hd.rotation.z=Math.PI/2;hd.position.copy(W({x:8,y:P.deckTop+.6},0));rig.add(reg(hd,'handle'));
+    const bm=[MAT.bungY(),MAT.bungB(),MAT.bungG()];[5.5,8,10.5].forEach((x,k)=>{const pts=[W({x,y:P.deckTop+.2},-2.0),W({x:x+.2,y:P.deckTop+1.25},-.5),W({x:x+.2,y:P.deckTop+1.25},.5),W({x,y:P.deckTop+.2},2.0)];rig.add(reg(tube(pts,2.2*MM,bm[k],30),'bungee'));});
+    lab('cage',W({x:g.cage.x-1,y:g.cage.y-1.4},-4.5),'9 in. roller cage');lab('handle',W({x:8,y:P.deckTop+1.4},0),'roller handle + bungees');}
+  // A-frame at the rod: LSTA12 upright on one side, LSTA9 on the other, two LSTA9 across the top
+  const rod=W(g.rod),hz=P.deckTop;{const zs=[-(1.8+.05),(1.8+.05)];
+    const up1a=W({x:g.rod.x-4.2,y:hz},zs[0]),up1b=W({x:g.rod.x+.6,y:g.rod.y+1.2},zs[0]);rig.add(reg(strapAB(12,up1a,up1a.clone().add(up1b.clone().sub(up1a).normalize().multiplyScalar(12*IN)),v3(0,0,1)),'aframe'));
+    const up2a=W({x:g.rod.x+4.8,y:hz},zs[1]),up2b=W({x:g.rod.x-.6,y:g.rod.y+1.0},zs[1]);rig.add(reg(strapAB(9,up2a,up2a.clone().add(up2b.clone().sub(up2a).normalize().multiplyScalar(9*IN)),v3(0,0,1)),'aframe'));
+    for(const dy of [.9,1.6]){const a=W({x:g.rod.x-.2,y:g.rod.y+dy},-2.6),b=W({x:g.rod.x-.2,y:g.rod.y+dy},6.4);rig.add(reg(strapAB(9,a,b,v3(0,1,0)),'aframe'));}
+    for(const z of zs){const s=new T.Mesh(new T.CylinderGeometry(3*MM,3*MM,.015,8),MAT.zinc());s.rotation.x=Math.PI/2;s.position.copy(W({x:g.rod.x,y:g.rod.y+1.2},z/IN*IN/IN));rig.add(s);}
+    lab('aframe',W({x:g.rod.x-3,y:g.rod.y-3.5},-1.9),'LSTA12 + LSTA9 frame');}
+  // top shaft
+  const topG=new T.Group();topG.position.copy(rod);rig.add(topG);SP.top=topG;
+  const legZs=[];const zPlate=g.plateZ;
+  if(!fixed){const rr=.164/2*IN,z0=P.discOut-P.rodLen+.5,z1=P.discOut+.5;const r=new T.Mesh(new T.CylinderGeometry(rr,rr,(z1-z0)*IN,8),MAT.zinc());r.rotation.x=Math.PI/2;r.position.z=(z0+z1)/2*IN;r.userData.noEdge=1;topG.add(r);
+    const gc=discZ(P.greenD/2*IN,1.4*IN,MAT.green(),24);topG.add(gc);const disc=discZ(P.discD/2*IN,.1*IN,MAT.brass());disc.position.z=P.discOut*IN;topG.add(disc);
+    for(const z of [-2.15,-1.95,-.85,.85,1.95,2.15,P.discOut-.2,P.discOut+.2]){const n=nut();n.position.z=z*IN;topG.add(n);}
+    reg(topG,'rod8');lab('rod8',W({x:g.rod.x,y:g.rod.y+.4},-3.5),'#8-32 rod, 0.164 in.');lab('rod8',W({x:g.rod.x,y:g.rod.y},P.discOut),'brass disc');}
+  else{const rr=5/16/2*IN,zL=LEGS2?-(zPlate+2.6):-3.2,zR=zPlate+2.6;const r=new T.Mesh(new T.CylinderGeometry(rr,rr,(zR-zL)*IN,10),MAT.zinc());r.rotation.x=Math.PI/2;r.position.z=(zL+zR)/2*IN;r.userData.noEdge=1;topG.add(r);
+    if(PULLEY==='lid'){const lid=discZ(11.9/2*IN,.3*IN,MAT.lid(),56);lid.position.z=-.9*IN;topG.add(lid);for(const s of [-1,1]){const fw=discZ(1.0*IN,.06*IN,MAT.zinc(),20);fw.position.z=(-.9+s*.2)*IN;topG.add(fw);}}
+    const gc=discZ(P.greenD/2*IN,1.4*IN,MAT.green(),24);gc.position.z=.4*IN;topG.add(gc);
+    // jam pairs around the pulley and outside each bearing
+    const jams=[-1.3,-.6,1.2,1.4];for(const z of jams){const n=nut(.007,.0055);n.position.z=z*IN;topG.add(n);}
+    reg(topG,'rod516');lab('rod516',W({x:g.rod.x,y:g.rod.y+.4},zR-1),'5/16-18 rod');
+    // inner bearing blocks: pine 1×2, 2-1/2 in., on the outside of each upright
+    for(const z of [-2.15,2.15]){const b=new T.Mesh(new T.BoxGeometry(1.5*IN,2.5*IN,.75*IN),MAT.pine());b.position.copy(W({x:g.rod.x,y:g.rod.y+.45},z+(z>0?.38:-.38)));rig.add(reg(b,'block'));
+      for(const s of [-.25,.25]){const n=nut(.0075,.0055);n.position.copy(W(g.rod,z+(z>0?.38:-.38)*2+(z>0?s+.55:s-.55)));rig.add(n);}}
+    lab('block',W({x:g.rod.x+.9,y:g.rod.y+1.8},2.5),'bearing block');
+    // side plates outside the basket: bearing at the rod and pivot B, braced to the rack
+    const sides=LEGS2?[1,-1]:[1];for(const s of sides){const zp=s*zPlate;const O=g.rod,B={x:g.rod.x-J.a*MM/IN,y:g.rod.y-J.l*MM/IN};
+      const shp=new T.Shape(),dx=B.x-O.x,dy=B.y-O.y,Lp=Math.hypot(dx,dy),ux=dx/Lp,uy=dy/Lp,nx=-uy,ny=ux,hw=1.5,ext=1.4;const pts=[[-ext,-hw],[Lp+ext,-hw],[Lp+ext,hw],[-ext,hw]].map(([a,b])=>[O.x+ux*a+nx*b,O.y+uy*a+ny*b]);
+      shp.moveTo(pts[0][0]*IN,pts[0][1]*IN);for(const p of pts.slice(1))shp.lineTo(p[0]*IN,p[1]*IN);shp.lineTo(pts[0][0]*IN,pts[0][1]*IN);for(const q of [O,B]){const h=new T.Path();h.absarc(q.x*IN,q.y*IN,(q===O?.17:.13)*IN,0,TAU,true);shp.holes.push(h);}
+      const geo=new T.ExtrudeGeometry(shp,{depth:PLY,bevelEnabled:false,curveSegments:16});geo.translate(0,0,-PLY/2);const pl=new T.Mesh(geo,MAT.ply());pl.position.z=zp*IN;rig.add(reg(pl,'plate'));
+      // brace from the plate's low corner down and in to the rack rail
+      const lowP=pts[1][1]<pts[2][1]?pts[1]:pts[2];rig.add(reg(boxAB(W({x:lowP[0],y:lowP[1]+.5},s*(zPlate-.5)),W({x:lowP[0]+2,y:rackY-.3},s*2.3),1.5*IN,.75*IN,MAT.pine(),v3(1,0,0)),'brace'));
+      rig.add(reg(boxAB(W({x:pts[0][0]+.6,y:pts[0][1]},s*(zPlate-.5)),W({x:g.rod.x+2.5,y:rackY-.3},s*2.3),1.5*IN,.75*IN,MAT.pine(),v3(1,0,0)),'brace'));
+      for(const zz of [-.35,.35]){const n=nut(.007,.0055);n.position.copy(W(g.rod,zp+s*zz*1.6));rig.add(n);}
+      legZs.push(s);}
+    lab('plate',W({x:g.rod.x-5,y:g.rod.y-3.2},zPlate+.5),'side plate, 1/2 in. ply');lab('brace',W({x:g.rod.x-4,y:rackY+1.2},zPlate-2),'1×2 braces to the rack');}
+  // the leg(s): two coroplast plates and pine 1×2 bars, velocipede proportions
+  const legSides=fixed?legZs:[1];
+  legSides.forEach((s,k)=>{const lg=new T.Group();lg.position.copy(rod);rig.add(lg);const zBase=fixed?s*zPlate*IN+s*PLY/2:s*(P.discOut*IN+.004);const parts={};
+    for(const L of LINKS){let o;if(L.kind==='plate'){const shp=new T.Shape();shp.moveTo(0,0);const g2=new T.ExtrudeGeometry(new T.Shape([new T.Vector2(0,0),new T.Vector2(.01,0),new T.Vector2(0,.01)]),{depth:CORO,bevelEnabled:false});o=new T.Mesh(g2,MAT.coro());o.userData.noEdge=1;}
+      else{o=new T.Mesh(new T.BoxGeometry(1,.038,PINE),MAT.pine());}
+      lg.add(o);parts[L.id]={o,L};}
+    const hoof=new T.Mesh(new T.BoxGeometry(.102,.025,.089),MAT.black());lg.add(hoof);
+    const bolts={};for(const c of ['B','C','D','E','F','G','H']){const b=new T.Mesh(new T.CylinderGeometry(3.2*MM,3.2*MM,.072,8),MAT.zinc());b.rotation.x=Math.PI/2;lg.add(b);bolts[c]=b;}
+    reg(lg,'leg');LEG.push({lg,parts,hoof,bolts,s,zBase,phase:k*.5});});
+  lab('leg',W({x:g.rod.x-8,y:g.rod.y-20},fixed?zPlate+2:P.discOut+1),'leg: coroplast plates + pine 1×2');
+  // belts
+  const d=drive(),top=PULLEY==='lid'&&fixed?11.9:P.greenD,cross2=PULLEY==='lid'&&fixed?1:P.cross2;
+  const belt=(c1,r1,c2,r2,cr,z)=>{const dx=c2.x-c1.x,dy=c2.y-c1.y,dd=Math.hypot(dx,dy),a=Math.atan2(dy,dx),kk=cr?(r1+r2)/dd:(r1-r2)/dd;if(Math.abs(kk)>=1)return;const b=Math.acos(kk);const pts=[];
+    const arc=(c,r,t0,t1)=>{for(let i=0;i<=20;i++){const t=t0+(t1-t0)*i/20;pts.push(W({x:c.x+r*Math.cos(t),y:c.y+r*Math.sin(t)},z));}};arc(c1,r1,a-b,a+b-TAU);if(cr)arc(c2,r2,a+b+Math.PI,a+3*Math.PI-b);else arc(c2,r2,a+b,a-b);pts.push(pts[0].clone());
+    rig.add(reg(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts,false,'catmullrom',0),pts.length*2,2.2*MM,6,false),MAT.cord()),'cord'));};
+  belt(g.red,P.groove/2,g.cage,P.cageD/2,!!P.cross1,0);belt(g.cage,P.cageD/2,g.rod,top/2,!!cross2,PULLEY==='lid'&&fixed?-.9:0);
+  lab('cord',W({x:(g.cage.x+g.rod.x)/2,y:(g.cage.y+g.rod.y)/2+.8},0),'paracord belts');
+  dirty=false;panels();}
+// leg pose
+function plateGeo(pts,margin){const n=pts.length,cx=pts.reduce((a,p)=>a+p.x,0)/n,cy=pts.reduce((a,p)=>a+p.y,0)/n;const out=[];
+  for(let i=0;i<n;i++){const p=pts[i],q=pts[(i+1)%n];const a0=Math.atan2(p.y-cy,p.x-cx);for(let t=0;t<=6;t++){/* rounded corner */}const d=Math.hypot(p.x-cx,p.y-cy);out.push(new T.Vector2(p.x+(p.x-cx)/d*margin,p.y+(p.y-cy)/d*margin));}
+  const s=new T.Shape(out);for(const p of pts){const h=new T.Path();h.absarc(p.x,p.y,.0035,0,TAU,true);s.holes.push(h);}return new T.ExtrudeGeometry(s,{depth:CORO,bevelEnabled:false,curveSegments:8});}
+let lastTh=null;
+function poseLegs(th){for(const L of LEG){const Pp=legAt(th+L.phase*TAU);const pm={};for(const k in Pp)pm[k]=V(Pp[k].x*MM,Pp[k].y*MM);
+  for(const id in L.parts){const {o,L:lk_}=L.parts[id];const z=L.s*LZ(lk_.L)+L.zBase;
+    if(lk_.kind==='plate'){const pts=lk_.j.map(c=>pm[c]);if(o.geometry)o.geometry.dispose();o.geometry=plateGeo(pts,.03);o.position.set(0,0,z-L.s*CORO/2);while(o.children.length){const c=o.children.pop();c.geometry.dispose();}o.add(new T.LineSegments(new T.EdgesGeometry(o.geometry,30),edgeMat));}
+    else{const a=lk_.j[0]==='O'?V(0,0):pm[lk_.j[0]],c=pm[lk_.j[1]],len=Math.hypot(c.x-a.x,c.y-a.y);o.scale.x=len+.038;o.position.set((a.x+c.x)/2,(a.y+c.y)/2,z);o.rotation.z=Math.atan2(c.y-a.y,c.x-a.x);}}
+  L.hoof.position.set(pm.H.x,pm.H.y-.022,L.s*LZ(1)+L.zBase);L.hoof.rotation.z=Math.atan2(pm.H.y-pm.E.y,pm.H.x-pm.E.x)-HOOF_ANG;
+  for(const c in L.bolts){L.bolts[c].position.set(pm[c].x,pm[c].y,L.zBase+L.s*.034);}}}
+// ---------------- camera, overlay ----------------
+const cam={tx:.15,ty:.75,tz:.05,r:2.3,th:.7,ph:1.2};let tween=null;
+const VIEWS={vSide:{th:0,ph:1.5,r:2.2,tx:0,ty:.7,tz:0},vRear:{th:-Math.PI/2,ph:1.45,r:2.0,tx:0,ty:.75,tz:0},vTop:{th:0,ph:.06,r:2.2,tx:.1,ty:.8,tz:0},v3q:{th:.7,ph:1.2,r:2.3,tx:.15,ty:.75,tz:.05},vAxle:null};
+function updCam(){const k=1/Math.pow(Math.min(1,camera.aspect),.7),sp=v3(Math.sin(cam.ph)*Math.sin(cam.th),Math.cos(cam.ph),Math.sin(cam.ph)*Math.cos(cam.th)).multiplyScalar(cam.r*k);camera.position.set(cam.tx+sp.x,cam.ty+sp.y,cam.tz+sp.z);camera.lookAt(cam.tx,cam.ty,cam.tz);}
+for(const id in VIEWS)$(id).onclick=()=>{for(const k in VIEWS)$(k).setAttribute('aria-pressed',k===id);let to=VIEWS[id];if(id==='vAxle'){const g=G(),r=W(g.rod);to={th:.95,ph:1.25,r:.65,tx:r.x-.03,ty:r.y-.02,tz:.1};}tween={from:Object.assign({},cam),to:Object.assign({},cam,to),t0:performance.now()};};
+let playing=true,showLabels=innerWidth>760;$('vLabels').setAttribute('aria-pressed',showLabels);$('vPlay').onclick=e=>{playing=!playing;e.currentTarget.setAttribute('aria-pressed',playing);};
+$('vBasket').onclick=e=>{const on=e.currentTarget.getAttribute('aria-pressed')!=='true';e.currentTarget.setAttribute('aria-pressed',on);if(BASKET)BASKET.visible=on;};
+$('vLabels').onclick=e=>{showLabels=!showLabels;e.currentTarget.setAttribute('aria-pressed',showLabels);};
+$('mBuilt').onclick=()=>{MODE='built';save();modeUI();};$('mFixed').onclick=()=>{MODE='fixed';save();modeUI();};
+function modeUI(){$('mBuilt').setAttribute('aria-pressed',MODE==='built');$('mFixed').setAttribute('aria-pressed',MODE==='fixed');}
+{const pts=new Map();let g0=null;view.addEventListener('pointerdown',e=>{if(e.target.closest('.vbar,.seg2'))return;view.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===1)g0={th:cam.th,ph:cam.ph,x:e.clientX,y:e.clientY};if(pts.size===2){const [a,b]=[...pts.values()];g0={pinch:Math.hypot(a.x-b.x,a.y-b.y),r:cam.r};}});
+  view.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!g0)return;tween=null;if(pts.size===2&&g0.pinch){const [a,b]=[...pts.values()];cam.r=Math.max(.2,Math.min(6,g0.r*g0.pinch/Math.hypot(a.x-b.x,a.y-b.y)));}else if(!g0.pinch){cam.th=g0.th-(e.clientX-g0.x)*.008;cam.ph=Math.max(.05,Math.min(1.62,g0.ph-(e.clientY-g0.y)*.006));}});
+  const up=e=>{pts.delete(e.pointerId);if(!pts.size)g0=null;};view.addEventListener('pointerup',up);view.addEventListener('pointercancel',up);
+  view.addEventListener('wheel',e=>{e.preventDefault();tween=null;cam.r=Math.max(.2,Math.min(6,cam.r*Math.exp(e.deltaY*.001)));},{passive:false});}
+function resize(){const r=view.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1);R.setSize(r.width,r.height,false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix();ov.width=r.width*dpr;ov.height=r.height*dpr;}
+addEventListener('resize',resize);
+let HI=null;function highlight(id){HI=id;for(const k in PARTS)for(const o of PARTS[k])o.traverse(m=>{if(m.isMesh&&m.material&&m.material.emissive){m.material.emissive.set(k===id?0xe2591b:0x000000);m.material.emissiveIntensity=k===id?.6:1;}});}
+function overlay(){const dpr=Math.min(2,devicePixelRatio||1),Wd=ov.width/dpr,Hd=ov.height/dpr;og.setTransform(dpr,0,0,dpr,0,0);og.clearRect(0,0,Wd,Hd);if(!showLabels)return;
+  const placed=[];og.font=`600 11px ${css('--f-body')}`;const pts=[];for(const l of LABELS){const p=l.p.clone().project(camera);if(p.z>1)continue;const x=(p.x+1)/2*Wd,y=(1-p.y)/2*Hd;if(x<0||x>Wd||y<0||y>Hd)continue;pts.push({x,y,l});}
+  pts.sort((a,b)=>a.y-b.y);for(const {x,y,l} of pts){const tw=og.measureText(l.text).width+10;let lx=x+(x>Wd*.6?-tw-16:16),ly=y-20;for(let k=0;k<40;k++){if(!placed.some(q=>lx<q.x+q.w&&lx+tw>q.x&&ly<q.y+17&&ly+17>q.y))break;ly+=10;}placed.push({x:lx,y:ly,w:tw});
+    const on=HI===l.id,col=on?css('--hot'):css('--ink');og.strokeStyle=on?col:css('--ink-3');og.lineWidth=1;og.beginPath();og.moveTo(x,y);og.lineTo(lx+(lx<x?tw:0),ly+8.5);og.stroke();og.fillStyle=col;og.beginPath();og.arc(x,y,2,0,TAU);og.fill();
+    og.fillStyle=css('--paper');og.globalAlpha=.9;og.fillRect(lx,ly,tw,17);og.globalAlpha=1;og.strokeStyle=on?col:css('--rule');og.strokeRect(lx+.5,ly+.5,tw-1,16);og.fillStyle=col;og.textBaseline='middle';og.fillText(l.text,lx+5,ly+9);}}
+// ---------------- panels ----------------
+const tq=(d,T)=>{const dm=d*IN;return {tau:16*T/(Math.PI*dm**3)/1e6,tw:T*.15/(79e9*Math.PI*dm**4/32)*180/Math.PI};};
+// leg torque: masses of the real leg (pine 1×2 ≈ 0.33 kg/m, coroplast 4 mm ≈ 0.7 kg/m², bolts) scaled from the engineering page's 3 N·m for a 2 kg pine leg
+const LEG_KG=(()=>{let m=0;for(const L of LINKS)if(L.kind==='pine')m+=.33*((L.len+40)*MM);m+=.7*(.04+.045);m+=7*.016+.09;return m;})();
+const LEG_NM=3*LEG_KG/2;
+function panels(){const g=G(),d=drive(),fixed=MODE==='fixed',two=fixed&&LEGS2,T_=LEG_NM*(two?1.5:1);
+  const rodAbove=g.rod.y,hoofGap=rodAbove-HT*MM/IN-1.0;
+  const r8=tq(.130,T_),r516=tq(.2443,T_);
+  $('status').innerHTML=`${fixed?'fixed axle':'as built'} · rod ${rodAbove.toFixed(1)} in. off the road · hoof ${hoofGap.toFixed(1)} in. off the road · ${d.crankPerWheel.toFixed(2)} crank turns per wheel turn${d.ok?'':' · <b>legs walk backwards</b>'}`;
+  $('p-axle').innerHTML=`<div class="row"><div class="segp"><button id="pg" aria-pressed="${PULLEY==='green'}">Green cap pulley</button><button id="pl" aria-pressed="${PULLEY==='lid'}">5-gal lid pulley</button></div></div>
+   <div class="nums"><div class="${r8.tau>140?'bad':''}"><b>${r8.tw.toFixed(0)}°</b><small>#8-32 twist under the leg (${r8.tau.toFixed(0)} MPa)</small></div><div class="good"><b>${r516.tw.toFixed(1)}°</b><small>5/16-18 twist (${r516.tau.toFixed(0)} MPa)</small></div><div class="${d.ok?'good':'bad'}"><b>${d.crankPerWheel.toFixed(2)}</b><small>crank turns per wheel turn (need 2.34)</small></div></div>
+   <h2>Why it won’t spin true now</h2>
+   <div class="msg bad"><b>The rod rides on the edges of two 20-gauge straps</b>: 0.036 in. of steel each, through holes much bigger than the rod. The threads rattle in the holes, the two holes are not on one line, and every nut that touches a strap unscrews as the rod turns. On top of that #8-32 is thin: under the leg (about ${LEG_NM.toFixed(1)} N·m for this ${LEG_KG.toFixed(2)} kg leg${two?', ×1.5 for two':''}) it twists ${r8.tw.toFixed(0)}° over 6 in.</div>
+   <h2>The fix, as modelled (press “Fixed axle”)</h2>
+   ${[
+    ['Swap the rod for <b>5/16-18 × 24 in. zinc threaded rod</b> (Home Depot, threaded rod aisle). Drill the green cap and brass disc out to 5/16.','rod516'],
+    ['Make two <b>bearing blocks</b>: 2-1/2 in. of pine 1×2 each, drilled 21/64 in. straight through the 3/4 in. face, 1/2 in. from one end. Grease the hole. Screw each block to the outside of an upright with two #8-32 × 1 in. machine screws through the strap’s nail holes, nuts inside.','block'],
+    ['Slide the rod through: block, strap, <b>jam pair</b>, washer, pulley (green cap, or a 5-gallon lid between two fender washers), washer, jam pair, strap, block. Leave the rod free in the blocks; only the pulley is clamped.','rod516'],
+    ['Outside each block, a <b>jam-pair collar</b> a paper-thickness away so the rod cannot walk sideways.','rod516'],
+    [`Cut a <b>side plate</b> from 1/2 in. plywood, 3 × ${(Math.hypot(J.a,J.l)*MM/IN+2.8).toFixed(1)} in. Drill 21/64 in. for the rod and 1/4 in. for pivot B, ${(Math.hypot(J.a,J.l)*MM/IN).toFixed(2)} in. apart. It hangs on the rod just outside the basket: a third bearing right next to the crank, so the long rod is supported where the leg pulls on it.`,'plate'],
+    ['Brace the side plate with <b>two 1×2 struts</b> down and in to the rack rails, under the basket, screwed at both ends. The plate must not swing: it holds pivot B.','brace'],
+    [`<b>Crank arm</b>: pine 1×2, holes ${(J.m*MM/IN).toFixed(2)} in. apart (62 mm). Clamp it on the rod outside the side plate between two jam pairs with blue thread locker, plus a screw through the arm into a nut wrapped round the rod if it slips.`,'leg'],
+    ['Spin it by hand before the legs go on: it should turn with one finger and coast.','rod516']].map((s,i)=>`<div class="step" data-p="${s[1]}"><i>${i+1}</i><span>${s[0]}</span></div>`).join('')}
+   <p class="note">Bearings: the Razor wheels run on 608 skate bearings (8 mm bore), which fit 5/16 rod. If you have a spare Razor wheel, press its two bearings into the blocks (7/8 in. spade bit, 1/4 in. deep) instead of the greased holes.</p>`;
+  $('pg').onclick=()=>{PULLEY='green';save();};$('pl').onclick=()=>{PULLEY='lid';save();};
+  $('p-axle').querySelectorAll('.step').forEach(s=>s.onclick=()=>highlight(s.dataset.p));
+  const lenRows=LINKS.map(L=>`<tr><td>${L.name}</td><td>${L.kind==='plate'?'coroplast, layer '+L.L:'pine 1×2, layer '+L.L}</td><td class="d">${L.kind==='plate'?L.j.join('·'):((L.len*MM/IN).toFixed(2)+' in.')}</td></tr>`).join('');
+  $('p-leg').innerHTML=`<div class="row"><div class="segp"><button id="l1" aria-pressed="${!LEGS2}">One leg</button><button id="l2" aria-pressed="${LEGS2}">Two legs</button></div></div>
+   <div class="nums"><div><b>${(HT*MM/IN).toFixed(1)} in.</b><small>rod centre to hoof</small></div><div class="${hoofGap<-.2?'bad':hoofGap<1.2?'good':''}"><b>${hoofGap.toFixed(1)} in.</b><small>hoof off the road at its lowest</small></div><div><b>${(ADV*MM/IN).toFixed(1)} in.</b><small>hoof travel per crank turn</small></div></div>
+   <p class="note">${hoofGap>1.5?`For hooves that brush the road, the rod needs to be about ${(HT*MM/IN+1).toFixed(1)} in. up; it is ${rodAbove.toFixed(1)}. Lower the A-frame by ${(hoofGap-.5).toFixed(1)} in., or add ${(hoofGap-.5).toFixed(1)} in. of rubber block under each hoof.`:hoofGap<-.2?'The hooves would hit the road: raise the rod or shorten the cannon.':'Hooves brush the road at the bottom of the stride.'}</p>
+   <h2>Your leg, link by link</h2><table class="stack">${lenRows}</table>
+   <p class="note">These are the velocipede lengths your bars are marked with (gaskin FG 327 mm, lower rod CE 426 mm). Hole spacing, centre to centre. Layer 1 sits against the side plate; nylon washers between layers. Pivot B goes through the side plate; C is the crank pin.</p>
+   <h2>Hang it</h2>${[
+    'Crank pin C: 1/4-20 × 3 in. bolt through the crank arm, upper rod and lower rod, nylon washers between, lock nut a quarter turn back.',
+    'Pivot B: 1/4-20 × 2-1/2 in. bolt through the side plate, hip plate and thigh rocker.',
+    'Coroplast tears at a bare bolt: put a fender washer each side of the plate at every hole, or glue a 1-1/2 in. square of 1/8 in. hardboard there first.',
+    two?'Second leg on the other side, crank pointing the opposite way: the legs alternate and one hoof is always lower.':'Prove one leg first; the second goes on the other side, crank pointing the opposite way.'].map((t,i)=>`<div class="step"><i>${i+1}</i><span>${t}</span></div>`).join('')}`;
+  $('l1').onclick=()=>{LEGS2=false;save();};$('l2').onclick=()=>{LEGS2=true;save();};
+  const PL=[
+   ['bike','State 4130 All-Road, 700×38c rear wheel','your bike',''],['rack','Rear rack','rails at the deck’s underside','chk'],['wheel','Rear tyre','27.5 in. outside','' ],
+   ['deck','Razor A deck (13003A-RD)','17.3 × 3.6 in. aluminium, rear wheel slot to the back',''],['redarm','Simpson LSTA9 straps ×2','9 × 1-1/4 in., 20 ga: deck prongs to the red axle','chk'],
+   ['red','Razor A wheels ×2','95 mm urethane, 608 bearings, cord in the gap between',''],['redbolt','Axle bolt','through both wheels',''],
+   ['cage','Paint roller frame, 9 in.','cage ≈ 1.75 in.; bent 1/4 in. wire',''],['handle','Roller handle + 3 bungee cords','strapped along the deck',''],['bungee','Bungee cords','hold the handle to the deck',''],
+   ['aframe','Simpson LSTA12 + LSTA9 ×3','uprights and top ties, #8 screws','chk'],['rod8','#8-32 × 12 in. threaded rod, green cap, brass disc','as built',''],['cord','Paracord belts','red gap → cage → green cap',''],
+   ['rod516','5/16-18 × 24 in. threaded rod, jam nuts','replaces the #8-32','new'],['block','Bearing blocks, pine 1×2 × 2-1/2 in. ×2','21/64 in. hole, greased','new'],['plate','Side plate, 1/2 in. plywood','rod bearing + pivot B','new'],['brace','1×2 braces ×2 per side','side plate to the rack','new'],
+   ['leg','Leg: 2 coroplast plates, 5 pine 1×2 bars','velocipede lengths','']];
+  $('parts').innerHTML=PL.map(([id,n,dd,t])=>`<tr data-p="${id}" class="${HI===id?'on':''}"><td>${n}${t==='new'?'<span class="tag new">new</span>':t==='chk'?'<span class="tag chk">check</span>':''}<small>${dd}</small></td></tr>`).join('');
+  $('parts').querySelectorAll('tr').forEach(r=>r.onclick=()=>{highlight(HI===r.dataset.p?null:r.dataset.p);$('parts').querySelectorAll('tr').forEach(q=>q.classList.toggle('on',q.dataset.p===HI));});
+  tasks();}
+const TASKS=[
+ ['Floor to the top of the Razor deck.','',[['deckTop','in.']]],
+ ['How far in front of the deck’s rear end is the rod, and how far above the deck top?','Measure to the rod centre.',[['rodFwd','in front'],['rodUp','above']]],
+ ['Red wheel axle: how far behind the deck’s rear end, and how far below the deck top (negative)?','',[['redX','behind'],['redY','below']]],
+ ['Roller cage axis: behind the deck end, and above (+) or below (−) the deck top.','',[['cageX','behind'],['cageY','up/down']]],
+ ['Cord groove between the red wheels: string once round, divide by 3.14.','The Razor wheel itself is 95 mm (3.74 in.).',[['groove','groove']]],
+ ['Basket: outside width and length.','The side plates must sit outside this.',[['basketW','width'],['basketL','length']]],
+ ['Count: bike upside down, 10 wheel turns, how many brass-disc turns? Same direction as the wheel (1) or opposite (−1)?','Model with photo values: '+'see the Axle fix tab.',[['count','disc turns']]],
+ ['Photo: the top of the A-frame from straight in front, so I can see which strap the rod passes through on each side.','',[]],
+ ['Photo: the leg laid flat with a tape measure along the long white plate.','To check the plate hole spacing against B–D–F.',[]]];
+function tasks(){$('tasks').innerHTML=TASKS.map(([t,h,f],i)=>`<div class="task"><p><b>${i+1}. ${t}</b>${h?`<small>${h}</small>`:''}</p>${f.length?`<div class="in">${f.map(([k,l])=>`<label>${l}<input type="number" step=".1" data-k="${k}" value="${P[k]}"></label>`).join('')}</div>`:''}</div>`).join('');
+  $('tasks').querySelectorAll('input').forEach(inp=>inp.onchange=()=>{const v=parseFloat(inp.value);if(!isNaN(v)){P[inp.dataset.k]=v;save();}});}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(q=>q.setAttribute('aria-selected',q===b));['axle','leg','parts','do'].forEach(k=>$('p-'+k).hidden=k!==b.dataset.t);});
+// ---------------- run ----------------
+modeUI();resize();let last=performance.now(),dist=0;
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(dirty){build();highlight(HI);}
+  const d=drive();if(playing)dist+=dt*.5*.44704/IN; // 1 mph at half speed, inches of road
+  if(SP.wheel)SP.wheel.rotation.z=-dist/13.75;if(SP.red)SP.red.rotation.z=dist/(P.redD/2);const cageRot=dist/(P.redD/2)*(P.groove/P.cageD)*(P.cross1?-1:1);if(SP.cage)SP.cage.rotation.z=cageRot;
+  const topD=MODE==='fixed'&&PULLEY==='lid'?11.9:P.greenD,cr2=MODE==='fixed'&&PULLEY==='lid'?1:P.cross2,topRot=cageRot*(P.cageD/topD)*(cr2?-1:1);if(SP.top)SP.top.rotation.z=topRot;
+  poseLegs(topRot+1.1);
+  grid.position.x=-((dist*IN)%.1);
+  if(tween){const k=Math.min(1,(now-tween.t0)/650),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;for(const key of ['th','ph','r','tx','ty','tz'])cam[key]=tween.from[key]+(tween.to[key]-tween.from[key])*e;if(k>=1)tween=null;}
+  updCam();scene.background=srgb(css('--paper'));R.render(scene,camera);overlay();requestAnimationFrame(frame);}
+window.__P=P;window.__save=save;window.__setMode=m=>{MODE=m;save();modeUI();};window.__legs=b=>{LEGS2=b;save();};
+requestAnimationFrame(frame);
+})();
+</script>
+</body></html>

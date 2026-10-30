@@ -16,7 +16,7 @@ h1{font:500 17px var(--f-disp);letter-spacing:.14em;text-transform:uppercase;mar
 header a{font:500 12px var(--f-body);color:var(--accent);text-decoration:none;white-space:nowrap}
 main{display:grid;grid-template-columns:1fr 440px;min-height:0}
 .view{position:relative;background:var(--paper);min-height:0;overflow:hidden;touch-action:none;cursor:default}
-.view canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.view canvas{position:absolute;inset:0;width:100%;height:100%;display:block}#ov{pointer-events:none}.nav{display:flex;gap:14px}
 aside{background:var(--panel);border-left:1px solid var(--rule);display:flex;flex-direction:column;min-height:0}
 .bar{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--rule);flex-wrap:wrap;flex-shrink:0}
 .seg{display:flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
@@ -49,18 +49,20 @@ p.note{font-size:12px;color:var(--ink-2);margin:6px 2px}
 @media (max-width:760px){main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}aside{border-left:0;border-top:1px solid var(--rule)}header{padding:7px 10px}h1{font-size:13px;letter-spacing:.08em}header a{display:none}.status{font-size:11px}.seg button,.btn{height:30px;font-size:12px;padding:0 8px}}
 </style></head>
 <body>
-<header><h1>Belt lab</h1><div class="status" id="status"></div><a href="rig3d.html">3D module</a><a href="index.html">All pages</a></header>
+<header><h1>Belt lab</h1><div class="status" id="status"></div><nav class="nav"><a href="rig3d.html">3D module</a><a href="powertrain.html">Powertrain</a><a href="index.html">All pages</a></nav></header>
 <main>
-  <section class="view" id="view"><canvas id="cv"></canvas></section>
+  <section class="view" id="view"><canvas id="cv"></canvas><canvas id="ov"></canvas></section>
   <aside>
     <div class="bar">
-      <div class="seg" role="group" aria-label="View"><button data-v="side" aria-pressed="true">Side</button><button data-v="top">Top</button><button data-v="section">Section</button></div>
+      <div class="seg" role="group" aria-label="View"><button data-v="q" aria-pressed="true">3/4</button><button data-v="side">Side</button><button data-v="top">Top</button><button data-v="rear">Rear</button></div>
+      <div class="seg" role="group" aria-label="Close-up"><button data-c="gap">Red gap</button><button data-c="cage">Cage</button><button data-c="topp">Top pulley</button></div>
       <button class="btn" id="play" aria-pressed="true">Turning</button><button class="btn" id="names" aria-pressed="false">Names</button>
       <div class="seg" role="group" aria-label="Setup"><button data-p="built" aria-pressed="true">As built</button><button data-p="inline">Belt 1 in line</button><button data-p="lid">Lid on top</button></div>
     </div>
     <div class="pane" id="pane"></div>
   </aside>
 </main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (()=>{
 const $=id=>document.getElementById(id),TAU=Math.PI*2,css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim(),IN=.0254;
@@ -117,116 +119,132 @@ function solve(){const tc=tyreC(),c1=CAGE1[P.b1],c2=CAGE2[P.b2cage],tp=TOPS[P.b2
     {n:'left rack rail',x0:-1.5,x1:18,y0:-1.3,y1:-.8,z0:-2.3,z1:-1.9},{n:'right rack rail',x0:-1.5,x1:18,y0:-1.3,y1:-.8,z0:1.9,z1:2.3},{n:'basket floor',x0:0,x1:14.3,y0:-1.45,y1:-1.25,z0:-7.75,z1:7.75}];
   const hits=[];for(const [bn,b] of [['Belt 1',b1],['Belt 2',b2]]){if(!b)continue;for(const k of ['sA','sB']){const [p0,p1]=b.g[k],z0=b.d.z,z1=b.dn.z;for(let i=1;i<40;i++){const t=i/40,x=p0.x+(p1.x-p0.x)*t,y=p0.y+(p1.y-p0.y)*t,z=z0+(z1-z0)*t;for(const o of OB)if(x>o.x0&&x<o.x1&&y>o.y0-.08&&y<o.y1+.08&&z>o.z0&&z<o.z1){if(!hits.some(h=>h.n===o.n&&h.b===bn))hits.push({b:bn,n:o.n,x,y,z});}}}}
   return {tc,red,cageA,cageB,top,sW,sRed,sCage,sTop,legsFwd,N1,N2,N3,N,Nt:Math.PI*P.tyreD/39.4,rpm,Tc,Tlegs,dT1,dT2,Tcage,Tred,Ftyre,tyre,b1,b2,first,parts,hits,OB};}
-// ===================== canvas =====================
-const cv=$('cv'),ctx=cv.getContext('2d'),view=$('view');let VIEW='side',SEL=null,S=null,names=false,playing=true;
-let cam={cx:5,cy:-3,s:20},camT=null;const ang={wheel:0,red:0,cage:0,top:0,belt1:0,belt2:0};
-function resize(){const r=view.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);cv.width=r.width*d;cv.height=r.height*d;cv.style.width=r.width+'px';cv.style.height=r.height+'px';fitTarget(true);}addEventListener('resize',resize);
-function frameBox(){if(VIEW==='section')return {x0:.2,x1:9.6,y0:.3,y1:4.2};
-  if(VIEW==='top')return {x0:-8,x1:20,y0:-13.5,y1:8.5};
-  if(SEL&&S){const c=SEL==='red'?S.red:SEL==='cage'?S.cageA:SEL==='top'?S.top:SEL==='tyre'?{x:(S.red.x+S.tc.x)/2-3,y:S.red.y-2.5,r:3}:null;
-    if(c){const R=Math.max(c.r*2.2,3.2);return {x0:c.x-R,x1:c.x+R,y0:c.y-R,y1:c.y+R};}
-    const b=SEL==='b1'?S.b1:S.b2;if(b){const pts=[...b.g.arc1,...b.g.arc2];const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);return {x0:Math.min(...xs)-1.5,x1:Math.max(...xs)+1.5,y0:Math.min(...ys)-1.5,y1:Math.max(...ys)+1.5};}}
-  return {x0:-7,x1:21,y0:-16,y1:P.b2top==='lid'?15:11.5};}
-function fitTarget(now){const b=frameBox(),W=cv.width,H=cv.height,pad=.92,s=Math.min(W/(b.x1-b.x0),H/(b.y1-b.y0))*pad;const t={cx:(b.x0+b.x1)/2,cy:(b.y0+b.y1)/2,s};if(now){cam=t;camT=null;}else camT={from:Object.assign({},cam),to:t,t0:performance.now()};}
-const X=x=>cv.width/2+(x-cam.cx)*cam.s,Y=y=>cv.height/2-(y-cam.cy)*cam.s,IX=px=>(px-cv.width/2)/cam.s+cam.cx,IY=py=>-(py-cv.height/2)/cam.s+cam.cy;
-const dpr=()=>Math.min(2,devicePixelRatio||1);
-function circle(x,y,r,fill,stroke,lw=1.2){ctx.beginPath();ctx.arc(X(x),Y(y),Math.max(.5,r*cam.s),0,TAU);if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw*dpr();ctx.stroke();}}
-function line(a,b,col,lw,dash){ctx.beginPath();ctx.moveTo(X(a.x),Y(a.y));ctx.lineTo(X(b.x),Y(b.y));ctx.strokeStyle=col;ctx.lineWidth=lw*dpr();ctx.setLineDash(dash||[]);ctx.stroke();ctx.setLineDash([]);}
-function rect(x0,y0,x1,y1,fill,stroke){ctx.beginPath();ctx.rect(X(x0),Y(y1),(x1-x0)*cam.s,(y1-y0)*cam.s);if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=dpr();ctx.stroke();}}
-function spokes(c,r,a,n,col){for(let i=0;i<n;i++){const t=a+i/n*TAU;line({x:c.x+r*.25*Math.cos(t),y:c.y+r*.25*Math.sin(t)},{x:c.x+r*.92*Math.cos(t),y:c.y+r*.92*Math.sin(t)},col,1);}}
-function turnArrow(c,r,sgn){const a0=.6,a1=a0+sgn*1.3,pts=[];for(let i=0;i<=16;i++){const t=a0+(a1-a0)*i/16;pts.push({x:c.x+r*Math.cos(t),y:c.y+r*Math.sin(t)});}
-  ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(X(p.x),Y(p.y)):ctx.moveTo(X(p.x),Y(p.y)));ctx.strokeStyle=css('--green');ctx.lineWidth=1.6*dpr();ctx.stroke();
-  const t=a1,tip={x:c.x+r*Math.cos(t),y:c.y+r*Math.sin(t)},tx=-Math.sin(t)*sgn,ty=Math.cos(t)*sgn,nx=Math.cos(t),ny=Math.sin(t),h=.32*Math.min(1.5,r/2+.4);
-  ctx.beginPath();ctx.moveTo(X(tip.x+tx*h),Y(tip.y+ty*h));ctx.lineTo(X(tip.x+nx*h*.55),Y(tip.y+ny*h*.55));ctx.lineTo(X(tip.x-nx*h*.55),Y(tip.y-ny*h*.55));ctx.closePath();ctx.fillStyle=css('--green');ctx.fill();}
-const lerpCol=(a,b,t)=>{const pa=hex(a),pb=hex(b);return `rgb(${pa.map((v,i)=>Math.round(v+(pb[i]-v)*t)).join(',')})`;};
-function hex(c){c=c.trim();if(c.startsWith('#')){if(c.length===4)c='#'+[...c.slice(1)].map(q=>q+q).join('');return [1,3,5].map(i=>parseInt(c.slice(i,i+2),16));}const m=c.match(/\d+/g);return m?m.slice(0,3).map(Number):[0,0,0];}
-// draw one belt: thickness and colour show tension; on each pulley the gripping arc (where tension changes) is drawn bright, the idle arc dim
-function drawBelt(b,key,hl){if(!b)return;const Tmax=Math.max(b.T1,1),tc=css('--tight'),sc=css('--slack'),bad=css('--hot');
-  const wOf=T=>(1.2+4.2*T/Tmax)*(hl?1.25:1);const colOf=T=>lerpCol(sc,tc,Math.max(0,Math.min(1,(T-b.T2)/Math.max(.01,b.T1-b.T2))));
-  const seg=(p,q,T,dim)=>{ctx.beginPath();ctx.moveTo(X(p.x),Y(p.y));ctx.lineTo(X(q.x),Y(q.y));ctx.strokeStyle=colOf(T);ctx.globalAlpha=dim?.35:1;ctx.lineWidth=wOf(T)*dpr();ctx.lineCap='round';ctx.stroke();ctx.globalAlpha=1;};
-  const arcT=(arc,th,phi,mu,T0,T1,driver)=>{const L=plen(arc),n=arc.length;let acc=0;for(let i=1;i<n;i++){acc+=Math.hypot(arc[i].x-arc[i-1].x,arc[i].y-arc[i-1].y);const f=acc/L*th,idle=th-phi;
-      let T,dim;if(f<idle){T=T0;dim=true;}else{const u=f-idle;T=driver?T0*Math.exp(-mu*u):T0*Math.exp(mu*u);dim=false;}seg(arc[i-1],arc[i],Math.max(b.T2,Math.min(b.T1,T)),dim);}};
-  const [tA,tB]=b.g[b.tk],[sA,sB]=b.g[b.sk];seg(tB,tA,b.T1);seg(sA,sB,b.T2);
-  arcT(b.arcD,b.g.th1,b.phi1,b.d.mu,b.T1,b.T2,true);arcT(b.arcN,b.g.th2,b.phi2,b.dn.mu,b.T2,b.T1,false);
-  // moving marks along the cord show travel; on a slipping pulley the pulley's own marks fall behind
-  const path=[tB,tA,...b.arcD,sA,sB,...b.arcN];ctx.beginPath();path.forEach((p,i)=>i?ctx.lineTo(X(p.x),Y(p.y)):ctx.moveTo(X(p.x),Y(p.y)));ctx.closePath();
-  ctx.setLineDash([2*dpr(),.9*cam.s]);ctx.lineDashOffset=-ang[key]*cam.s;ctx.strokeStyle=css('--paper');ctx.lineWidth=1.4*dpr();ctx.stroke();ctx.setLineDash([]);
-  if(b.slip){for(const [arc,th,phi] of [[b.arcD,b.g.th1,b.phi1],[b.arcN,b.g.th2,b.phi2]]){if(phi>=th-1e-6){ctx.beginPath();arc.forEach((p,i)=>i?ctx.lineTo(X(p.x),Y(p.y)):ctx.moveTo(X(p.x),Y(p.y)));ctx.strokeStyle=bad;ctx.lineWidth=(wOf(b.T1)+5)*dpr();ctx.globalAlpha=.25+.2*Math.sin(performance.now()/120);ctx.stroke();ctx.globalAlpha=1;}}}}
-function tag(p,t,dx=8,dy=-8){if(!names)return;ctx.font=`500 ${11*dpr()}px ${css('--f-body')}`;ctx.fillStyle=css('--ink-3');ctx.fillText(t,X(p.x)+dx*dpr(),Y(p.y)+dy*dpr());}
-function drawSide(){const s=S,ink=css('--ink'),ink3=css('--ink-3'),metal=css('--metal'),paper=css('--paper');
-  // tyre, rack, deck, A-frame, handle: context drawn quietly
-  circle(s.tc.x,s.tc.y,P.tyreD/2,null,ink,9*cam.s/20);spokes(s.tc,P.tyreD/2-.6,ang.wheel,18,ink3+'55');
-  rect(-1.5,-1.3,18,-.8,ink3+'55');rect(0,-1.45,14.3,-1.25,ink3+'33');rect(0,-1,17.3,0,metal+'aa',metal);rect(4,0,10.5,1.2,css('--orange')+'99');
-  const r=P.rod;line({x:r.x-7,y:0},r,metal,4*cam.s/20+1);line({x:Math.min(17.2,r.x+2.6),y:0},r,metal,4*cam.s/20+1);circle(12.82,5.97,.12,ink3);
-  // red-wheel arm hangs from the rack
-  line({x:.4,y:-1.3},{x:s.red.x+.7,y:s.red.y-1.4},metal,3.5*cam.s/20+1);
-  // pulleys
-  circle(s.red.x,s.red.y,P.tread/2,css('--red')+'cc',css('--red'));circle(s.red.x,s.red.y,P.groove/2,null,paper,1);spokes(s.red,P.tread/2,ang.red,8,paper+'aa');
-  circle(P.cage.x,P.cage.y,P.capD/2,css('--orange')+'55',css('--orange'));circle(P.cage.x,P.cage.y,s.cageA.r,null,ink3,1);circle(P.cage.x,P.cage.y,s.cageB.r,null,ink3,1);spokes(P.cage,P.capD/2,ang.cage,6,ink3);
-  if(P.b2top!=='green')circle(r.x,r.y,P.greenD/2,null,css('--green'),1);
-  const tcol=P.b2top==='green'?css('--green'):P.b2top==='brass'?css('--brass'):css('--orange');circle(r.x,r.y,s.top.r,tcol+'44',tcol);spokes(r,s.top.r,ang.top,P.b2top==='lid'?10:5,tcol);circle(r.x,r.y,.16,ink);
-  drawBelt(s.b1,'belt1',SEL==='b1');drawBelt(s.b2,'belt2',SEL==='b2');
-  // tyre contact: push into the tyre, drag along it
-  const n={x:s.red.x-s.tc.x,y:s.red.y-s.tc.y},nl=Math.hypot(n.x,n.y);n.x/=nl;n.y/=nl;const C={x:s.red.x-n.x*P.tread/2,y:s.red.y-n.y*P.tread/2};
-  circle(C.x,C.y,.22,s.tyre.slip?css('--hot'):css('--red'));
-  turnArrow(s.tc,P.tyreD/2-2.2,s.sW);turnArrow(s.red,P.tread/2+.55,s.sRed);turnArrow(P.cage,P.capD/2+.5,s.sCage);turnArrow(r,s.top.r+.5,s.sTop);
-  for(const h of s.hits){const p={x:h.x,y:h.y},k=.35;line({x:p.x-k,y:p.y-k},{x:p.x+k,y:p.y+k},css('--hot'),2.4);line({x:p.x-k,y:p.y+k},{x:p.x+k,y:p.y-k},css('--hot'),2.4);}
-  tag(s.red,'red wheels',16,20);tag(P.cage,'roller cage',-70,-18);tag(r,TOPS[P.b2top].n.split(' (')[0],14,-14);tag({x:s.tc.x-6,y:s.tc.y+11},'rear tyre');tag({x:2,y:0},'deck',0,-6);
-  if(SEL){const info=selInfo();if(info){ctx.font=`600 ${11.5*dpr()}px ${css('--f-mono')}`;ctx.fillStyle=css('--ink');let y=14*dpr();for(const t of info){ctx.fillText(t,12*dpr(),y+6*dpr());y+=16*dpr();}}}}
 function selInfo(){const s=S;const b=SEL==='b1'?s.b1:SEL==='b2'?s.b2:null;if(b)return [`tight ${f1(b.T1)} N   slack ${f1(b.T2)} N`,`wrap ${deg(b.g.th1)}° on ${b.d.s}, ${deg(b.g.th2)}° on ${b.dn.s}`,`${b.slip?'slipping':Math.round(100/b.margin)+'% of its grip used'}`];
   if(SEL==='red')return [`turns ${f1(s.N1)}× the wheel`,`${f1(s.rpm.red)} rpm`,`belt 1 wraps ${s.b1?deg(s.b1.g.th1):'–'}°`];
   if(SEL==='cage')return [`${f1(s.rpm.cage)} rpm`,`belt 1 on ${CAGE1[P.b1].n.toLowerCase()}`,`belt 2 on ${CAGE2[P.b2cage].n.toLowerCase()}`];
   if(SEL==='top')return [`${f1(s.rpm.top)} rpm, ${s.sTop<0?'clockwise':'anticlockwise'} seen from the right`,`legs ${s.legsFwd?'walk forward':'walk backward'}`,`load ${s.Tc.toFixed(2)} N·m`];
   if(SEL==='tyre')return [`drag needed ${f1(s.Ftyre)} N`,`grip ${f1(s.tyre.cap)} N (push ${P.push} N × ${P.mu.tyre})`,s.tyre.slip?'slipping':Math.round(100/s.tyre.margin)+'% of grip used'];return null;}
 const deg=r=>(r*180/Math.PI).toFixed(0);
-function drawTop(){const s=S,ink=css('--ink'),ink3=css('--ink-3'),metal=css('--metal');const Z=z=>-z; // screen up = rider's left
-  const R=(x0,z0,x1,z1,fill,stroke)=>rect(x0,Z(z1),x1,Z(z0),fill,stroke);
-  R(0,-7.75,14.3,7.75,null,ink3+'88');R(2.6,-1.8,17.3,1.8,metal+'66',metal);R(0,-1.8,2.6,-.95,metal+'66',metal);R(0,.95,2.6,1.8,metal+'66',metal);R(4,-.6,10.5,.6,css('--orange')+'88');
-  R(s.tc.x-P.tyreD/2,-.75,s.tc.x+P.tyreD/2,.75,ink+'cc');
-  const half=P.gap/25.4/2;R(s.red.x-P.tread/2,half,s.red.x+P.tread/2,half+.945,css('--red')+'cc');R(s.red.x-P.tread/2,-half-.945,s.red.x+P.tread/2,-half,css('--red')+'cc');
-  R(P.cage.x-P.wireD/2,P.capL,P.cage.x+P.wireD/2,P.capR,ink3+'55',ink3);R(P.cage.x-P.capD/2,P.capL-.45,P.cage.x+P.capD/2,P.capL+.45,css('--orange'));R(P.cage.x-P.capD/2,P.capR-.45,P.cage.x+P.capD/2,P.capR+.45,css('--orange'));
-  line({x:P.cage.x,y:Z(P.capL-.45)},{x:P.cage.x+2.5,y:Z(P.capL-1.6)},metal,2);line({x:P.cage.x+2.5,y:Z(P.capL-1.6)},{x:-.3,y:Z(-.4)},metal,2);
-  if(P.b1!=='capL'&&P.b1!=='capR')R(P.cage.x-P.tapeD/2,-.4,P.cage.x+P.tapeD/2,.4,ink+'aa');if(P.b2cage==='tape2')R(P.cage.x-P.tapeD/2,P.b2z-.4,P.cage.x+P.tapeD/2,P.b2z+.4,ink+'aa');
-  line({x:P.rod.x,y:Z(-12.6)},{x:P.rod.x,y:Z(6.2)},metal,2.2);R(P.rod.x-.08,-1.95,P.rod.x+.08,-1.75,metal);R(P.rod.x-.08,1.75,P.rod.x+.08,1.95,metal);
-  R(P.rod.x-P.greenD/2,P.greenZ-.6,P.rod.x+P.greenD/2,P.greenZ+.6,css('--green')+'cc');R(P.rod.x-P.brassD/2,P.brassZ-.06,P.rod.x+P.brassD/2,P.brassZ+.06,css('--brass'));
-  if(P.b2top==='lid')R(P.rod.x-P.lidD/2,P.lidZ-.4,P.rod.x+P.lidD/2,P.lidZ+.4,css('--orange')+'88');
-  // belts in plan: each is a line from where it leaves one pulley to where it meets the next
-  const bl=(b,hl)=>{if(!b)return;const mid=(a,c)=>({x:(a.x+c.x)/2,y:0});line({x:b.d.x,y:Z(b.d.z)},{x:b.dn.x,y:Z(b.dn.z)},b.fleet>3?css('--hot'):css('--tight'),hl?4:2.6);circle(b.dn.x,Z(b.dn.z),.28,css('--paper'),b.fleet>3?css('--hot'):css('--tight'),2);};
-  bl(s.b1,SEL==='b1');bl(s.b2,SEL==='b2');
-  tag({x:P.cage.x,y:Z(P.capL)},'left end cap',-80,4);tag({x:s.red.x,y:Z(-1.3)},'red wheels',-20,-6);tag({x:P.rod.x,y:Z(P.brassZ)},'brass disc',8,-8);tag({x:P.rod.x,y:Z(P.greenZ)},'green cap',12,-10);
-  ctx.font=`500 ${11*dpr()}px ${css('--f-body')}`;ctx.fillStyle=css('--ink-3');ctx.fillText('drag the white dots along the cage',12*dpr(),cv.height-14*dpr());}
-function drawSection(){const ink=css('--ink'),ink3=css('--ink-3'),red=css('--red');const mm=1/25.4;
-  // three cuts, true scale, side by side: red wheels on the tyre, the cage end cap, the green cap
-  const base=.6,ox1=1.6,ox2=5,ox3=8.2;
-  // 1. red wheels and tyre
-  const g=P.gap*mm,ww=24*mm,tr=19*mm;ctx.save();
-  circle(ox1,base+tr,tr,ink+'dd');rect(ox1-g/2-ww,base+2*tr,ox1-g/2,base+2*tr+1.4,red+'cc');rect(ox1+g/2,base+2*tr,ox1+g/2+ww,base+2*tr+1.4,red+'cc');
-  const cordY=base+2*tr+(P.tread-P.groove)/2;circle(ox1,cordY,P.cord*mm/2,css('--tight'));
-  line({x:ox1,y:base-.1},{x:ox1,y:base+2*tr+1.6},ink3,1,[3,3]);
-  // 2. end cap: a flat cylinder; the cord can slide off either edge
-  rect(ox2-.45,base+.4,ox2+.45,base+.4+P.capD/2,css('--orange')+'bb');rect(ox2-.06,base+.4,ox2+.06,base+.4+P.capD/2+.05,ink3+'55');circle(ox2+.28,base+.4+P.capD/2+P.cord*mm/2,P.cord*mm/2,css('--tight'));
-  for(let i=-1;i<=1;i+=2){line({x:ox2+i*.45,y:base+.4},{x:ox2+i*.45,y:base+.4+P.capD/2},css('--orange'),1.5);}
-  // 3. green cap: plastic cup, outside face is the pulley; no flange
-  rect(ox3-.62,base+.4,ox3+.62,base+.4+P.greenD/2,css('--green')+'bb');rect(ox3-.62,base+.4,ox3+.62,base+.5,ink3);circle(ox3,base+.4+P.greenD/2+P.cord*mm/2,P.cord*mm/2,css('--tight'));
-  ctx.font=`500 ${11*dpr()}px ${css('--f-body')}`;ctx.fillStyle=css('--ink-2');ctx.fillText('red wheels on the tyre',X(ox1-1.1),Y(base+2*tr+2.1));ctx.fillText('cage end cap',X(ox2-.7),Y(base+2.2));ctx.fillText('green cap',X(ox3-.6),Y(base+2.2));
-  ctx.restore();}
-function draw(){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle=css('--paper');ctx.fillRect(0,0,cv.width,cv.height);if(!S)return;if(VIEW==='side')drawSide();else if(VIEW==='top')drawTop();else drawSection();}
-// ===================== interaction: tap to zoom into a part, drag to move it =====================
-let drag=null;
-function hitSide(px,py){const x=IX(px),y=IY(py),s=S;const d=(c,r)=>Math.hypot(x-c.x,y-c.y)<r;
-  if(d(s.red,P.tread/2+.3))return 'red';if(d(P.cage,P.capD/2+.3))return 'cage';if(d(P.rod,s.top.r+.3))return 'top';
-  for(const [k,b] of [['b1',s.b1],['b2',s.b2]]){if(!b)continue;for(const st of ['sA','sB']){const [a,c]=b.g[st];const dx=c.x-a.x,dy=c.y-a.y,l2=dx*dx+dy*dy;let t=((x-a.x)*dx+(y-a.y)*dy)/l2;t=Math.max(0,Math.min(1,t));if(Math.hypot(x-a.x-t*dx,y-a.y-t*dy)<.45)return k;}}
-  if(Math.hypot(x-s.tc.x,y-s.tc.y)<P.tyreD/2+.4&&Math.hypot(x-s.tc.x,y-s.tc.y)>P.tyreD/2-1)return 'tyre';return null;}
-view.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect(),px=(e.clientX-r.left)*dpr(),py=(e.clientY-r.top)*dpr();view.setPointerCapture(e.pointerId);
-  if(VIEW==='top'){const x=IX(px),z=-IY(py);for(const k of ['b1','b2']){const b=S[k];if(b&&Math.hypot(x-b.dn.x,-z+b.dn.z)<.8&&k==='b1'||(b&&k==='b2'&&Math.hypot(x-b.d.x,-z+b.d.z)<.8)){drag={k:'z'+k,moved:false};return;}}drag=null;return;}
-  if(VIEW!=='side')return;const h=hitSide(px,py);drag={h,px,py,moved:false};});
-view.addEventListener('pointermove',e=>{if(!drag)return;const r=cv.getBoundingClientRect(),px=(e.clientX-r.left)*dpr(),py=(e.clientY-r.top)*dpr();
-  if(drag.k){const z=Math.max(P.capL-.4,Math.min(P.capR+.4,-IY(py)));drag.moved=true;if(drag.k==='zb1'){P.b1=Math.abs(z-P.capL)<.5?'capL':Math.abs(z-P.capR)<.5?'capR':'tape1';if(P.b1==='tape1')P.zt1=z;}else{P.b2z=+z.toFixed(2);}preset='';update();return;}
-  if(!drag.moved&&Math.hypot(px-drag.px,py-drag.py)<6*dpr())return;drag.moved=true;const x=IX(px),y=IY(py);
-  if(drag.h==='cage'){P.cage={x:+x.toFixed(2),y:+y.toFixed(2)};}else if(drag.h==='top'){P.rod={x:+x.toFixed(2),y:+y.toFixed(2)};}
-  else if(drag.h==='red'){const tc=tyreC(),R=P.tyreD/2+P.tread/2,a=Math.atan2(y-tc.y,x-tc.x);P.red={x:+(tc.x+R*Math.cos(a)).toFixed(2),y:+(tc.y+R*Math.sin(a)).toFixed(2)};}
-  else return;preset='';update(true);});
-view.addEventListener('pointerup',e=>{if(drag&&!drag.moved&&VIEW==='side'){SEL=drag.h&&drag.h!==SEL?drag.h:null;fitTarget();panel();}else if(drag&&drag.moved){save();panel();}drag=null;});
+// ===================== 3D scene, same parts and positions as the photos =====================
+const T=window.THREE,cv=$('cv'),ov=$('ov'),og=ov.getContext('2d'),view=$('view');let SEL=null,S=null,names=false,playing=true;
+const ang={wheel:0,red:0,cage:0,top:0,belt1:0,belt2:0};
+const R=new T.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(Math.min(2,devicePixelRatio||1));R.shadowMap.enabled=true;R.outputEncoding=T.sRGBEncoding;
+const scene=new T.Scene(),camera=new T.PerspectiveCamera(32,1,.005,30),srgb=c=>new T.Color(c.trim()).convertSRGBToLinear();
+scene.add(new T.HemisphereLight(0xffffff,0x8a7d6a,.95));const sun=new T.DirectionalLight(0xffffff,.75);sun.position.set(1.2,3,2.2);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-1.2,right:1.2,top:1.2,bottom:-1.2});scene.add(sun);
+const fill=new T.DirectionalLight(0xe4e9ff,.35);fill.position.set(-2,1,-1.5);scene.add(fill);
+const ground=new T.Mesh(new T.PlaneGeometry(8,8),new T.ShadowMaterial({opacity:.13}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+const mat=(c,o={})=>new T.MeshStandardMaterial(Object.assign({color:srgb(c),roughness:.6},o));
+const v3=(x,y,z)=>new T.Vector3(x,y,z),DT=33,W=(p,z=0)=>v3(p.x*IN,(p.y+DT)*IN,z*IN);  // the deck top is 33 in. off the floor
+const box=(cx,cy,cz,sx,sy,sz,m)=>{const o=new T.Mesh(new T.BoxGeometry(sx*IN,sy*IN,sz*IN),m);o.position.copy(W({x:cx,y:cy},cz));return o;};
+const cylAB=(a,b,r,m,seg=12)=>{const d=new T.Vector3().subVectors(b,a),L=d.length(),o=new T.Mesh(new T.CylinderGeometry(r,r,Math.max(1e-5,L),seg),m);o.position.copy(a).addScaledVector(d,.5);o.quaternion.setFromUnitVectors(v3(0,1,0),d.normalize());return o;};
+const discZ=(r,t,m,seg=40,open=false)=>{const o=new T.Mesh(new T.CylinderGeometry(r*IN,r*IN,t*IN,seg,1,open),m);o.rotation.x=Math.PI/2;return o;};
+const tube=(pts,r,m,seg)=>new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts,false,'catmullrom',.2),seg||pts.length*6,r,8,false),m);
+function strap(a,b,n,m){const d=new T.Vector3().subVectors(b,a),L=d.length(),o=new T.Mesh(new T.BoxGeometry(1.25*IN,L,.036*IN),m||mat('#b9bec3',{metalness:.6,roughness:.42}));const y=d.clone().normalize(),z=n.clone().normalize(),x=new T.Vector3().crossVectors(y,z).normalize();z.crossVectors(x,y);o.quaternion.setFromRotationMatrix(new T.Matrix4().makeBasis(x,y,z));o.position.copy(a).addScaledVector(d,.5);o.castShadow=true;return o;}
+function arrowArc(c,z,r,dir,start=.5,span=1.6){const g=new T.Group(),m=new T.MeshBasicMaterial({color:srgb(css('--green'))});const pts=[];for(let i=0;i<=20;i++){const t=start+dir*span*i/20;pts.push(v3(Math.cos(t)*r*IN,Math.sin(t)*r*IN,0));}
+  g.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),30,.0016,6),m));const te=start+dir*span,cone=new T.Mesh(new T.ConeGeometry(.0055,.016,10),m);cone.position.set(Math.cos(te)*r*IN,Math.sin(te)*r*IN,0);cone.quaternion.setFromUnitVectors(v3(0,1,0),v3(-Math.sin(te)*dir,Math.cos(te)*dir,0));g.add(cone);g.position.copy(W(c,z));return g;}
+let rig=new T.Group();scene.add(rig);const G={},PICK=[],PULSE=[],BEADS=[];
+const pick=(o,sel)=>{o.traverse(m=>{if(m.isMesh){m.userData.sel=sel;PICK.push(m);}});return o;};
+const lerpC=(a,b,t)=>a.clone().lerp(b,Math.max(0,Math.min(1,t)));
+function build(){scene.remove(rig);rig.traverse(o=>{if(o.geometry)o.geometry.dispose();});rig=new T.Group();scene.add(rig);PICK.length=0;PULSE.length=0;BEADS.length=0;const s=S,metal=mat('#c3c8cd',{metalness:.55,roughness:.35}),black=mat('#26241f',{roughness:.8});
+  // rear tyre and wheel
+  {const g=new T.Group();g.position.copy(W(s.tc));g.add(new T.Mesh(new T.TorusGeometry((P.tyreD/2-.75)*IN,.75*IN,16,80),mat('#1e1d1b',{roughness:.9})));g.add(new T.Mesh(new T.TorusGeometry((P.tyreD/2-1.6)*IN,.18*IN,8,64),mat('#cfd4d8',{metalness:.55,roughness:.3})));
+    const sp=[];for(let i=0;i<28;i++){const a=i/28*TAU,z=i%2?.03:-.03;sp.push(v3(0,0,z),v3(Math.cos(a)*(P.tyreD/2-1.7)*IN,Math.sin(a)*(P.tyreD/2-1.7)*IN,0));}g.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(sp),new T.LineBasicMaterial({color:0x9aa0a6})));
+    const mk=new T.Mesh(new T.BoxGeometry(.05,.022,.04),mat(css('--hot')));mk.position.y=(P.tyreD/2-.1)*IN;g.add(mk);rig.add(pick(g,'tyre'));G.wheel=g;}
+  // frame stub, saddle, rack, basket
+  {const tc=W(s.tc),bb=W({x:s.tc.x+16.5,y:10.8-DT}),sad=W({x:28,y:7});for(const z of [-.065,.065]){rig.add(cylAB(v3(tc.x,tc.y,z),v3(bb.x,bb.y,z*.4),.009,black));rig.add(cylAB(v3(tc.x,tc.y,z),v3(sad.x-.03,sad.y-.2,z*.3),.008,black));}
+    rig.add(cylAB(bb,v3(sad.x-.03,sad.y-.2,0),.016,black));const sd=new T.Mesh(new T.BoxGeometry(10.5*IN,2*IN,6.5*IN),black);sd.position.copy(W({x:30.2,y:7.4}));rig.add(sd);
+    for(const z of [-2.1,2.1]){rig.add(cylAB(W({x:-1.5,y:-1.05},z),W({x:18,y:-1.05},z),.0055,black));rig.add(cylAB(W({x:-.5,y:-1.05},z),v3(tc.x,tc.y,z*IN*1.25),.0055,black));}
+    for(const x of [-1.2,5,11,17.5])rig.add(cylAB(W({x,y:-1.05},-2.1),W({x,y:-1.05},2.1),.0045,black));
+    const pts=[],y=-1.35,hw=7.75,top=-.2;for(let k=0;k<=10;k++){const z=-hw+2*hw*k/10;pts.push(W({x:0,y},z),W({x:14.3,y},z));}for(let k=0;k<=7;k++){const x=14.3*k/7;pts.push(W({x,y},-hw),W({x,y},hw));}
+    for(const [x,z] of [[0,-hw],[0,hw],[14.3,-hw],[14.3,hw]])pts.push(W({x,y},z),W({x,y:top},z));for(const z of [-hw,hw])pts.push(W({x:0,y:top},z),W({x:14.3,y:top},z));for(const x of [0,14.3])pts.push(W({x,y:top},-hw),W({x,y:top},hw));
+    rig.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(pts),new T.LineBasicMaterial({color:srgb('#2a2824')})));}
+  // Razor A deck, rear fork slot open
+  {const al=mat('#cfd4d8',{metalness:.55,roughness:.3});rig.add(box(9.95,-.07,0,14.7,.14,3.6,al));for(const sg of [-1,1]){rig.add(box(1.3,-.07,sg*1.375,2.6,.14,.85,al));rig.add(box(8.65,-.5,sg*1.74,17.3,.95,.12,al));}}
+  // A-frame: LSTA12 behind, LSTA9 in front, both sides; lower #8-32 tie rod
+  {const r=P.rod;for(const z of [-1.86,1.86]){rig.add(strap(W({x:r.x-7.2,y:0},z),W({x:r.x+.5,y:r.y+.9},z),v3(0,0,1)));rig.add(strap(W({x:Math.min(17.1,r.x+2.6),y:0},z),W({x:r.x-.3,y:r.y+.9},z),v3(0,0,1)));}
+    rig.add(cylAB(W({x:12.82,y:5.97},-2.3),W({x:12.82,y:5.97},2.3),.082*IN,mat('#d3d7db',{metalness:.6,roughness:.35}),8));}
+  // roller handle on the deck, its wire to the cage
+  {const o=mat(css('--orange'),{roughness:.5});const h=new T.Mesh(new T.CylinderGeometry(.55*IN,.6*IN,6.5*IN,16),o);h.rotation.z=Math.PI/2;h.position.copy(W({x:7.25,y:.6}));rig.add(h);
+    rig.add(tube([W({x:4,y:.6}),W({x:1.5,y:.5},-.2),W({x:-.2,y:.1},-.6),W({x:P.cage.x+1.6,y:P.cage.y+.2},P.capL-.9),W({x:P.cage.x,y:P.cage.y},P.capL-1.1),W({x:P.cage.x,y:P.cage.y},P.capL-.2)],.125*IN,mat('#d3d7db',{metalness:.6,roughness:.35}),60));}
+  // red wheels on their LSTA9 arms hanging from the rack
+  {const g=new T.Group();g.position.copy(W(P.red));const half=P.gap/25.4/2+.472,red=mat(css('--red'),{roughness:.45}),hub=mat('#9a9a96');
+    for(const z of [-half,half]){const w=discZ(P.tread/2,24/25.4,red,48);w.position.z=z*IN;g.add(w);const hb=discZ(P.tread/2*.58,24.4/25.4,hub,20);hb.position.z=z*IN;g.add(hb);for(let i=0;i<8;i++){const a=i/8*TAU,sp=new T.Mesh(new T.BoxGeometry(.18*IN,P.tread*.2*IN,.3*IN),hub);sp.position.set(Math.cos(a)*P.tread*.3*IN,Math.sin(a)*P.tread*.3*IN,z*IN);sp.rotation.z=a+Math.PI/2;g.add(sp);}}
+    rig.add(pick(g,'red'));G.red=g;rig.add(cylAB(W(P.red,-1.6),W(P.red,1.6),.125*IN,mat('#d3d7db',{metalness:.6}),10));
+    for(const z of [-1.45,1.45]){const a=W({x:.4,y:-1.3},z),b=W(P.red,z),d=new T.Vector3().subVectors(b,a);rig.add(strap(a,a.clone().addScaledVector(d,1.15),v3(0,0,1)));}}
+  // roller cage across the bike
+  {const g=new T.Group();g.position.copy(W(P.cage));const len=P.capR-P.capL,mid=(P.capR+P.capL)/2,o=mat(css('--orange'),{roughness:.5}),zn=mat('#d3d7db',{metalness:.6,roughness:.35});
+    for(let i=0;i<6;i++){const a=i/6*TAU,b=new T.Mesh(new T.CylinderGeometry(1.3/25.4*IN,1.3/25.4*IN,len*IN,6),zn);b.rotation.x=Math.PI/2;b.position.set(Math.cos(a)*P.wireD/2*IN,Math.sin(a)*P.wireD/2*IN,mid*IN);g.add(b);}
+    for(const z of [P.capL,P.capR]){const c=discZ(P.capD/2,.9,o,28);c.position.z=z*IN;g.add(c);}
+    if(P.b1==='tape1'||P.b1==='wires1'){if(P.b1==='tape1'){const t=discZ(P.tapeD/2,.75,mat('#1b1b1b',{roughness:.4}),32);t.position.z=0;g.add(t);}}
+    if(P.b2cage==='tape2'){const t=discZ(P.tapeD/2,.75,mat('#1b1b1b',{roughness:.4}),32);t.position.z=P.b2z*IN;g.add(t);}
+    const mkr=new T.Mesh(new T.BoxGeometry(.08*IN,.3*IN,(len-.2)*IN),mat(css('--hot')));mkr.position.set(0,P.wireD/2*IN,mid*IN);g.add(mkr);
+    rig.add(pick(g,'cage'));G.cage=g;}
+  // top rod with green cap, brass disc, and the lid when chosen
+  {const g=new T.Group();g.position.copy(W(P.rod));const zn=mat('#d3d7db',{metalness:.6,roughness:.35});const rod=new T.Mesh(new T.CylinderGeometry(.082*IN,.082*IN,18.8*IN,10),zn);rod.rotation.x=Math.PI/2;rod.position.z=-3.2*IN;g.add(rod);
+    const gc=discZ(P.greenD/2,1.2,mat(css('--green'),{roughness:.5,side:T.DoubleSide}),36,true);gc.position.z=P.greenZ*IN;g.add(gc);const back=discZ(P.greenD/2,.06,mat(css('--green')),36);back.position.z=(P.greenZ+.6)*IN;g.add(back);const sp=discZ(.35,1.1,mat('#eeeeea'),16);sp.position.z=P.greenZ*IN;g.add(sp);
+    const br=discZ(P.brassD/2,.06,mat(css('--brass'),{metalness:.7,roughness:.3}),48);br.position.z=P.brassZ*IN;g.add(br);
+    for(const z of [-2.05,-1.65,1.65,2.05,P.brassZ+.15]){const n=new T.Mesh(new T.CylinderGeometry(.17*IN,.17*IN,.13*IN,6),zn);n.rotation.x=Math.PI/2;n.position.z=z*IN;g.add(n);}
+    if(P.b2top==='lid'){for(const sg of [-1,1]){const l=new T.Mesh(new T.CylinderGeometry((P.lidD/2+.15)*IN,(P.lidD/2+.45)*IN,.4*IN,64),mat('#f0802e',{roughness:.5}));l.rotation.x=sg*Math.PI/2;l.position.z=(P.lidZ+sg*.2)*IN;g.add(l);}}
+    const mk=new T.Mesh(new T.BoxGeometry(.1*IN,.5*IN,.1*IN),mat(css('--hot')));mk.position.set(0,(P.b2top==='lid'?P.lidD/2:P.greenD/2)*IN,(P.b2top==='lid'?P.lidZ+.5:P.greenZ-.65)*IN);g.add(mk);
+    rig.add(pick(g,'top'));G.top=g;}
+  // belts: strands run between the pulleys' own planes, so a belt off line shows as a slanted cord
+  for(const [key,b] of [['b1',s.b1],['b2',s.b2]])if(b)beltMesh(b,key);
+  // tyre contact
+  {const n={x:P.red.x-s.tc.x,y:P.red.y-s.tc.y},l=Math.hypot(n.x,n.y),C={x:P.red.x-n.x/l*P.tread/2,y:P.red.y-n.y/l*P.tread/2};const c=new T.Mesh(new T.SphereGeometry(.2*IN,16,12),new T.MeshBasicMaterial({color:srgb(s.tyre.slip?css('--hot'):css('--red'))}));c.position.copy(W(C,0));rig.add(c);if(s.tyre.slip)PULSE.push(c);G.contact=C;}
+  // turning arrows
+  rig.add(arrowArc(s.tc,1.2,P.tyreD/2-2.6,s.sW,1.15,.9));rig.add(arrowArc(P.red,1.6,P.tread/2+.45,s.sRed));rig.add(arrowArc(P.cage,P.capR+.6,P.capD/2+.45,s.sCage));rig.add(arrowArc(P.rod,2.4,(P.b2top==='lid'?P.lidD/2:P.greenD/2)+.5,s.sTop));
+  // collisions
+  for(const h of s.hits){const m=new T.MeshBasicMaterial({color:srgb(css('--hot'))}),k=.35;for(const sg of [-1,1])rig.add(cylAB(W({x:h.x-k,y:h.y-k*sg},h.z),W({x:h.x+k,y:h.y+k*sg},h.z),.05*IN,m,6));}
+  rig.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});}
+function beltMesh(b,key){const tc=srgb(css('--tight')),sc=srgb(css('--slack')),pale=srgb(css('--paper'));const colOf=Tn=>lerpC(sc,tc,(Tn-b.T2)/Math.max(.01,b.T1-b.T2)),radOf=Tn=>(.045+.075*Tn/Math.max(b.T1,1))*IN*(SEL===key?1.25:1);
+  const zD=b.d.z,zN=b.dn.z,g=new T.Group();
+  const seg=(pts,Tn,idle)=>{const m=new T.MeshStandardMaterial({color:idle?lerpC(colOf(Tn),pale,.55):colOf(Tn),roughness:.6,emissive:new T.Color(0),transparent:!!idle,opacity:idle?.7:1});const o=pts.length===2?cylAB(pts[0],pts[1],radOf(Tn),m,8):tube(pts,radOf(Tn),m,pts.length*3);g.add(o);return o;};
+  const [tD,tN]=b.g[b.tk],[sD,sN]=b.g[b.sk];seg([W(tN,zN),W(tD,zD)],b.T1);seg([W(sD,zD),W(sN,zN)],b.T2);
+  const arcT=(arc,z,th,phi,mu,Tin,Tout,driver)=>{const L=plen(arc),n=arc.length,out=[];let acc=0,chunk=[arc[0]],T0=Tin,idle0=true;const flush=(Tc,idle)=>{if(chunk.length>1)out.push(seg(chunk.map(p=>W(p,z)),Tc,idle));chunk=[chunk[chunk.length-1]];};
+    for(let i=1;i<n;i++){acc+=Math.hypot(arc[i].x-arc[i-1].x,arc[i].y-arc[i-1].y);const f=acc/L*th,idle=f<th-phi;const Tv=idle?Tin:(driver?Tin*Math.exp(-mu*(f-(th-phi))):Tin*Math.exp(mu*(f-(th-phi))));chunk.push(arc[i]);if(chunk.length>=5||idle!==idle0||i===n-1){flush(Math.max(b.T2,Math.min(b.T1,Tv)),idle0);idle0=idle;}}
+    if(phi>=th-1e-6&&b.slip)for(const o of out)PULSE.push(o);};
+  arcT(b.arcD,zD,b.g.th1,b.phi1,b.d.mu,b.T1,b.T2,true);arcT(b.arcN,zN,b.g.th2,b.phi2,b.dn.mu,b.T2,b.T1,false);
+  pick(g,key);rig.add(g);
+  // beads ride the cord so its travel can be followed
+  const path=[];const add=(pts,z0,z1)=>{pts.forEach((p,i)=>{const t=pts.length>1?i/(pts.length-1):0;path.push(W(p,z0+(z1-z0)*t));});};
+  add([tN,tD],zN,zD);add(b.arcD,zD,zD);add([sD,sN],zD,zN);add(b.arcN,zN,zN);const cum=[0];for(let i=1;i<path.length;i++)cum.push(cum[i-1]+path[i].distanceTo(path[i-1]));
+  const bm=new T.MeshBasicMaterial({color:srgb(css('--paper'))});const beads=[];for(let i=0;i<12;i++){const s=new T.Mesh(new T.SphereGeometry(radOf(b.T1)*1.15,8,6),bm);rig.add(s);beads.push(s);}BEADS.push({key,path,cum,beads});
+  // a ring on the cage marks where the belt touches it; drag it sideways
+  const onCage=key==='b1'?b.dn:b.d;const ring=new T.Mesh(new T.TorusGeometry((onCage.r+.18)*IN,.05*IN,6,32),new T.MeshBasicMaterial({color:srgb(css('--accent'))}));ring.position.copy(W(P.cage,onCage.z));rig.add(ring);ring.userData.sel='z'+key;PICK.push(ring);}
+function placeBeads(){for(const B of BEADS){const L=B.cum[B.cum.length-1];if(!L)continue;B.beads.forEach((s,i)=>{let d=((ang[B.key==='b1'?'belt1':'belt2']*IN+i*L/B.beads.length)%L+L)%L;let k=1;while(k<B.cum.length-1&&B.cum[k]<d)k++;const t=(d-B.cum[k-1])/Math.max(1e-9,B.cum[k]-B.cum[k-1]);s.position.copy(B.path[k-1]).lerp(B.path[k],t);});}}
+// ===================== camera =====================
+const cam={tx:.15,ty:.75,tz:0,r:1.3,th:.75,ph:1.15};let tween=null;
+const C3=(p,z)=>{const w=W(p,z);return {tx:w.x,ty:w.y,tz:w.z};};
+const VIEWS={q:()=>Object.assign(C3({x:6,y:-2},-1),{r:1.35,th:.75,ph:1.15}),side:()=>Object.assign(C3({x:6,y:-3},0),{r:1.25,th:0,ph:1.52}),top:()=>Object.assign(C3({x:6,y:0},-2),{r:1.3,th:0,ph:.04}),rear:()=>Object.assign(C3({x:3,y:-3},-2),{r:1.05,th:-Math.PI/2,ph:1.42}),
+  gap:()=>Object.assign(C3(P.red,0),{r:.42,th:-Math.PI/2+.3,ph:1.25}),cage:()=>Object.assign(C3(P.cage,(P.capL+P.capR)/2),{r:.78,th:-.75,ph:1.1}),topp:()=>Object.assign(C3(P.rod,P.b2top==='lid'?P.lidZ:P.greenZ),{r:P.b2top==='lid'?1.05:.5,th:.55,ph:1.2})};
+const SELCAM={red:()=>Object.assign(C3(P.red,0),{r:.5,th:.2,ph:1.35}),cage:()=>VIEWS.cage(),top:()=>VIEWS.topp(),tyre:()=>Object.assign(C3(G.contact||P.red,0),{r:.3,th:-.4,ph:1.3}),
+  b1:()=>{const b=S.b1;return Object.assign(C3({x:(b.d.x+b.dn.x)/2,y:(b.d.y+b.dn.y)/2},(b.d.z+b.dn.z)/2),{r:Math.max(.5,b.span*IN*2.3),th:.25,ph:1.35});},b2:()=>{const b=S.b2;return Object.assign(C3({x:(b.d.x+b.dn.x)/2,y:(b.d.y+b.dn.y)/2},(b.d.z+b.dn.z)/2),{r:Math.max(.5,b.span*IN*2.1),th:.3,ph:1.3});}};
+const goCam=to=>{tween={from:Object.assign({},cam),to:Object.assign({},cam,to),t0:performance.now()};};
+function updCam(){const k=1/Math.pow(Math.min(1,camera.aspect),.7),sp=v3(Math.sin(cam.ph)*Math.sin(cam.th),Math.cos(cam.ph),Math.sin(cam.ph)*Math.cos(cam.th)).multiplyScalar(cam.r*k);camera.position.set(cam.tx+sp.x,cam.ty+sp.y,cam.tz+sp.z);camera.lookAt(cam.tx,cam.ty,cam.tz);}
+function press(v){document.querySelectorAll('[data-v],[data-c]').forEach(b=>b.setAttribute('aria-pressed',(b.dataset.v||b.dataset.c)===v));}
+function setView(v){press(v);goCam((VIEWS[v]||VIEWS.q)());}
+function fitTarget(){if(SEL&&SELCAM[SEL]){press('');goCam(SELCAM[SEL]());}}
+function resize(){const r=view.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);R.setSize(r.width,r.height,false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix();ov.width=r.width*d;ov.height=r.height*d;}addEventListener('resize',resize);
+// ===================== interaction: tap a part to zoom to it, drag a pulley to move it, drag elsewhere to turn the view =====================
+const ray=new T.Raycaster(),ndc=new T.Vector2();let drag=null;
+function hit(e){const r=cv.getBoundingClientRect();ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(ndc,camera);const h=ray.intersectObjects(PICK,false)[0];return h?h.object.userData.sel:null;}
+function onPlane(e,normal,point){const r=cv.getBoundingClientRect();ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(ndc,camera);const pl=new T.Plane().setFromNormalAndCoplanarPoint(normal,point),out=new T.Vector3();return ray.ray.intersectPlane(pl,out)?out:null;}
+view.addEventListener('pointerdown',e=>{view.setPointerCapture(e.pointerId);drag={sel:hit(e),x:e.clientX,y:e.clientY,th:cam.th,ph:cam.ph,moved:false};});
+view.addEventListener('pointermove',e=>{if(!drag)return;if(!drag.moved&&Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<6)return;drag.moved=true;const sel=drag.sel;
+  if(sel==='red'||sel==='cage'||sel==='top'){const p=onPlane(e,v3(0,0,1),v3(0,0,0));if(!p)return;const x=+(p.x/IN).toFixed(2),y=+(p.y/IN-DT).toFixed(2);
+    if(sel==='cage')P.cage={x,y};else if(sel==='top')P.rod={x,y};else{const tc=tyreC(),Rr=P.tyreD/2+P.tread/2,a=Math.atan2(y-tc.y,x-tc.x);P.red={x:+(tc.x+Rr*Math.cos(a)).toFixed(2),y:+(tc.y+Rr*Math.sin(a)).toFixed(2)};}preset='';update(true);return;}
+  if(sel==='zb1'||sel==='zb2'){const p=onPlane(e,v3(0,1,0),W(P.cage,0));if(!p)return;const z=Math.max(P.capL-.4,Math.min(P.capR+.4,p.z/IN));if(sel==='zb1'){P.b1=Math.abs(z-P.capL)<.6?'capL':Math.abs(z-P.capR)<.6?'capR':'tape1';}else P.b2z=+z.toFixed(2);preset='';update(true);return;}
+  tween=null;cam.th=drag.th-(e.clientX-drag.x)*.008;cam.ph=Math.max(.04,Math.min(1.62,drag.ph-(e.clientY-drag.y)*.006));press('');});
+view.addEventListener('pointerup',()=>{if(drag&&!drag.moved){const s=drag.sel&&drag.sel[0]!=='z'?drag.sel:null;SEL=s&&s!==SEL?s:null;if(SEL)fitTarget();update();}else if(drag&&drag.moved&&drag.sel&&drag.sel!=='tyre'&&drag.sel[0]!=='b'){panel();}drag=null;});
+view.addEventListener('wheel',e=>{e.preventDefault();tween=null;cam.r=Math.max(.08,Math.min(5,cam.r*Math.exp(e.deltaY*.001)));},{passive:false});
+{const pts=new Map();let p0=null;view.addEventListener('touchstart',e=>{if(e.touches.length===2){drag=null;const [a,b]=e.touches;p0={d:Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY),r:cam.r};}},{passive:true});
+ view.addEventListener('touchmove',e=>{if(e.touches.length===2&&p0){const [a,b]=e.touches;cam.r=Math.max(.08,Math.min(5,p0.r*p0.d/Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY)));}},{passive:true});view.addEventListener('touchend',()=>{p0=null;});}
+// ===================== overlay: only what you asked for =====================
+function overlay(){const d=Math.min(2,devicePixelRatio||1);og.setTransform(1,0,0,1,0,0);og.clearRect(0,0,ov.width,ov.height);
+  if(SEL){const info=selInfo();if(info){og.font=`600 ${11.5*d}px ${css('--f-mono')}`;og.fillStyle=css('--ink');let y=18*d;for(const t of info){og.fillText(t,12*d,y);y+=16*d;}}}
+  if(!names)return;og.font=`500 ${11*d}px ${css('--f-body')}`;og.fillStyle=css('--ink-2');
+  const L=[[P.red,0,'red wheels'],[P.cage,P.capL,'left end cap'],[P.cage,P.capR,'right end cap'],[P.rod,P.greenZ,'green cap'],[P.rod,P.brassZ,'brass disc'],[{x:7,y:1.2},0,'roller handle'],[{x:P.rod.x-4,y:4},1.9,'A-frame'],[{x:S.tc.x-9,y:S.tc.y+11},0,'rear tyre'],[{x:12.82,y:6},2.3,'tie rod']];
+  for(const [p,z,t] of L){const v=W(p,z).project(camera);if(v.z>1)continue;og.fillText(t,(v.x+1)/2*ov.width+6*d,(1-v.y)/2*ov.height-6*d);}}
 // ===================== panel =====================
 function meter(key,name,need,cap,unit){const used=need/cap,pc=Math.min(1,used),col=used>1?css('--hot'):used>.7?css('--warn'):css('--ok');
   return `<div class="meter" data-sel="${key}" title="tap to look at it"><span>${name}</span><div class="track"><div class="fill" style="width:${(pc*100).toFixed(1)}%;background:${col}"></div></div><b style="color:${col}">${used>1?'slips':Math.round(used*100)+'%'}</b></div>`;}
@@ -275,7 +293,7 @@ function panel(){const s=S,b1=s.b1,b2=s.b2;if(!b1||!b2){$('pane').innerHTML='<p 
   <div class="card${sel('tyre')}" data-card="tyre">
    <div class="row"><span>Push of the red wheels on the tyre</span><b id="pv">${P.push} N</b></div><input type="range" id="push" min="2" max="80" step="1" value="${P.push}">
    <div class="row"><span>Drag it must pass</span><b>${f1(s.Ftyre)} N</b></div><p class="note">The push comes from the arm’s weight and the bungee. A luggage scale hooked on the red axle and pulled straight away from the tyre reads it: the reading when the wheels lift off.</p></div>
-  ${s.hits.length?`<h2>The cord hits something</h2><div class="card">${s.hits.map(h=>`<p>${h.b} runs through the ${h.n}.</p>`).join('')}<p class="note">Marked with an X in the side view. Positions of the tie rod and handle are read from photos; look at the real thing.</p></div>`:''}
+  ${s.hits.length?`<h2>The cord hits something</h2><div class="card">${s.hits.map(h=>`<p>${h.b} runs through the ${h.n}.</p>`).join('')}<p class="note">Marked with a red X in the model. Positions of the tie rod and handle are read from photos; look at the real thing.</p></div>`:''}
   <h2>Bench tests<span>do these on the bike</span></h2>
   <div class="card"><ol class="tests">
    <li><b>Slip, chalk line.</b> Draw one chalk line across the cord and the rim at each of the four contacts. Hold the crank back gently with one finger and turn the wheel 5 times. A line that splits shows a slipping contact; the gap divided by that pulley’s circumference is the slip.</li>
@@ -284,9 +302,9 @@ function panel(){const s=S,b1=s.b1,b2=s.b2;if(!b1||!b2){$('pane').innerHTML='<p 
    <li><b>Tension.</b> Hang a 200 g phone on the middle of a strand. Belt 1 should sag <b>${fr(b1.sag,16)} in.</b>, belt 2 <b>${fr(b2.sag,16)} in.</b> at the tensions set above.</li>
    <li><b>Line.</b> Sight along each belt from above. The cord should leave one pulley straight toward the next; belt 1 now goes ${fr(Math.abs(b1.dn.z-b1.d.z),8)} in. sideways.</li></ol></div>
   <details><summary>Grip of each surface (cord friction μ) and measurements</summary><div class="grid2" style="margin-top:6px">${Object.entries(P.mu).map(([k,v])=>`<label>${k}<input type="number" step=".05" data-mu="${k}" value="${v}"></label>`).join('')}</div>
-   <p class="note">Friction values are estimates for nylon cord; the chalk test tells you the real ones. Positions read from your photos: green cap ${P.rod.y} in. above the deck and ${P.rod.x} in. ahead of its rear end; cage ${-P.cage.x} in. behind, ${-P.cage.y} in. below; red wheels ${-P.red.y} in. below the deck top. Drag the pulleys in the side view to try other positions.</p>
+   <p class="note">Friction values are estimates for nylon cord; the chalk test tells you the real ones. Positions read from your photos: green cap ${P.rod.y} in. above the deck and ${P.rod.x} in. ahead of its rear end; cage ${-P.cage.x} in. behind, ${-P.cage.y} in. below; red wheels ${-P.red.y} in. below the deck top. Drag a pulley in the model to try another position; it moves in the side plane.</p>
    <div class="grid2">${[['greenD','green cap ⌀'],['capD','end cap ⌀'],['wireD','wire cage ⌀'],['tapeD','tape track ⌀'],['groove','red groove ⌀'],['lidD','lid V ⌀']].map(([k,l])=>`<label>${l}<input type="number" step=".05" data-k="${k}" value="${P[k]}"></label>`).join('')}</div></details>
-  <p class="note">Reading the side view: cord thickness and colour show its pull, blue slack to orange tight. On each pulley the bright part of the wrap is where the cord grips and its pull changes; the dim part just rides along. When the bright part fills the whole wrap, that contact is slipping and it pulses. Tap a pulley or belt to zoom in; drag a pulley to move it.</p>`;
+  <p class="note">Reading the model: cord thickness and colour show its pull, blue slack to orange tight. On each pulley the solid part of the wrap is where the cord grips and its pull changes; the pale part just rides along. When the solid part fills the whole wrap, that contact slips and pulses red. White beads ride the cord. A cord that runs off line is drawn slanted between the two pulleys’ planes. Tap a part to zoom to it, drag a pulley to move it, drag the blue ring on the cage to move a belt sideways, drag empty space to turn the view.</p>`;
   const on=(id,ev,f)=>{const el=$(id);if(el)el[ev]=f;};
   on('mph','oninput',e=>{P.mph=+e.target.value;$('mphv').textContent=P.mph+' mph';update(true);});on('mph','onchange',()=>panel());
   on('load','onchange',e=>{P.load=e.target.value;update();});on('hoof','onchange',e=>{P.hoof=e.target.value;update();});
@@ -297,25 +315,27 @@ function panel(){const s=S,b1=s.b1,b2=s.b2;if(!b1||!b2){$('pane').innerHTML='<p 
   on('b1','onchange',e=>{P.b1=e.target.value;preset='';update();});on('b2c','onchange',e=>{P.b2cage=e.target.value;preset='';update();});on('b2t','onchange',e=>{P.b2top=e.target.value;preset='';update();fitTarget();});
   on('x1','onchange',e=>{P.cross1=e.target.checked;preset='';update();});on('x2','onchange',e=>{P.cross2=e.target.checked;preset='';update();});
   document.querySelectorAll('[data-mu]').forEach(i=>i.onchange=()=>{P.mu[i.dataset.mu]=+i.value;update();});document.querySelectorAll('[data-k]').forEach(i=>i.onchange=()=>{P[i.dataset.k]=+i.value;update();});
-  document.querySelectorAll('[data-sel]').forEach(m=>m.onclick=()=>{setView('side');SEL=m.dataset.sel;fitTarget();panel();});
+  document.querySelectorAll('[data-sel]').forEach(m=>m.onclick=()=>{SEL=m.dataset.sel;fitTarget();update();});
   document.querySelectorAll('[data-p]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===preset));}
-function update(light){S=solve();save();const s=S;
+function update(light){S=solve();save();build();const s=S;
   $('status').innerHTML=`${s.N.toFixed(2)} crank turns per wheel turn · legs ${s.legsFwd?'forward':'<b>backward</b>'} · ${s.first[2]<1?`<b>${s.first[1].toLowerCase()} slips</b>`:`<b class=ok>grips</b>, ${s.first[1].toLowerCase()} first`}${s.hits.length?` · <b>${s.hits.length} hit${s.hits.length>1?'s':''}</b>`:''}`;
   if(!light)panel();else{const m=document.querySelector('.meters');if(m)m.innerHTML=meter('tyre','Tyre',s.Ftyre,s.tyre.cap)+meter('b1','Belt 1',s.b1?s.b1.dT:0,s.b1?s.b1.cap:1)+meter('b2','Belt 2',s.b2?s.b2.dT:0,s.b2?s.b2.cap:1);}}
-function setView(v){VIEW=v;document.querySelectorAll('[data-v]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v));if(v!=='side')SEL=null;fitTarget();}
-document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{setView(b.dataset.v);panel();});
-document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{preset=b.dataset.p;const keepMph=P.mph;P=Object.assign(clone(BUILT),clone(PRESETS[preset]));P.mph=keepMph;SEL=null;update();fitTarget();});
+document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{SEL=null;setView(b.dataset.v);update();});
+document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{SEL=null;setView(b.dataset.c);update();});
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{preset=b.dataset.p;const keepMph=P.mph;P=Object.assign(clone(BUILT),clone(PRESETS[preset]));P.mu=Object.assign(clone(BUILT.mu),P.mu||{});P.mph=keepMph;SEL=null;update();});
 $('play').onclick=e=>{playing=!playing;e.currentTarget.setAttribute('aria-pressed',playing);};$('names').onclick=e=>{names=!names;e.currentTarget.setAttribute('aria-pressed',names);};
 // ===================== run =====================
 let last=performance.now();
 function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;
-  if(playing&&S){const k=.06,wr=P.mph*17.6/(Math.PI*P.tyreD)*TAU*k; // slowed to 1/16 of real speed so the motion can be followed
+  if(playing&&S&&S.b1&&S.b2){const k=.06,wr=P.mph*17.6/(Math.PI*P.tyreD)*TAU*k; // 1/16 of real speed so the motion can be followed
     ang.wheel+=S.sW*wr*dt;const redW=wr*S.N1*(S.tyre.slip?S.tyre.margin:1);ang.red+=S.sRed*redW*dt;const v1=redW*S.red.r;ang.belt1+=v1*dt;
-    const cageW=v1/S.cageA.r*(S.b1&&S.b1.slip?S.b1.margin:1);ang.cage+=S.sCage*cageW*dt;const v2=cageW*S.cageB.r;ang.belt2+=v2*dt;ang.top+=S.sTop*v2/S.top.r*(S.b2&&S.b2.slip?S.b2.margin:1)*dt;}
-  if(camT){const t=Math.min(1,(now-camT.t0)/450),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;for(const k of ['cx','cy','s'])cam[k]=camT.from[k]+(camT.to[k]-camT.from[k])*e;if(t>=1)camT=null;}
-  draw();requestAnimationFrame(frame);}
-resize();update();fitTarget(true);requestAnimationFrame(frame);
-window.__S=()=>S;window.__P=()=>P;window.__sel=k=>{SEL=k;fitTarget();panel();};window.__view=setView;
+    const cageW=v1/S.cageA.r*(S.b1.slip?S.b1.margin:1);ang.cage+=S.sCage*cageW*dt;const v2=cageW*S.cageB.r;ang.belt2+=v2*dt;ang.top+=S.sTop*v2/S.top.r*(S.b2.slip?S.b2.margin:1)*dt;}
+  if(G.wheel)G.wheel.rotation.z=ang.wheel;if(G.red)G.red.rotation.z=ang.red;if(G.cage)G.cage.rotation.z=ang.cage;if(G.top)G.top.rotation.z=ang.top;placeBeads();
+  const pz=.5+.5*Math.sin(now/130);for(const o of PULSE)if(o.material&&o.material.emissive){o.material.emissive.setRGB(.9*pz,.15*pz,.05*pz);}else if(o.isGroup||o.traverse)o.traverse(m=>{if(m.material&&m.material.emissive)m.material.emissive.setRGB(.9*pz,.15*pz,.05*pz);});
+  if(tween){const t=Math.min(1,(now-tween.t0)/600),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;for(const key of ['th','ph','r','tx','ty','tz'])cam[key]=tween.from[key]+(tween.to[key]-tween.from[key])*e;if(t>=1)tween=null;}
+  updCam();scene.background=srgb(css('--paper'));R.render(scene,camera);overlay();requestAnimationFrame(frame);}
+resize();update();Object.assign(cam,VIEWS.q());requestAnimationFrame(frame);
+window.__S=()=>S;window.__P=()=>P;window.__sel=k=>{SEL=k;fitTarget();update();};window.__view=setView;
 })();
 </script>
 </body></html>

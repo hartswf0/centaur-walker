@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Velocipede Drive Module</title>
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#e9e7e2;--panel:#f7f6f2;--paper:#f4f2ec;--ink:#17150f;--ink-2:#5a554b;--ink-3:#8d877b;--rule:#d0cabe;--accent:#2f55c9;--accent-ink:#fff;--hot:#e2591b;--ok:#15803d;--warn:#b7791f;
+  --f-body:'IBM Plex Sans',system-ui,sans-serif;--f-mono:'IBM Plex Mono',ui-monospace,monospace;--f-disp:'Bodoni Moda',Georgia,serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0f0e0c;--panel:#171512;--paper:#1d1a16;--ink:#ece7dd;--ink-2:#a9a293;--ink-3:#736c60;--rule:#2d2924;--accent:#8fa8ff;--accent-ink:#0d1014;--hot:#ff8a4c;--ok:#4ade80;--warn:#f0b54a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f0e0c;--panel:#171512;--paper:#1d1a16;--ink:#ece7dd;--ink-2:#a9a293;--ink-3:#736c60;--rule:#2d2924;--accent:#8fa8ff;--accent-ink:#0d1014;--hot:#ff8a4c;--ok:#4ade80;--warn:#f0b54a;color-scheme:dark}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-body);display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+header{display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid var(--rule);background:var(--panel);min-width:0}
+h1{font:500 17px var(--f-disp);letter-spacing:.14em;text-transform:uppercase;margin:0;white-space:nowrap}
+.status{font:12px var(--f-mono);color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}.status b{color:var(--hot)}.status b.ok{color:var(--ok)}
+header a{font:500 12px var(--f-body);color:var(--accent);text-decoration:none;white-space:nowrap}
+main{display:grid;grid-template-columns:1fr 430px;min-height:0}
+.view{position:relative;background:var(--paper);min-height:0;overflow:hidden;touch-action:none}
+.view canvas{position:absolute;inset:0;width:100%;height:100%;display:block}#ov{pointer-events:none}
+.vbar{position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:6px;flex-wrap:wrap;z-index:2;pointer-events:none}
+.vbar button{pointer-events:auto;height:30px;border:1px solid var(--rule);background:var(--panel);color:var(--ink-2);border-radius:7px;font:600 12px var(--f-body);padding:0 10px;cursor:pointer}.vbar button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.seg2{position:absolute;left:10px;top:10px;display:flex;z-index:2;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.seg2 button{height:32px;border:0;background:var(--panel);color:var(--ink-2);font:600 12.5px var(--f-body);padding:0 12px;cursor:pointer}.seg2 button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+aside{background:var(--panel);border-left:1px solid var(--rule);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;gap:4px;padding:8px 10px;flex-shrink:0;border-bottom:1px solid var(--rule)}
+.tabs button{flex:1;height:34px;border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);border-radius:8px;font:600 12.5px var(--f-body);cursor:pointer}.tabs button[aria-selected="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.pane{overflow:auto;flex:1;padding:4px 12px 16px}.pane[hidden]{display:none}
+h2{font:600 11px var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:14px 2px 6px}
+.stepnav{display:flex;gap:8px;align-items:center;padding:8px 2px;position:sticky;top:0;background:var(--panel);z-index:1;border-bottom:1px solid var(--rule)}
+.stepnav button{height:34px;min-width:40px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);color:var(--ink);font:600 13px var(--f-body);cursor:pointer}.stepnav .nx{background:var(--accent);color:var(--accent-ink);border:0;padding:0 14px}
+.stepnav .t{flex:1;font-weight:700;font-size:14px}.stepnav .t small{display:block;font:500 11px var(--f-mono);color:var(--ink-3)}
+.sbody{font-size:13.5px;padding:6px 2px}.sbody ol{padding-left:18px;margin:6px 0}.sbody li{margin:4px 0}
+.kit{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.kit span{font:500 12px var(--f-body);border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:3px 7px}.kit b{font-family:var(--f-mono)}
+.why{font-size:12.5px;color:var(--ink-2);border-left:3px solid var(--accent);padding:4px 10px;margin:8px 0}
+.slist button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--rule);background:none;padding:6px 2px;font:13px var(--f-body);color:var(--ink-2);cursor:pointer}.slist button[aria-current="true"]{color:var(--ink);font-weight:700}.slist i{font:600 11px var(--f-mono);font-style:normal;color:var(--accent);margin-right:8px}
+.chk{width:100%;border-collapse:collapse;font-size:12.5px}.chk td{padding:6px 4px;border-bottom:1px solid var(--rule);vertical-align:top}.chk td.d{font:600 12px var(--f-mono);text-align:right;white-space:nowrap}.chk tr.bad td.d{color:var(--hot)}.chk tr.good td.d{color:var(--ok)}.chk tr.warn td.d{color:var(--warn)}.chk small{display:block;color:var(--ink-3)}
+.bom{width:100%;border-collapse:collapse;font-size:12.5px}.bom td{padding:5px 4px;border-bottom:1px solid var(--rule);vertical-align:top}.bom tr{cursor:pointer}.bom tr.on td{background:var(--paper);color:var(--hot)}.bom small{display:block;color:var(--ink-3)}
+.task{border-bottom:1px solid var(--rule);padding:9px 2px}.task p{margin:0;font-size:13px}
+.task .in{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0}.task .in label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-2)}
+.task input[type=number]{width:70px;font:600 13px var(--f-mono);padding:4px 6px;border:1px solid var(--rule);border-radius:6px;background:var(--panel);color:var(--ink);text-align:right}
+p.note{font-size:12px;color:var(--ink-2);margin:6px 2px}
+@media (max-width:760px){main{grid-template-columns:1fr;grid-template-rows:1fr 1fr}aside{border-left:0;border-top:1px solid var(--rule)}header{padding:7px 10px}h1{font-size:13px;letter-spacing:.08em}header a{display:none}.status{font-size:11px}.vbar button{height:28px;font-size:11px;padding:0 8px}.seg2 button{height:28px;font-size:11.5px;padding:0 9px}}
+</style></head>
+<body>
+<header><h1>Drive module</h1><div class="status" id="status"></div><a href="../powertrain.html">Powertrain</a><a href="../index.html">All pages</a></header>
+<main>
+  <section class="view" id="view"><canvas id="c3"></canvas><canvas id="ov"></canvas>
+    <div class="seg2"><button id="mBike" aria-pressed="true">On the bike</button><button id="mExplode">Shaft apart</button><button id="mShelf">On a shelf</button></div>
+    <div class="vbar"><button id="vSide">Side</button><button id="vRear">Rear</button><button id="vTop">Top</button><button id="v3q" aria-pressed="true">3/4</button><button id="vFocus">Step close-up</button><button id="vPlay" aria-pressed="true">Moving</button><button id="vBasket" aria-pressed="true">Basket</button><button id="vLabels" aria-pressed="true">Labels</button></div>
+  </section>
+  <aside>
+    <div class="tabs"><button data-t="build" aria-selected="true">Build</button><button data-t="checks">Checks</button><button data-t="bom">Parts</button><button data-t="do">Measure</button></div>
+    <div class="pane" id="p-build"><div class="stepnav"><button id="sPrev" aria-label="Previous step">‹</button><div class="t" id="sTitle"></div><button class="nx" id="sNext">Next</button></div><div class="sbody" id="sBody"></div><h2>All steps</h2><div class="slist" id="sList"></div></div>
+    <div class="pane" id="p-checks" hidden><p class="note">Computed from the model over a full turn of the crank. Green is clear, amber is close or needs measuring, orange collides unless the step is done exactly.</p><table class="chk" id="chk"></table></div>
+    <div class="pane" id="p-bom" hidden><p class="note">Everything in the module. Tap a row to find it in the model.</p><table class="bom" id="bom"></table></div>
+    <div class="pane" id="p-do" hidden><p class="note">Measure on your bike; the model, steps and checks update. Inches.</p><div id="tasks"></div></div>
+  </aside>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(()=>{
+const T=window.THREE,TAU=Math.PI*2,$=id=>document.getElementById(id),css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const IN=.0254,MM=.001,V=(x,y)=>({x,y});
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+const fr=(x,den=16)=>{const s=x<0?'−':'';x=Math.abs(x);let w=Math.floor(x+1e-9),r=Math.round((x-w)*den);if(r===den){w++;r=0;}if(!r)return s+w;let n=r,d=den;while(n%2===0){n/=2;d/=2;}return s+(w?w+'-':'')+n+'/'+d;};
+// ======================= the leg (velocipede lengths, mm) =======================
+const J={m:62,a:202,l:89,b:342,c:281,d:277,e:596,f:327,g:206,h:359,i:518,j:226,k:426};
+function circ(p,r1,q,r2,side){const dx=q.x-p.x,dy=q.y-p.y,d=Math.hypot(dx,dy);if(d<1e-9)return null;const a=(r1*r1-r2*r2+d*d)/(2*d),hh=r1*r1-a*a;if(hh<0)return null;const h=Math.sqrt(hh),mx=p.x+a*dx/d,my=p.y+a*dy/d;return V(mx-side*h*dy/d,my+side*h*dx/d);}
+function lk(th){const O=V(0,0),B=V(-J.a,-J.l),C=V(J.m*Math.cos(th),J.m*Math.sin(th));const D=circ(B,J.b,C,J.j,1),E=circ(B,J.c,C,J.k,-1);if(!D||!E)return null;const F=circ(B,J.d,D,J.e,1);if(!F)return null;const G=circ(F,J.f,E,J.g,-1);if(!G)return null;const H=circ(G,J.h,E,J.i,-1);if(!H)return null;return {O,B,C,D,E,F,G,H};}
+const NS=360,PU=[];for(let k=0;k<NS;k++)PU.push(lk(k/NS*TAU));
+const legAt=th=>PU[((Math.round(th/TAU*NS)%NS)+NS)%NS];
+const YMIN=Math.min(...PU.map(p=>p.H.y)),HT=-YMIN,CONTACT=PU.map(p=>p.H.y<YMIN+6);let TD=0;for(let k=0;k<NS;k++)if(CONTACT[k]&&!CONTACT[(k+1)%NS])TD=k;
+const DUTY=CONTACT.filter(Boolean).length/NS,STX=PU.filter((p,i)=>CONTACT[i]).map(p=>p.H.x),ADV=(Math.max(...STX)-Math.min(...STX))/DUTY;
+const HOOF_ANG=(()=>{const P=PU[(((Math.round(TD-NS*DUTY/2))%NS)+NS)%NS];return Math.atan2(P.H.y-P.E.y,P.H.x-P.E.x);})();
+const PARK=(()=>{let b=null;for(let k=0;k<NS;k++){const a=PU[k],c=PU[(k+NS/2)%NS],d=Math.abs(a.H.y-c.H.y);if(!b||d<b.d)b={k,d};}return b.k/NS*TAU;})();
+const LINKS=[{id:'crank',j:['O','C'],L:1,kind:'pine'},{id:'t1',j:['B','D','F'],L:1,kind:'plate'},{id:'t2',j:['G','E','H'],L:1,kind:'plate'},
+  {id:'j',j:['C','D'],L:2,kind:'pine'},{id:'c',j:['B','E'],L:2,kind:'pine'},{id:'f',j:['F','G'],L:2,kind:'pine'},{id:'k',j:['C','E'],L:3,kind:'pine'}];
+// ======================= the module, inches =======================
+// x forward from the deck's rear end; y up from the floor; z across the bike
+const DEF={deckTop:33,rodFwd:6.5,saddleX:16,saddleUp:6,riderBack:2.5,rodUp:8.5,redX:4.4,redY:-5.6,cageX:4,cageY:-1,basketW:15.5,basketL:14,basketRim:-.5,redD:3.74,groove:3.2,cageD:1.75,riderHalf:7,tyreD:27.5};
+const P=Object.assign({},DEF,store.get('rig3d3',{}));const save=()=>{store.set('rig3d3',P);dirty=true;};
+const PLY=.5,PINE=.75,PINEW=1.5,CORO=.157,WASHT=1/16,NUTH=17/64,SPACER=5/8,LIDD=11.9,EFFD=LIDD-.6,CORD=.125;
+function D(){const rod={x:P.rodFwd,y:P.deckTop+P.rodUp};
+  const zIn=P.basketW/2+.25,zOut=zIn+PLY;                         // cheek faces
+  const plat={y0:P.deckTop,y1:P.deckTop+PLY,x0:P.rodFwd-3.5,x1:P.rodFwd+3.5,w:2*zOut};
+  const B={x:rod.x-J.a*MM/IN,y:rod.y-J.l*MM/IN};
+  const z1=zOut+SPACER;                                          // inner face of leg layer 1
+  const LZ=L=>z1+(L-1)*(PINE+WASHT)+PINE/2;
+  const crankOut=z1+PINE;
+  const cheek=[[B.x-1.1,plat.y1],[plat.x1,plat.y1],[plat.x1,rod.y-1.5],[rod.x+1.6,rod.y+1.4],[rod.x-1.6,rod.y+1.4],[B.x-1.1,B.y+1.1]];
+  const tyreR=P.tyreD/2,red={x:-P.redX,y:P.deckTop+P.redY},dy=red.y-tyreR,tc={x:red.x+Math.sqrt(Math.max(1,(tyreR+P.redD/2)**2-dy*dy)),y:tyreR};
+  return {rod,plat,zIn,zOut,B,z1,LZ,crankOut,cheek,red,tc,tyreR,cage:{x:-P.cageX,y:P.deckTop+P.cageY},wire:{z:-.6,x0:.3,x1:P.rodFwd-.5},rodLen:2*crankOut};}
+const roadPerCrank=()=>Math.PI*P.redD*EFFD/P.groove;          // inches of road per crank turn
+// ======================= renderer =======================
+const c3=$('c3'),ov=$('ov'),view=$('view'),og=ov.getContext('2d');
+const R=new T.WebGLRenderer({canvas:c3,antialias:true});R.setPixelRatio(Math.min(2,devicePixelRatio||1));R.shadowMap.enabled=true;R.outputEncoding=T.sRGBEncoding;
+const scene=new T.Scene(),camera=new T.PerspectiveCamera(32,1,.005,30),srgb=c=>new T.Color(c).convertSRGBToLinear();
+scene.add(new T.HemisphereLight(0xffffff,0x8a7d6a,.9));const sun=new T.DirectionalLight(0xffffff,.8);sun.position.set(1.2,3,2.2);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-1.5,right:1.5,top:1.5,bottom:-1.5});scene.add(sun);
+const fillL=new T.DirectionalLight(0xe4e9ff,.35);fillL.position.set(-2,1,-1.5);scene.add(fillL);
+const ground=new T.Mesh(new T.PlaneGeometry(8,8),new T.ShadowMaterial({opacity:.15}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+const grid=new T.GridHelper(8,80,0x000000,0x000000);grid.material.transparent=true;grid.material.opacity=.07;scene.add(grid);
+const mat=(c,o={})=>new T.MeshStandardMaterial(Object.assign({color:srgb(c),roughness:.6},o));
+const M={alu:()=>mat('#cfd4d8',{metalness:.55,roughness:.3}),galv:()=>mat('#b9bec3',{metalness:.6,roughness:.42}),zinc:()=>mat('#d3d7db',{metalness:.6,roughness:.35}),black:()=>mat('#26241f',{roughness:.8}),tyre:()=>mat('#1e1d1b',{roughness:.9}),
+  red:()=>mat('#c23a30',{roughness:.45}),hub:()=>mat('#9a9a96'),orange:()=>mat('#f2622e',{roughness:.5}),pine:()=>mat('#e6ca98',{roughness:.7}),ply:()=>mat('#d9bb8c',{roughness:.7}),ply2:()=>mat('#cfae7c',{roughness:.7}),
+  coro:()=>mat('#e4e7ea',{roughness:.55,side:T.DoubleSide}),lid:()=>mat('#eeece6',{roughness:.5}),cord:()=>mat('#141312',{roughness:.7}),strap:()=>mat('#222',{roughness:.9}),hot:()=>mat('#e2591b'),label:()=>mat('#f5f5f2'),bung:()=>mat('#3f62b5'),wood:()=>mat('#b8946a'),pvc:()=>mat('#f1f1ee')};
+const edgeMat=new T.LineBasicMaterial({color:srgb('#1b1a17'),transparent:true,opacity:.4});
+const v3=(x,y,z)=>new T.Vector3(x,y,z),W=(p,z=0)=>v3(p.x*IN,p.y*IN,z*IN);
+const PARTS={},LABELS=[];let rig=new T.Group();scene.add(rig);let dirty=true;
+function reg(o,id){o.traverse(m=>{if(m.isMesh){m.castShadow=true;m.receiveShadow=true;m.userData.part=id;if(!m.userData.noEdge&&m.geometry.attributes.position&&m.geometry.attributes.position.count<5000)m.add(new T.LineSegments(new T.EdgesGeometry(m.geometry,30),edgeMat));}});(PARTS[id]=PARTS[id]||[]).push(o);return o;}
+const box=(cx,cy,cz,sx,sy,sz,m)=>{const o=new T.Mesh(new T.BoxGeometry(sx*IN,sy*IN,sz*IN),m);o.position.set(cx*IN,cy*IN,cz*IN);return o;};
+const cylAB=(a,b,r,m,seg=12)=>{const d=new T.Vector3().subVectors(b,a),L=d.length(),o=new T.Mesh(new T.CylinderGeometry(r,r,L,seg),m);o.position.copy(a).addScaledVector(d,.5);o.quaternion.setFromUnitVectors(v3(0,1,0),d.normalize());return o;};
+const discZ=(r,t,m,seg=40)=>{const o=new T.Mesh(new T.CylinderGeometry(r*IN,r*IN,t*IN,seg),m);o.rotation.x=Math.PI/2;return o;};
+const nutZ=(dia,h)=>{const o=new T.Mesh(new T.CylinderGeometry(dia/2*IN,dia/2*IN,h*IN,6),M.zinc());o.rotation.x=Math.PI/2;return o;};
+const tube=(pts,r,m,seg)=>new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts,false,'catmullrom',.15),seg||pts.length*8,r,8),m);
+function slab(pts,holes,z0,t,m){const s=new T.Shape(pts.map(p=>new T.Vector2(p[0]*IN,p[1]*IN)));for(const h of holes||[]){const p=new T.Path();p.absarc(h[0]*IN,h[1]*IN,h[2]*IN,0,TAU,true);s.holes.push(p);}const g=new T.ExtrudeGeometry(s,{depth:t*IN,bevelEnabled:false,curveSegments:16});const o=new T.Mesh(g,m);o.position.z=z0*IN;return o;}
+// Simpson LSTA strap: 1-1/4 in. wide, 20 ga, along a bent path
+function lstaPath(pts,n,m){const g=new T.Group();for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],d=new T.Vector3().subVectors(b,a),L=d.length();const o=new T.Mesh(new T.BoxGeometry(1.25*IN,L,.036*IN),m?m():M.galv());const y=d.clone().normalize(),z=n.clone().normalize(),x=new T.Vector3().crossVectors(y,z).normalize();z.crossVectors(x,y);o.quaternion.setFromRotationMatrix(new T.Matrix4().makeBasis(x,y,z));o.position.copy(a).addScaledVector(d,.5);g.add(o);}return g;}
+function beltPts(c1,r1,c2,r2,cr){const dx=c2.x-c1.x,dy=c2.y-c1.y,dd=Math.hypot(dx,dy),a=Math.atan2(dy,dx),kk=cr?(r1+r2)/dd:(r1-r2)/dd;if(Math.abs(kk)>=1)return null;const b=Math.acos(kk);const pts=[];
+  const arc=(c,r,t0,t1)=>{for(let i=0;i<=24;i++){const t=t0+(t1-t0)*i/24;pts.push({x:c.x+r*Math.cos(t),y:c.y+r*Math.sin(t)});}};
+  if(!cr){arc(c1,r1,a+b,a+TAU-b);arc(c2,r2,a-b,a+b);}else{arc(c1,r1,a+b,a+TAU-b);arc(c2,r2,a+Math.PI-b,a-Math.PI+b);}pts.push(pts[0]);return pts;}
+// ======================= build =======================
+let SP={},LEG=[],BASKET=null,MODE='bike',LEGS_ON=true;
+function lab(id,p,text){LABELS.push({id,p,text});}
+function build(){scene.remove(rig);rig=new T.Group();scene.add(rig);for(const k in PARTS)delete PARTS[k];LABELS.length=0;LEG=[];SP={};const d=D();
+  const bikeG=new T.Group(),modG=new T.Group(),legG=new T.Group();rig.add(bikeG,modG,legG);Object.assign(SP,{bikeG,modG,legG});
+  // ---------- the bike: rear wheel, frame stub, saddle, rack, basket ----------
+  {const w=new T.Group();w.position.copy(W(d.tc));w.add(new T.Mesh(new T.TorusGeometry(d.tyreR*IN-.019,.019,14,64),M.tyre()));w.add(new T.Mesh(new T.TorusGeometry(d.tyreR*IN-.045,.007,8,64),M.alu()));
+    const sp=[];for(let i=0;i<28;i++){const a=i/28*TAU,z=i%2?.03:-.03;sp.push(v3(0,0,z),v3(Math.cos(a)*(d.tyreR*IN-.05),Math.sin(a)*(d.tyreR*IN-.05),0));}w.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(sp),new T.LineBasicMaterial({color:0x9aa0a6})));
+    const mk=new T.Mesh(new T.BoxGeometry(.05,.022,.045),M.hot());mk.position.y=d.tyreR*IN-.019;w.add(mk);bikeG.add(reg(w,'bike'));SP.wheel=w;
+    const tc=W(d.tc),bb=W({x:d.tc.x+17,y:10.8}),sad=W({x:P.saddleX+4,y:P.deckTop+P.saddleUp-.05}),bl=M.black();for(const z of [-.065,.065]){bikeG.add(cylAB(v3(tc.x,tc.y,z),v3(bb.x,bb.y,z*.4),.009,bl));bikeG.add(cylAB(v3(tc.x,tc.y,z),v3(sad.x-.02,sad.y-.2,z*.3),.008,bl));}
+    bikeG.add(cylAB(bb,v3(sad.x-.02,sad.y-.2,0),.016,bl));bikeG.add(cylAB(v3(sad.x-.02,sad.y-.2,0),v3(sad.x,sad.y-.03,0),.0136,M.zinc()));const s=new T.Mesh(new T.BoxGeometry(10.5*IN,2*IN,6.5*IN),bl);s.position.set((P.saddleX+5.25)*IN,sad.y,0);bikeG.add(reg(s,'saddle'));lab('saddle',v3(P.saddleX*IN,sad.y+.03,0),'saddle rear edge');
+    const rackY=P.deckTop-1.0;const r=new T.Group();for(const z of [-2.1,2.1]){r.add(cylAB(W({x:-1.5,y:rackY},z),W({x:P.rodFwd+5,y:rackY},z),.0055,bl));r.add(cylAB(W({x:-.5,y:rackY},z),v3(tc.x,tc.y,z*IN*1.15),.0055,bl));}
+    for(const x of [-1,5,11,P.rodFwd+4.5])r.add(cylAB(W({x,y:rackY},-2.1),W({x,y:rackY},2.1),.0045,bl));bikeG.add(reg(r,'rack'));
+    BASKET=new T.Group();const y=rackY-.25,hw=P.basketW/2,pts=[],ry=P.deckTop+P.basketRim;for(let k=0;k<=10;k++){const z=-hw+2*hw*k/10;pts.push(W({x:0,y},z),W({x:P.basketL,y},z));}for(let k=0;k<=7;k++){const x=P.basketL*k/7;pts.push(W({x,y},-hw),W({x,y},hw));}
+    for(const [x,z] of [[0,-hw],[0,hw],[P.basketL,-hw],[P.basketL,hw]])pts.push(W({x,y},z),W({x,y:ry},z));for(const z of [-hw,hw])pts.push(W({x:0,y:ry},z),W({x:P.basketL,y:ry},z));for(const x of [0,P.basketL])pts.push(W({x,y:ry},-hw),W({x,y:ry},hw));
+    BASKET.add(new T.LineSegments(new T.BufferGeometry().setFromPoints(pts),new T.LineBasicMaterial({color:srgb('#2a2824')})));bikeG.add(BASKET);BASKET.visible=$('vBasket').getAttribute('aria-pressed')==='true';
+    for(const x of [3,15.5]){const p2=[W({x,y:P.deckTop+.05},-1.95),W({x,y:P.deckTop+.05},1.95),W({x,y:rackY-.35},2.35),W({x,y:rackY-.35},-2.35),W({x,y:P.deckTop+.05},-1.95)];modG.add(reg(lstaPath(p2,v3(1,0,0),M.strap),'camstrap'));}
+    lab('camstrap',W({x:15.5,y:P.deckTop-1.2},2.4),'cam strap to rack ×2');}
+  // ---------- Razor A deck, 17.3 × 3.6 in. ----------
+  {const g=new T.Group(),al=M.alu(),y=P.deckTop,L=17.3,Wd=3.6;g.add(box(2.6+(L-2.6)/2,y-.07,0,L-2.6,.14,Wd,al));for(const s of [-1,1]){g.add(box(1.3,y-.07,s*(Wd/2-.425),2.6,.14,.85,al));g.add(box(L/2,y-.5,s*(Wd/2-.06),L,.95,.12,al));}
+    const lb=box(6,y-.5,Wd/2+.005,2.6,.55,.01,M.label());lb.userData.noEdge=1;g.add(lb);modG.add(reg(g,'deck'));lab('deck',W({x:5,y:P.deckTop-.3},1.8),'Razor A deck');}
+  // ---------- red wheels on a hinged LSTA arm, bungee pulls them onto the tyre ----------
+  {const piv=W({x:.4,y:P.deckTop-.55}),red=W(d.red);for(const z of [-1.55,1.55]){const a=v3(piv.x,piv.y,z*IN),dir=new T.Vector3().subVectors(v3(red.x,red.y,z*IN),a);const b=a.clone().add(dir.multiplyScalar(1.12));modG.add(reg(lstaPath([a,b],v3(0,0,1)),'redarm'));}
+    modG.add(reg(cylAB(v3(piv.x,piv.y,-1.9*IN),v3(piv.x,piv.y,1.9*IN),.0032,M.zinc()),'redarm'));
+    const rg=new T.Group();rg.position.copy(red);for(const z of [-.55,.55]){const w=discZ(P.redD/2,24/25.4,M.red(),36);w.position.z=z*IN;rg.add(w);const h=discZ(P.redD/2*.58,24.4/25.4,M.hub(),18);h.position.z=z*IN;rg.add(h);}
+    for(let i=0;i<3;i++){const a=i/3*TAU;rg.add(cylAB(v3(Math.cos(a)*.022,Math.sin(a)*.022,-.022),v3(Math.cos(a)*.022,Math.sin(a)*.022,.022),.0015,M.black(),6));}
+    modG.add(reg(rg,'red'));SP.red=rg;modG.add(reg(cylAB(W(d.red,-1.7),W(d.red,1.7),.004,M.zinc()),'red'));
+    modG.add(reg(tube([W({x:d.red.x+.3,y:d.red.y+.6},1.9),W({x:2,y:P.deckTop-1.6},1.95),W({x:6,y:P.deckTop-.8},1.95)],2.5*MM,M.bung(),30),'redbungee'));
+    lab('red',W({x:d.red.x-1.6,y:d.red.y-1.6},1.4),'Razor wheels, zip-tied together');lab('redarm',W({x:-1.3,y:P.deckTop-2.6},1.6),'LSTA9 arm, hinged');lab('redbungee',W({x:3,y:P.deckTop-1.3},1.95),'bungee: wheels onto tyre');}
+  // ---------- paint roller: handle cut off, its wire clamped under the platform ----------
+  {const cg=new T.Group();cg.position.copy(W(d.cage));for(let i=0;i<6;i++){const a=i/6*TAU,b=new T.Mesh(new T.CylinderGeometry(1.3*MM,1.3*MM,9*IN,6),M.zinc());b.rotation.x=Math.PI/2;b.position.set(Math.cos(a)*P.cageD/2*IN,Math.sin(a)*P.cageD/2*IN,0);b.userData.noEdge=1;cg.add(b);}
+    for(const z of [-4.5,4.5]){const c=discZ(P.cageD/2+.25,.9,M.orange(),24);c.position.z=z*IN;cg.add(c);}const tape=discZ(P.cageD/2+.03,1.2,M.black(),24);cg.add(tape);
+    modG.add(reg(cg,'cage'));SP.cage=cg;const h=d.wire;
+    modG.add(reg(tube([W(d.cage,-4.9),W(d.cage,-6.3),W({x:d.cage.x+2,y:d.cage.y+.4},-6.3),W({x:-.6,y:P.deckTop+.13},-1.6),W({x:h.x0,y:P.deckTop+.13},h.z),W({x:h.x1,y:P.deckTop+.13},h.z)],3.2*MM,M.zinc(),80),'wire'));
+    lab('cage',W({x:d.cage.x-.8,y:d.cage.y-1.3},-4.5),'roller cage, tape track');lab('wire',W({x:1.2,y:P.deckTop+.2},h.z),'roller wire, clamped under platform');}
+  // ---------- platform, cheeks, cleats, bearing blocks, diagonal straps ----------
+  {modG.add(reg(box((d.plat.x0+d.plat.x1)/2,P.deckTop+PLY/2,0,d.plat.x1-d.plat.x0,PLY,d.plat.w,M.ply()),'platform'));
+    for(const x of [d.plat.x0+1.2,d.plat.x1-1.2])for(const z of [-1.1,1.1]){const b=new T.Mesh(new T.CylinderGeometry(.3*IN,.3*IN,.08*IN,16),M.zinc());b.position.copy(W({x,y:d.plat.y1+.04},z));modG.add(reg(b,'platform'));}
+    lab('platform',W({x:d.plat.x1-1,y:d.plat.y1},-d.zIn+3.5),'platform, 1/2 in. ply');
+    for(const s of [1,-1]){const z0=s>0?d.zIn:-d.zOut;
+      modG.add(reg(slab(d.cheek,[[d.rod.x,d.rod.y,21/128],[d.B.x,d.B.y,1/8]],z0,PLY,M.ply2()),'cheek'));
+      modG.add(reg(box((d.plat.x0+d.plat.x1)/2,d.plat.y1+PINE/2,s*(d.zIn-PINEW/2),d.plat.x1-d.plat.x0,PINE,PINEW,M.pine()),'cleat'));
+      modG.add(reg(box(d.rod.x,d.rod.y,s*(d.zIn-PINE/2),PINEW,3,PINE,M.pine()),'bearing'));
+      for(const x of [d.plat.x0+1,d.plat.x1-1]){const b=new T.Mesh(new T.CylinderGeometry(.3*IN,.3*IN,.08*IN,12),M.zinc());b.position.copy(W({x,y:d.plat.y1+PINE+.04},s*(d.zIn-PINEW/2)));modG.add(reg(b,'cleat'));}
+      const zf=s*(d.zIn-.02),zp=s*1.6;modG.add(reg(lstaPath([W({x:d.rod.x,y:d.rod.y-1.9},zf),W({x:d.rod.x,y:d.rod.y-3.2},zf),W({x:d.rod.x,y:d.plat.y1+.03},zp+s*.6),W({x:d.rod.x,y:d.plat.y1+.03},zp)],v3(1,0,0)),'diag'));}
+    lab('cheek',W({x:d.B.x+1.5,y:d.B.y+2.2},d.zOut),'cheek, 1/2 in. ply ×2');lab('cleat',W({x:d.plat.x0+.6,y:d.plat.y1+.8},-d.zIn+.8),'cleat 1×2, bolted');lab('bearing',W({x:d.rod.x+.8,y:d.rod.y-1.4},-d.zIn+.4),'bearing block 1×2');lab('diag',W({x:d.rod.x,y:d.plat.y1+3.5},-d.zIn+3),'LSTA12 diagonal ×2');}
+  // ---------- shaft: rod, collars, lid pulley, jam pairs, crank spacers ----------
+  {const sg=new T.Group();sg.position.copy(W(d.rod));modG.add(sg);SP.shaft=sg;const parts=[];const add=(o,id,z,ez)=>{o.position.z=z*IN;sg.add(o);reg(o,id);parts.push({o,z,ez});};
+    const rod=new T.Mesh(new T.CylinderGeometry(5/32*IN,5/32*IN,d.rodLen*IN,12),M.zinc());rod.rotation.x=Math.PI/2;rod.userData.noEdge=1;sg.add(reg(rod,'rod'));
+    const lidG=new T.Group();for(const s of [-1,1]){const l=new T.Mesh(new T.CylinderGeometry((LIDD/2-.25)*IN,LIDD/2*IN,.35*IN,64),M.lid());l.rotation.x=s*Math.PI/2;l.position.z=s*.18*IN;lidG.add(l);
+      const hub=discZ(2,PLY,M.ply(),32);hub.position.z=s*(.36+PLY/2)*IN;lidG.add(hub);}
+    for(let i=0;i<4;i++){const a=i/4*TAU+Math.PI/4;lidG.add(cylAB(v3(Math.cos(a)*1.31*IN,Math.sin(a)*1.31*IN,-.8*IN),v3(Math.cos(a)*1.31*IN,Math.sin(a)*1.31*IN,.8*IN),.0024,M.zinc(),6));}
+    // a stripe so you can see it turn
+    const st=box(0,LIDD/2-1.2,0,.6,2,.72,M.hot());st.userData.noEdge=1;lidG.add(st);add(lidG,'lid',0,0);
+    const hubOut=.36+PLY;
+    for(const s of [-1,1]){add(discZ(.45,WASHT,M.zinc(),20),'jam',s*(hubOut+WASHT/2),s*(hubOut+.9));
+      for(const k of [0,1])add(nutZ(1/2,NUTH),'jam',s*(hubOut+WASHT+NUTH/2+k*NUTH),s*(hubOut+1.5+k*.6));
+      for(const k of [0,1])add(nutZ(1/2,NUTH),'collar',s*(d.zIn-PINE-.03-NUTH/2-k*NUTH),s*(d.zIn-PINE-1.6-k*.6));
+      add(discZ(.45,WASHT,M.zinc(),20),'crankstack',s*(d.zOut+WASHT/2),s*(d.zOut+.8));
+      for(const k of [0,1])add(nutZ(1/2,NUTH),'crankstack',s*(d.zOut+WASHT+NUTH/2+k*NUTH),s*(d.zOut+1.4+k*.6));
+      add(nutZ(1/2,NUTH),'crankstack',s*(d.crankOut-NUTH/2),s*(d.crankOut+3.2));}
+    SP.parts=parts;lab('lid',W({x:d.rod.x,y:d.rod.y+LIDD/2-.3},0),'pulley: 2 bucket lids + hub discs');lab('rod',W({x:d.rod.x-.6,y:d.rod.y+.3},-d.zIn-1.3),'5/16-18 rod');lab('collar',W(d.rod,-(d.zIn-1.3)),'collar: jam pair');lab('jam',W(d.rod,1.5),'jam pairs clamp the pulley');lab('crankstack',W(d.rod,d.zOut+.4),'spacer jam pair');}
+  // ---------- belts ----------
+  {const b1=beltPts(d.red,P.groove/2,d.cage,P.cageD/2,false),b2=beltPts(d.cage,P.cageD/2,d.rod,EFFD/2,true);SP.belt2=b2;SP.belt1=b1;
+    for(const pts of [b1,b2]){if(!pts)continue;const wp=pts.map(p=>W(p,0));modG.add(reg(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(wp,true,'catmullrom',0),wp.length*2,CORD/2*IN,6,true),M.cord()),'cord'));}
+    lab('cord',W({x:(d.cage.x+d.rod.x)/2-3,y:(d.cage.y+d.rod.y)/2+2.4},0),'belt 2, crossed');}
+  // ---------- legs, two pins each ----------
+  for(const s of [1,-1]){const lg=new T.Group();legG.add(lg);const parts={};
+    for(const L of LINKS){let o;if(L.kind==='plate'){o=new T.Mesh(new T.BufferGeometry(),M.coro());o.userData.noEdge=1;}else{o=new T.Mesh(new T.BoxGeometry(1,PINEW*IN,PINE*IN),L.id==='crank'?M.wood():M.pine());}lg.add(o);parts[L.id]={o,L};}
+    const hoof=new T.Mesh(new T.BoxGeometry(4*IN,1*IN,3.5*IN),M.black());lg.add(hoof);
+    const pins={};for(const c of ['B','C','D','E','F','G','H']){const len=c==='B'?(SPACER+PLY+PINE*2+.5):c==='C'?(PINE*3+.6):(PINE*2+.4);const b=new T.Mesh(new T.CylinderGeometry(1/8*IN,1/8*IN,len*IN,10),c==='B'||c==='C'?M.hot():M.zinc());b.rotation.x=Math.PI/2;lg.add(b);pins[c]={b,len};}
+    const spacer=new T.Mesh(new T.CylinderGeometry(.42*IN,.42*IN,SPACER*IN,16),M.pvc());spacer.rotation.x=Math.PI/2;lg.add(spacer);
+    reg(lg,'leg');LEG.push({lg,parts,hoof,pins,spacer,s,phase:s>0?0:.5});}
+  lab('leg',W({x:d.rod.x-11,y:d.rod.y-20},d.z1+1),'leg: coroplast + pine 1×2');
+  // shelf (only shown off the bike)
+  const shelf=new T.Group();shelf.add(box(23.5,P.deckTop-.98-.375,0,45,.75,46,M.ply()));shelf.add(box(44.5,(P.deckTop-1.73)/2,4,1.5,P.deckTop-1.73,1.5,M.pine()));shelf.add(box(2.5,(P.deckTop-1.73)/2,-21,1.5,P.deckTop-1.73,1.5,M.pine()));rig.add(shelf);SP.shelf=shelf;
+  dirty=false;checks();bom();highlightApply();applyMode();}
+function plateGeo(pts,margin){const n=pts.length,cx=pts.reduce((a,p)=>a+p.x,0)/n,cy=pts.reduce((a,p)=>a+p.y,0)/n;const out=pts.map(p=>{const dd=Math.hypot(p.x-cx,p.y-cy);return new T.Vector2(p.x+(p.x-cx)/dd*margin,p.y+(p.y-cy)/dd*margin);});
+  const s=new T.Shape(out);for(const p of pts){const h=new T.Path();h.absarc(p.x,p.y,.0035,0,TAU,true);s.holes.push(h);}return new T.ExtrudeGeometry(s,{depth:CORO*IN,bevelEnabled:false,curveSegments:8});}
+function poseLegs(th){const d=D();for(const L of LEG){const Pp=legAt(th+L.phase*TAU),pm={};for(const k in Pp)pm[k]=V(Pp[k].x*MM,Pp[k].y*MM);
+  for(const id in L.parts){const {o,L:lk_}=L.parts[id];const z=L.s*d.LZ(lk_.L)*IN;
+    if(lk_.kind==='plate'){o.geometry.dispose();o.geometry=plateGeo(lk_.j.map(c=>pm[c]),.03);o.position.set(0,0,z-CORO*IN/2);while(o.children.length){const c=o.children.pop();c.geometry.dispose();}o.add(new T.LineSegments(new T.EdgesGeometry(o.geometry,30),edgeMat));}
+    else{const a=pm[lk_.j[0]],c=pm[lk_.j[1]],len=Math.hypot(c.x-a.x,c.y-a.y);o.scale.x=len+PINEW*IN;o.position.set((a.x+c.x)/2,(a.y+c.y)/2,z);o.rotation.z=Math.atan2(c.y-a.y,c.x-a.x);}}
+  L.hoof.position.set(pm.H.x,pm.H.y-.5*IN,L.s*d.LZ(1)*IN);L.hoof.rotation.z=Math.atan2(pm.H.y-pm.E.y,pm.H.x-pm.E.x)-HOOF_ANG;
+  for(const c in L.pins){const p=L.pins[c];const zc=c==='B'?(d.zIn-.15+p.len/2):c==='C'?(d.z1-.2+p.len/2):(d.z1-.1+p.len/2);p.b.position.set(pm[c].x,pm[c].y,L.s*zc*IN);}
+  L.spacer.position.set(pm.B.x,pm.B.y,L.s*(d.zOut+SPACER/2)*IN);}}
+// ======================= modes =======================
+function applyMode(){const d=D(),shelf=MODE==='shelf';SP.bikeG.visible=MODE==='bike';SP.shelf.visible=shelf;SP.legG.visible=MODE!=='explode'&&(LEGS_ON||MODE==='shelf');
+  ['mBike','mExplode','mShelf'].forEach(id=>$(id).setAttribute('aria-pressed',id===({bike:'mBike',explode:'mExplode',shelf:'mShelf'})[MODE]));
+  LEG.forEach((L,i)=>{if(shelf){// off the bike: each leg laid flat on the shelf, hip-plate side down
+      L.lg.rotation.set(L.s>0?-Math.PI/2:Math.PI/2,0,0);L.lg.position.copy(W({x:d.rod.x+33,y:P.deckTop-.98-(d.zIn-.15)+i*4.6},L.s>0?-12:12));}
+    else{L.lg.rotation.set(0,0,0);L.lg.position.copy(W(d.rod));}});}
+['mBike','mExplode','mShelf'].forEach(id=>$(id).onclick=()=>{LEGS_ON=true;HI=[];highlightApply();MODE=id==='mBike'?'bike':id==='mExplode'?'explode':'shelf';dirty=true;const d=D();
+  if(MODE==='explode')goCam({tx:d.rod.x*IN,ty:d.rod.y*IN,tz:0,r:.95,th:2.2,ph:1.3});if(MODE==='shelf')goCam({tx:(d.rod.x+16)*IN,ty:P.deckTop*IN,tz:0,r:2.1,th:.6,ph:.95});});
+// ======================= camera and overlay =======================
+const cam={tx:.25,ty:.82,tz:.05,r:2.3,th:.75,ph:1.2};let tween=null;
+const VIEWS={vSide:{th:0,ph:1.5,r:2.3,tx:.1,ty:.7,tz:0},vRear:{th:-Math.PI/2,ph:1.45,r:2.1,tx:0,ty:.75,tz:0},vTop:{th:0,ph:.06,r:2.3,tx:.15,ty:.8,tz:0},v3q:{th:.75,ph:1.2,r:2.3,tx:.25,ty:.82,tz:.05}};
+function updCam(){const k=1/Math.pow(Math.min(1,camera.aspect),.7),sp=v3(Math.sin(cam.ph)*Math.sin(cam.th),Math.cos(cam.ph),Math.sin(cam.ph)*Math.cos(cam.th)).multiplyScalar(cam.r*k);camera.position.set(cam.tx+sp.x,cam.ty+sp.y,cam.tz+sp.z);camera.lookAt(cam.tx,cam.ty,cam.tz);}
+const goCam=to=>{tween={from:Object.assign({},cam),to:Object.assign({},cam,to),t0:performance.now()};};
+const pressView=id=>{for(const k of [...Object.keys(VIEWS),'vFocus'])$(k).setAttribute('aria-pressed',k===id);};
+for(const id in VIEWS)$(id).onclick=()=>{pressView(id);goCam(VIEWS[id]);};
+$('vFocus').onclick=()=>{pressView('vFocus');goCam(STEPS[SI].cam(D()));};
+let playing=true,showLabels=innerWidth>760;$('vLabels').setAttribute('aria-pressed',showLabels);
+$('vPlay').onclick=e=>{playing=!playing;e.currentTarget.setAttribute('aria-pressed',playing);};
+$('vBasket').onclick=e=>{const on=e.currentTarget.getAttribute('aria-pressed')!=='true';e.currentTarget.setAttribute('aria-pressed',on);if(BASKET)BASKET.visible=on;};
+$('vLabels').onclick=e=>{showLabels=!showLabels;e.currentTarget.setAttribute('aria-pressed',showLabels);};
+{const pts=new Map();let g0=null;view.addEventListener('pointerdown',e=>{if(e.target.closest('.vbar,.seg2'))return;view.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pts.size===1)g0={th:cam.th,ph:cam.ph,x:e.clientX,y:e.clientY};if(pts.size===2){const [a,b]=[...pts.values()];g0={pinch:Math.hypot(a.x-b.x,a.y-b.y),r:cam.r};}});
+  view.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});if(!g0)return;tween=null;if(pts.size===2&&g0.pinch){const [a,b]=[...pts.values()];cam.r=Math.max(.15,Math.min(6,g0.r*g0.pinch/Math.hypot(a.x-b.x,a.y-b.y)));}else if(!g0.pinch){cam.th=g0.th-(e.clientX-g0.x)*.008;cam.ph=Math.max(.05,Math.min(1.62,g0.ph-(e.clientY-g0.y)*.006));}});
+  const up=e=>{pts.delete(e.pointerId);if(!pts.size)g0=null;};view.addEventListener('pointerup',up);view.addEventListener('pointercancel',up);
+  view.addEventListener('wheel',e=>{e.preventDefault();tween=null;cam.r=Math.max(.15,Math.min(6,cam.r*Math.exp(e.deltaY*.001)));},{passive:false});}
+function resize(){const r=view.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1);R.setSize(r.width,r.height,false);camera.aspect=r.width/Math.max(1,r.height);camera.updateProjectionMatrix();ov.width=r.width*dpr;ov.height=r.height*dpr;}addEventListener('resize',resize);
+let HI=[];function highlightApply(){const set=new Set(HI);for(const k in PARTS)for(const o of PARTS[k])o.traverse(m=>{if(m.isMesh&&m.material&&m.material.emissive){const on=set.has(k);m.material.emissive.set(on?0xe2591b:0x000000);m.material.emissiveIntensity=on?.45:1;}});}
+const visible=o=>{let v=o;while(v){if(!v.visible)return false;v=v.parent;}return true;};
+function overlay(){const dpr=Math.min(2,devicePixelRatio||1),Wd=ov.width/dpr,Hd=ov.height/dpr;og.setTransform(dpr,0,0,dpr,0,0);og.clearRect(0,0,Wd,Hd);if(!showLabels)return;
+  og.font=`600 11px ${css('--f-body')}`;const pts=[],set=new Set(HI);for(const l of LABELS){const o=PARTS[l.id];if(!o||!o.some(visible))continue;const p=l.p.clone().project(camera);if(p.z>1)continue;const x=(p.x+1)/2*Wd,y=(1-p.y)/2*Hd;if(x<0||x>Wd||y<46||y>Hd-46)continue;pts.push({x,y,l,on:set.has(l.id)});}
+  pts.sort((a,b)=>(b.on-a.on)||(a.y-b.y));
+  const placed=[];for(const {x,y,l,on} of pts){if(HI.length&&!on&&placed.length>4)continue;const tw=og.measureText(l.text).width+10;let lx=x+(x>Wd*.6?-tw-16:16),ly=y-20;for(let k=0;k<40;k++){if(!placed.some(q=>lx<q.x+q.w&&lx+tw>q.x&&ly<q.y+17&&ly+17>q.y))break;ly+=10;}placed.push({x:lx,y:ly,w:tw});
+    const col=on?css('--hot'):css('--ink');og.strokeStyle=on?col:css('--ink-3');og.lineWidth=1;og.beginPath();og.moveTo(x,y);og.lineTo(lx+(lx<x?tw:0),ly+8.5);og.stroke();og.fillStyle=col;og.beginPath();og.arc(x,y,2,0,TAU);og.fill();
+    og.fillStyle=css('--paper');og.globalAlpha=.92;og.fillRect(lx,ly,tw,17);og.globalAlpha=1;og.strokeStyle=on?col:css('--rule');og.strokeRect(lx+.5,ly+.5,tw-1,16);og.fillStyle=col;og.textBaseline='middle';og.fillText(l.text,lx+5,ly+9);}}
+// ======================= checks =======================
+function segD(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy||1e-9;let t=((p.x-a.x)*dx+(p.y-a.y)*dy)/l2;t=Math.max(0,Math.min(1,t));return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy);}
+function inTri(p,a,b,c){const s=(p1,p2,p3)=>(p1.x-p3.x)*(p2.y-p3.y)-(p2.x-p3.x)*(p1.y-p3.y);const d1=s(p,a,b),d2=s(p,b,c),d3=s(p,c,a);return !((d1<0||d2<0||d3<0)&&(d1>0||d2>0||d3>0));}
+let CHK=[];
+function checks(){const d=D(),O=V(0,0);let armHip=1e9,jOverO=1e9,legTopY=-1e9;
+  for(const Pq of PU){const tri=[Pq.B,Pq.D,Pq.F],ed=[[Pq.B,Pq.D],[Pq.D,Pq.F],[Pq.F,Pq.B]];
+    // crank arm (O to C, 1-1/2 in. wide) and the hip plate share layer 1
+    let dm=1e9;for(const [a,b] of ed){dm=Math.min(dm,segD(O,a,b),segD(Pq.C,a,b));}for(const q of tri)dm=Math.min(dm,segD(q,O,Pq.C));if(inTri(O,...tri)||inTri(Pq.C,...tri))dm=-dm;
+    armHip=Math.min(armHip,dm);jOverO=Math.min(jOverO,segD(O,Pq.C,Pq.D));legTopY=Math.max(legTopY,Pq.D.y);}
+  const armNet=(armHip-30-19)/25.4;
+  const lidLow=d.rod.y-LIDD/2-d.plat.y1;
+  let beltPlat=1e9,beltDeck=1e9,beltHandle=1e9;if(SP.belt2)for(const p of SP.belt2){if(p.x>d.plat.x0-.5&&p.x<d.plat.x1+.5)beltPlat=Math.min(beltPlat,p.y-CORD/2-d.plat.y1);if(p.x>-.2&&p.x<d.plat.x0)beltDeck=Math.min(beltDeck,p.y-CORD/2-P.deckTop);}
+  const lidF=d.rod.x+LIDD/2,riderX=P.saddleX-P.riderBack,lidRider=riderX-lidF,lidTopUp=d.rod.y+LIDD/2-P.deckTop;
+  const hoof=d.rod.y-HT/25.4-1,rider=d.zOut+SPACER-P.riderHalf,basket=d.zIn-P.basketW/2,rim=-P.basketRim;
+  const rpc=roadPerCrank(),gearErr=rpc/(ADV/25.4)-1;
+  CHK=[
+   ['Crank arm past the hip plate',`${armNet.toFixed(2)} in.`,armNet>.6?'good':armNet>0?'warn':'bad','Both sit in layer 1. Closest edge to edge over a full turn, with the plate cut 30 mm round each hole.'],
+   ['Upper rod over the rod end',jOverO<20?'cut flush':'clear',jOverO<20?'bad':'good','The upper rod (layer 2) sweeps straight over the rod end every turn. Cut the rod flush with the crank arm’s outer face and sink the nut in a counterbore (step 8), or they hit.'],
+   ['Lid pulley above the platform',`${lidLow.toFixed(2)} in.`,lidLow>1?'good':lidLow>0?'warn':'bad','Bottom of the lids to the top of the platform.'],
+   ['Belt 2 above the platform',beltPlat===1e9?'—':`${beltPlat.toFixed(2)} in.`,beltPlat>.5?'good':beltPlat>0?'warn':'bad','Lowest cord over the platform.'],
+   ['Belt 2 above the deck’s rear end',beltDeck===1e9?'—':`${beltDeck.toFixed(2)} in.`,beltDeck>.4?'good':beltDeck>0?'warn':'bad','The rising strand passes over the back of the deck.'],
+   ['Lid pulley behind you',`${lidRider.toFixed(1)} in.`,lidRider>1?'good':lidRider>0?'warn':'bad',`The lids stand ${lidTopUp.toFixed(1)} in. above the deck, higher than the saddle, so they must be behind you. Front of the lids to ${fr(P.riderBack)} in. behind the saddle’s rear edge (Measure, 2 and 8).${lidRider<=1?` Move the rod back to ${fr(Math.min(P.rodFwd,riderX-LIDD/2-1),4)} in.`:''}`],
+   ['Roller wire under the platform',`${(d.wire.x1-d.plat.x0).toFixed(1)} in.`,d.wire.x1-d.plat.x0>=2.5?'good':'warn','Length of the wire clamped between platform and deck.'],
+   ['Platform over the basket rim',`${rim.toFixed(2)} in.`,rim>=.1?'good':'bad','The platform overhangs the basket on both sides. Measure how high the basket rim is (Measure, 3).'],
+   ['Cheeks outside the basket',`${basket.toFixed(2)} in.`,basket>=.2?'good':'bad','Basket side to cheek inner face.'],
+   ['Leg layer 1 to the cheek',`${fr(SPACER)} in.`,'good','Set twice to the same number: the spacer jam pair on the rod and the PVC spacer on pivot B. The leg then hangs square.'],
+   ['Gear: road per crank turn',`${rpc.toFixed(1)} in.`,Math.abs(gearErr)<.1?'good':'warn',`The hoof moves ${(ADV/25.4).toFixed(1)} in. per crank turn; the road moves ${rpc.toFixed(1)} in. (${gearErr>0?'+':''}${(gearErr*100).toFixed(0)}%). With the cord ${fr(.3)} in. deep in the lid V. Count it in step 11.`],
+   ['Hooves off the road',`${hoof.toFixed(1)} in.`,hoof<-.2?'bad':hoof<1.5?'good':'warn',hoof>1.5?`The lids set the rod at least ${(PLY+LIDD/2+1).toFixed(1)} in. above the deck, so the hooves swing clear. Screw ${fr(Math.max(0,hoof-.5),4)} in. blocks under them to brush the road, or ride them as air-walkers.`:'Brushing the road.'],
+   ['Leg beside your hip',`${rider.toFixed(1)} in.`,rider>2.5?'good':rider>1?'warn':'bad',`The hip plate rises ${(legTopY/25.4).toFixed(1)} in. above the rod, beside the saddle. Gap from the outside of your hip to the leg’s inner face (Measure, 7).`],
+   ['Rod, cut length',`${fr(d.rodLen,8)} in.`,'good','Flush with both crank arms’ outer faces. From one 24 in. rod.'],
+   ['Module width with crank arms',`${fr(d.crankOut*2,4)} in.`,'good','What has to fit on the shelf once the legs are off.']];
+  $('chk').innerHTML=CHK.map(([n,v,c,h])=>`<tr class="${c}"><td>${n}<small>${h}</small></td><td class="d">${v}</td></tr>`).join('');
+  const bad=CHK.filter(c=>c[2]==='bad').length,warn=CHK.filter(c=>c[2]==='warn').length;
+  $('status').innerHTML=`rod ${d.rod.y.toFixed(1)} in. off the floor · ${fr(d.rodLen,8)} in. long · ${bad?`<b>${bad} to do exactly</b>`:'<b class=ok>no collisions</b>'}${warn?` · ${warn} to watch`:''}`;}
+// ======================= build steps =======================
+const STEPS=[
+ {t:'Cut the roller handle off',hi:['wire','cage'],cam:d=>({tx:1*IN,ty:(P.deckTop+.5)*IN,tz:-.04,r:.8,th:-.7,ph:1.1}),
+  body:d=>`<ol><li>Cut the bungees off. Hacksaw the plastic handle off the roller frame, or pull it off, leaving the bare wire with the cage on its end.</li><li>Bend the wire so its straight end lies flat on the deck top, <b>${fr(Math.abs(d.wire.z))} in. left of the centre line</b>, running forward from the deck’s rear end to about <b>${fr(d.wire.x1)} in.</b> The cage axis must stay square across the bike, ${fr(P.cageX)} in. behind the deck.</li><li>Hold it for now with tape. The platform clamps it in the next step.</li></ol><div class="why">The handle took up the deck top where the platform has to go, and its bungees let the cage creep so belt 1 went slack. Clamped under the platform, the wire cannot move.</div>`,kit:[['hacksaw',''],['duct tape','']]},
+ {t:'Platform on the deck',hi:['platform'],cam:d=>({tx:d.rod.x*IN,ty:(P.deckTop+.5)*IN,tz:0,r:1.0,th:.5,ph:.9}),
+  body:d=>`<ol><li>Cut a <b>${fr(d.plat.x1-d.plat.x0)} × ${fr(d.plat.w)} in.</b> platform from 1/2 in. plywood.</li><li>On its underside, cut a groove for the roller wire: two saw cuts ${fr(1/4)} in. apart and ${fr(3/16)} in. deep, chisel out between, ${fr(Math.abs(d.wire.z))} in. left of centre.</li><li>Centre it across the deck over the wire, front edge <b>${fr(d.plat.x1)} in.</b> from the deck’s rear end.</li><li>Clamp it and drill four 1/4 in. holes through platform and deck together: ${fr(2.2)} in. apart across, ${fr(d.plat.x1-d.plat.x0-2.4)} in. apart along.</li><li>1/4-20 × 1-1/2 in. carriage bolts down through; washer and lock nut under the deck. Tightening them clamps the wire in its groove. Check first that you can reach under the deck at those spots; move the holes if a rib is in the way.</li></ol><div class="why">The platform turns the 3.6 in. deck into a base wide enough to reach past the basket on both sides, so both cheeks hang off the same piece.</div>`,kit:[['1/2 in. plywood, 2 × 4 ft',1],['1/4-20 × 1-1/2 in. carriage bolt, washer, lock nut',4]]},
+ {t:'Cut and drill both cheeks at once',hi:['cheek','bearing'],cam:d=>({tx:(d.rod.x-3)*IN,ty:(d.rod.y-3)*IN,tz:d.zOut*IN,r:.9,th:.2,ph:1.4}),
+  body:d=>`<ol><li>Mark one cheek on 1/2 in. plywood. Bottom edge <b>${fr(d.plat.x1-(d.B.x-1.1))} in.</b>, its front end flush with the platform’s front. Rod hole <b>${fr(d.rod.y-d.plat.y1)} in.</b> above the bottom edge and ${fr(d.plat.x1-d.rod.x)} in. back from the front. Pivot B <b>${fr(J.a*MM/IN)} in.</b> behind the rod hole and <b>${fr(J.l*MM/IN)} in.</b> below it. Leave 1-1/8 in. of wood round B and 1-1/2 in. above the rod hole.</li><li>Screw two blanks together and saw both at once.</li><li>Glue and screw a 3 in. <b>1×2 bearing block</b>, standing upright, on the inside face over the rod hole.</li><li>Still screwed together, drill the rod hole <b>21/64 in.</b> through cheek and block on both, and B <b>1/4 in.</b> Keep the bit square (a drill guide or a helper sighting from two sides).</li></ol><div class="why">One pass through both is what makes the rod run straight. Two holes drilled separately never line up and the rod binds. The block gives the rod ${fr(PLY+PINE)} in. of bearing instead of 1/2 in.</div>`,kit:[['pine 1×2, 3 in.',2],['#8 × 1-1/4 in. wood screws',8],['wood glue','']]},
+ {t:'Stand the cheeks on the platform',hi:['cheek','cleat','platform'],cam:d=>({tx:d.rod.x*IN,ty:(d.plat.y1+2)*IN,tz:0,r:1.1,th:-.35,ph:1.25}),
+  body:d=>`<ol><li>Unscrew the cheeks from each other.</li><li>Stand each on the platform, outside face flush with the platform’s side edge.</li><li>Glue and screw a <b>${fr(d.plat.x1-d.plat.x0)} in. 1×2 cleat</b> into the corner inside, flat on the platform and tight to the cheek: three #8 screws sideways into the cheek, two 1/4-20 × 2 in. bolts down through cleat and platform.</li><li>Push a straight 5/16 rod through both holes. It must slide with no force; if not, loosen a cleat bolt and shift that cheek.</li></ol>`,kit:[['pine 1×2',''],['1/4-20 × 2 in. bolt, washers, lock nut',4],['#8 × 1-1/4 in. screws',6]]},
+ {t:'Diagonal straps',hi:['diag'],cam:d=>({tx:d.rod.x*IN,ty:(d.plat.y1+3)*IN,tz:0,r:.8,th:-1.35,ph:1.35}),
+  body:d=>`<ol><li>One LSTA12 per side (the straps from the old A-frame work). Bend about 1-1/4 in. at each end with pliers so one end lies flat on the cheek’s inside face just under the bearing block and the other lies flat on the platform about 1-1/2 in. from the centre line.</li><li>Two #8 × 3/4 in. screws through the strap holes at each end.</li></ol><div class="why">A plywood cheek is stiff front to back but can rock sideways on its cleat. The strap stops it rocking out; the rod with its collars stops it rocking in. It is then a triangle and cannot move.</div>`,kit:[['Simpson LSTA12',2],['#8 × 3/4 in. screws',8]]},
+ {t:'Make the lid pulley',hi:['lid'],cam:d=>({tx:d.rod.x*IN,ty:d.rod.y*IN,tz:0,r:.8,th:2.0,ph:1.35}),explode:true,
+  body:d=>`<ol><li>Two 5-gallon bucket lids, <b>top faces together</b>. Their rounded rims meet in a V at the outside: the cord rides in it.</li><li>Cut two <b>4 in. discs</b> of 1/2 in. ply with a 4 in. hole saw; its pilot hole is the centre. One disc goes outside each lid.</li><li>Clamp disc, lid, lid, disc. Drill the centre out to 5/16 in., then four 3/16 in. holes on a 2-5/8 in. circle.</li><li>Four #10-24 × 1-1/2 in. bolts, washers and nuts.</li></ol><div class="why">The bolts carry the drive from the lids to the hub discs; the jam pairs on the rod (next step) carry it from the hub discs to the rod. No glue, nothing thin carries torque.</div>`,kit:[['5-gallon bucket lids',2],['4 in. hole saw',1],['#10-24 × 1-1/2 in. bolts, washers, nuts',4]]},
+ {t:'Thread the shaft',hi:['rod','collar','jam','lid'],cam:d=>({tx:d.rod.x*IN,ty:d.rod.y*IN,tz:0,r:.95,th:2.2,ph:1.3}),explode:true,
+  body:d=>`<ol><li>Cut the 5/16-18 rod to <b>${fr(d.rodLen,8)} in.</b> File both ends and run a nut off each to clean the thread.</li><li>Grease both cheek holes. From the left: rod through the left cheek, then a <b>collar pair</b> (2 nuts), a <b>jam pair</b>, washer, the pulley, washer, a <b>jam pair</b>, a <b>collar pair</b>, and through the right cheek. Spin the nuts with a nut driver in a drill.</li><li>Centre the pulley over belt line (deck centre). Lock each jam pair hard against the pulley: two wrenches, the nuts turned against each other. Blue thread locker on those threads.</li><li>Run each collar pair to its bearing block, back off a paper’s thickness, and lock it the same way.</li><li>Spin the rod by hand. It should turn freely and not slide.</li></ol><div class="why">Only the pulley and the crank arms are clamped to the rod. The rod turns in the wooden holes; the collars only stop it sliding. No nut rubs on anything that stands still, so nothing unscrews.</div>`,kit:[['5/16-18 × 24 in. zinc threaded rod',1],['5/16-18 hex nuts',14],['5/16 flat washers',6],['blue thread locker','']]},
+ {t:'Crank arms',hi:['crankstack','leg'],cam:d=>({tx:(d.rod.x-1)*IN,ty:(d.rod.y-1)*IN,tz:d.zOut*IN,r:.95,th:1.0,ph:1.2}),
+  body:d=>`<ol><li>Two crank arms from pine 1×2, 3-1/2 in. long. Rod hole 5/16 in. and crank pin hole 1/4 in., <b>${fr(J.m*MM/IN,32)} in. apart</b> (62 mm), centred on the width.</li><li>On the outside face, bore a <b>7/8 in. counterbore 3/8 in. deep</b> over the rod hole (spade bit).</li><li>Each rod end: washer against the cheek, a jam pair locked <b>${fr(SPACER)} in.</b> out from the cheek, the crank arm, a nut in the counterbore. Thread locker; tighten the nut hard against the arm.</li><li>The two arms point in <b>opposite directions</b>. File the rod flush with the outer faces.</li></ol><div class="why">The upper rod passes straight over the rod end once a turn. Anything sticking out past the crank arm hits it.</div>`,kit:[['pine 1×2, 3-1/2 in.',2],['7/8 in. spade bit',1],['5/16-18 nuts (in the 14)','']]},
+ {t:'Belts',hi:['cord','cage','red'],cam:d=>({tx:(d.cage.x+5)*IN,ty:(P.deckTop+2)*IN,tz:.05,r:1.25,th:-.1,ph:1.4}),
+  body:d=>`<ol><li>Zip-tie the two red wheels together through their spokes, three ties, so they turn as one.</li><li>Wrap electrical tape round the middle of the roller cage, about 1 in. wide, as a track.</li><li>Belt 1: 1/4 in. shock cord in the groove between the red wheels and round the cage track. Open loop.</li><li>Belt 2: shock cord round the cage track and in the V of the lids, <b>crossed once</b> (a figure 8). The cross makes the crank turn the same way as the wheel, which walks the legs forward.</li><li>Join each: overlap 1 in., whip tight with waxed thread, super glue. Cut 10% short so it stretches on. Lengths: Powertrain page.</li></ol>`,kit:[['1/4 in. shock cord',''],['electrical tape',''],['waxed thread, super glue','']]},
+ {t:'Hang the legs, two pins each',hi:['leg'],cam:d=>({tx:(d.rod.x-6)*IN,ty:(d.rod.y-12)*IN,tz:d.z1*IN,r:1.4,th:.65,ph:1.35}),
+  body:d=>`<ol><li>Pivot B: a <b>${fr(SPACER)} in. spacer</b> (1/2 in. PVC pipe) against the cheek’s outside face, then fender washer, hip plate, fender washer, thigh rocker. A 1/4 in. × 3 in. <b>clevis pin</b> from inside the cheek, hitch-pin clip outside.</li><li>Crank pin C: crank arm, washer, upper rod, washer, lower rod. 1/4 × 3 in. clevis pin and clip.</li><li>Coroplast tears at a bare hole: a fender washer on each side of the plate at every pivot.</li><li>The other leg on the other side, its crank half a turn round.</li></ol><div class="why">Each leg is held on by two pins. Pull them and the leg comes off whole, which is how the module goes on a shelf.</div>`,kit:[['1/4 × 3 in. clevis pins and clips',4],['1/2 in. PVC, cut 5/8 in.',2],['1/4 in. fender washers',14]]},
+ {t:'Hinged red wheel arm',hi:['redarm','redbungee','red'],cam:d=>({tx:d.red.x*IN,ty:(d.red.y+2)*IN,tz:0,r:.8,th:-.9,ph:1.3}),
+  body:d=>`<ol><li>Replace the screw at the top of each LSTA9 arm with a 1/4-20 × 2 in. bolt through the deck prong; lock nut snug, then a quarter turn back so the arm swings.</li><li>A short bungee from the arm, near the wheels, forward under the deck to the rack: it should press the red wheels onto the tyre with about 3 kg (lift the wheels with a luggage scale to check).</li></ol><div class="why">A rigid arm either misses the tyre or jams on it. A sprung arm keeps even pressure, slips instead of breaking if something jams, and lets go by itself when the module lifts off.</div>`,kit:[['1/4-20 × 2 in. bolt, lock nut',1],['short bungee',1]]},
+ {t:'On the bike',hi:['camstrap'],cam:d=>({tx:9*IN,ty:(P.deckTop-1)*IN,tz:0,r:1.3,th:.9,ph:1.25}),
+  body:d=>{const per=P.tyreD*P.groove/(P.redD*EFFD);return `<ol><li>Set the module on the rack with the red wheels resting on the tyre.</li><li>Two 1 in. cam-buckle straps round the deck and the rack rails, one near each end. Pull hard.</li><li>Lift the rear wheel and turn it 10 times by hand with a chalk mark. The crank should turn about <b>${(per*10).toFixed(0)}</b> times (target ${(10*Math.PI*P.tyreD/(ADV/25.4)).toFixed(0)} for no hoof skid). Write the number in Checks.</li></ol>`;},kit:[['1 in. cam-buckle straps',2]]},
+ {t:'Off and onto a shelf',hi:['leg','deck'],cam:d=>({tx:(d.rod.x+16)*IN,ty:P.deckTop*IN,tz:0,r:2.1,th:.6,ph:.95}),shelf:true,
+  body:d=>`<ol><li>Pull four clips and four clevis pins: both legs come off whole. The crank arms stay on the rod.</li><li>Undo the two cam straps and lift the module by the two cheeks. The red wheel arm hangs on its hinge.</li><li>Set the deck on the shelf with its rear end over the edge, so the red wheels and roller cage hang in the air and the deck sits flat. Lay the legs flat beside it, hip plates down.</li><li>Shelf space: about 17 × ${fr(d.crankOut*2,4)} in. for the module, ${fr(d.rod.y+LIDD/2-P.deckTop+.5,4)} in. tall; each leg about 21 × 44 × 4 in.</li></ol>`,kit:[]}];
+let SI=store.get('rig3d3-step',0);if(!(SI>=0&&SI<STEPS.length))SI=0;
+function showStep(i){SI=(i+STEPS.length)%STEPS.length;store.set('rig3d3-step',SI);const s=STEPS[SI],d=D();$('sTitle').innerHTML=`${s.t}<small>step ${SI+1} of ${STEPS.length}</small>`;
+  $('sBody').innerHTML=s.body(d)+(s.kit.length?`<div class="kit">${s.kit.map(([n,q])=>`<span>${q?`<b>${q}×</b> `:''}${n}</span>`).join('')}</div>`:'');
+  $('sList').innerHTML=STEPS.map((q,k)=>`<button data-i="${k}" aria-current="${k===SI}"><i>${k+1}</i>${q.t}</button>`).join('');$('sList').querySelectorAll('button').forEach(b=>b.onclick=()=>showStep(+b.dataset.i));
+  HI=s.hi;highlightApply();const lo=SI>=7;if(lo!==LEGS_ON){LEGS_ON=lo;dirty=true;}const want=s.shelf?'shelf':s.explode?'explode':'bike';if(MODE!==want){MODE=want;dirty=true;}
+  pressView('vFocus');goCam(s.cam(d));}
+$('sPrev').onclick=()=>showStep(SI-1);$('sNext').onclick=()=>showStep(SI+1);
+// ======================= parts list =======================
+function bom(){const d=D();const rows=[
+ ['platform',`Platform, 1/2 in. ply, ${fr(d.plat.x1-d.plat.x0)} × ${fr(d.plat.w)} in.`,'4 carriage bolts through the deck'],['cheek','Cheeks, 1/2 in. ply ×2','sawn and drilled together'],
+ ['cleat',`Cleats, pine 1×2, ${fr(d.plat.x1-d.plat.x0)} in. ×2`,'2 bolts + 3 screws each'],['bearing','Bearing blocks, pine 1×2, 3 in. ×2','21/64 in. hole, greased'],['diag','Simpson LSTA12 ×2','bent; cheek to platform'],
+ ['rod',`5/16-18 threaded rod, cut ${fr(d.rodLen,8)} in.`,'from a 24 in. rod'],['collar','Collar jam pairs ×2','a paper’s thickness from each block'],['jam','Pulley jam pairs ×2, washers','locked, thread locker'],
+ ['lid','Pulley: 2 bucket lids, two 4 in. ply discs','4 #10-24 bolts'],['crankstack','Spacer jam pairs ×2, counterbore nuts ×2',`${fr(SPACER)} in. from each cheek`],['cord','Shock-cord belts ×2','belt 2 crossed'],
+ ['red','Razor A wheels ×2, zip-tied','95 mm'],['redarm','LSTA9 arms ×2 on a 1/4 in. bolt','swing'],['redbungee','Arm bungee','about 3 kg onto the tyre'],
+ ['cage','Paint roller cage, tape track','9 in.'],['wire','Roller frame wire, handle cut off','clamped under the platform'],['deck','Razor A deck','17.3 × 3.6 in.'],['camstrap','Cam-buckle straps ×2','module to rack'],['leg','Legs ×2 on clevis pins','2 pins each, PVC spacer at B']];
+ $('bom').innerHTML=rows.map(([id,n,dd])=>`<tr data-p="${id}" class="${HI.length===1&&HI[0]===id?'on':''}"><td>${n}<small>${dd}</small></td></tr>`).join('');
+ $('bom').querySelectorAll('tr').forEach(r=>r.onclick=()=>{HI=(HI.length===1&&HI[0]===r.dataset.p)?[]:[r.dataset.p];highlightApply();bom();});}
+// ======================= measure =======================
+const TASKS=[['Floor to the top of the Razor deck.',[['deckTop','in.']]],['Rod centre: in front of the deck’s rear end, and above the deck top.',[['rodFwd','in front'],['rodUp','above']]],
+ ['Basket: outside width, length, and rim height above the deck top (negative if below).',[['basketW','width'],['basketL','length'],['basketRim','rim']]],['Red wheel axle: behind the deck end, and below the deck top (negative).',[['redX','behind'],['redY','below']]],
+ ['Roller cage axis: behind the deck end, and above (+) or below (−) the deck top.',[['cageX','behind'],['cageY','up/down']]],['Cord groove between the red wheels (a string round it, ÷ 3.14).',[['groove','groove']]],
+ ['Sitting on the saddle: middle of the bike to the outside of your hip.',[['riderHalf','in.']]],['Saddle: its rear edge in front of the deck’s rear end; its top above the deck top; how far your seat sticks out behind it when you ride.',[['saddleX','rear edge'],['saddleUp','top'],['riderBack','you, behind']]]];
+function tasks(){$('tasks').innerHTML=TASKS.map(([t,f],i)=>`<div class="task"><p><b>${i+1}.</b> ${t}</p><div class="in">${f.map(([k,l])=>`<label>${l}<input type="number" step=".1" data-k="${k}" value="${P[k]}"></label>`).join('')}</div></div>`).join('')+`<p class="note"><button id="reset" style="font:600 12px var(--f-body);border:1px solid var(--rule);background:var(--paper);color:var(--ink-2);border-radius:6px;padding:4px 10px;cursor:pointer">Reset to defaults</button></p>`;
+  $('tasks').querySelectorAll('input').forEach(inp=>inp.onchange=()=>{const v=parseFloat(inp.value);if(!isNaN(v)){P[inp.dataset.k]=v;save();showStep(SI);}});$('reset').onclick=()=>{Object.assign(P,DEF);save();tasks();showStep(SI);};}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(q=>q.setAttribute('aria-selected',q===b));['build','checks','bom','do'].forEach(k=>$('p-'+k).hidden=k!==b.dataset.t);});
+// ======================= run =======================
+tasks();resize();showStep(SI);let last=performance.now(),dist=0,expl=0;
+function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(dirty)build();
+  if(playing&&MODE!=='shelf')dist+=dt*.6*.44704/IN;            // inches of road at 0.6 mph
+  if(SP.wheel)SP.wheel.rotation.z=-dist/(P.tyreD/2);if(SP.red)SP.red.rotation.z=dist/(P.redD/2);const cageRot=dist/(P.redD/2)*(P.groove/P.cageD);if(SP.cage)SP.cage.rotation.z=cageRot;
+  const topRot=-cageRot*(P.cageD/EFFD);                          // belt 2 crossed: the shaft turns with the wheel
+  if(SP.shaft)SP.shaft.rotation.z=topRot;
+  expl+=((MODE==='explode'?1:0)-expl)*Math.min(1,dt*4);if(SP.parts)for(const p of SP.parts)p.o.position.z=(p.z+(p.ez-p.z)*expl)*IN;
+  poseLegs(MODE==='shelf'?PARK:PARK+topRot);
+  grid.position.x=-((dist*IN)%.1);
+  if(tween){const k=Math.min(1,(now-tween.t0)/650),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;for(const key of ['th','ph','r','tx','ty','tz'])cam[key]=tween.from[key]+(tween.to[key]-tween.from[key])*e;if(k>=1)tween=null;}
+  updCam();scene.background=srgb(css('--paper'));R.render(scene,camera);overlay();requestAnimationFrame(frame);}
+window.__step=showStep;window.__P=P;window.__mode=m=>{MODE=m;dirty=true;};window.__chk=()=>CHK;
+requestAnimationFrame(frame);
+})();
+</script>
+</body></html>
